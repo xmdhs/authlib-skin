@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS `user` (
     email VARCHAR(20) NOT NULL,
     password text NOT NULL,
     salt text NOT NULL,
+    -- 二进制状态位，暂无作用
     state INT NOT NULL,
     reg_time BIGINT NOT NULL
 );

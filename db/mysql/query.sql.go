@@ -9,18 +9,16 @@ import (
 )
 
 const createUser = `-- name: CreateUser :execresult
-INSERT INTO
-  user (
-    id,
-    email,
-    password,
-    salt,
-    disabled,
-    admin,
-    reg_time
-  )
+REPLACE INTO user (
+  id,
+  email,
+  password,
+  salt,
+  state,
+  reg_time
+)
 VALUES
-  (?, ?, ?, ?, ?, ?, ?)
+  (?, ?, ?, ?, ?, ?)
 `
 
 type CreateUserParams struct {
@@ -28,8 +26,7 @@ type CreateUserParams struct {
 	Email    string `db:"email"`
 	Password string `db:"password"`
 	Salt     string `db:"salt"`
-	Disabled int32  `db:"disabled"`
-	Admin    int32  `db:"admin"`
+	State    int32  `db:"state"`
 	RegTime  int64  `db:"reg_time"`
 }
 
@@ -39,10 +36,25 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (sql.Res
 		arg.Email,
 		arg.Password,
 		arg.Salt,
-		arg.Disabled,
-		arg.Admin,
+		arg.State,
 		arg.RegTime,
 	)
+}
+
+const createUserProfile = `-- name: CreateUserProfile :execresult
+REPLACE INTO ` + "`" + `user_profile` + "`" + ` (` + "`" + `user_id` + "`" + `, ` + "`" + `name` + "`" + `, ` + "`" + `uuid` + "`" + `)
+VALUES
+  (?, ?, ?)
+`
+
+type CreateUserProfileParams struct {
+	UserID int64  `db:"user_id"`
+	Name   string `db:"name"`
+	Uuid   string `db:"uuid"`
+}
+
+func (q *Queries) CreateUserProfile(ctx context.Context, arg CreateUserProfileParams) (sql.Result, error) {
+	return q.exec(ctx, q.createUserProfileStmt, createUserProfile, arg.UserID, arg.Name, arg.Uuid)
 }
 
 const deleteUser = `-- name: DeleteUser :exec
@@ -59,7 +71,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
 
 const getUser = `-- name: GetUser :one
 SELECT
-  id, email, password, salt, disabled, admin, reg_time
+  id, email, password, salt, state, reg_time
 FROM
   user
 WHERE
@@ -76,8 +88,32 @@ func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
 		&i.Email,
 		&i.Password,
 		&i.Salt,
-		&i.Disabled,
-		&i.Admin,
+		&i.State,
+		&i.RegTime,
+	)
+	return i, err
+}
+
+const getUserByEmail = `-- name: GetUserByEmail :one
+SELECT
+  id, email, password, salt, state, reg_time
+FROM
+  user
+WHERE
+  email = ?
+LIMIT
+  1
+`
+
+func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
+	row := q.queryRow(ctx, q.getUserByEmailStmt, getUserByEmail, email)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Password,
+		&i.Salt,
+		&i.State,
 		&i.RegTime,
 	)
 	return i, err
@@ -85,7 +121,7 @@ func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
 
 const listUser = `-- name: ListUser :many
 SELECT
-  id, email, password, salt, disabled, admin, reg_time
+  id, email, password, salt, state, reg_time
 FROM
   user
 ORDER BY
@@ -106,8 +142,7 @@ func (q *Queries) ListUser(ctx context.Context) ([]User, error) {
 			&i.Email,
 			&i.Password,
 			&i.Salt,
-			&i.Disabled,
-			&i.Admin,
+			&i.State,
 			&i.RegTime,
 		); err != nil {
 			return nil, err

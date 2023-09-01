@@ -17,21 +17,35 @@ ORDER BY
   reg_time;
 
 -- name: CreateUser :execresult
-INSERT INTO
-  user (
-    id,
-    email,
-    password,
-    salt,
-    disabled,
-    admin,
-    reg_time
-  )
+REPLACE INTO user (
+  id,
+  email,
+  password,
+  salt,
+  state,
+  reg_time
+)
 VALUES
-  (?, ?, ?, ?, ?, ?, ?);
+  (?, ?, ?, ?, ?, ?);
 
 -- name: DeleteUser :exec
 DELETE FROM
   user
 WHERE
   id = ?;
+
+-- name: CreateUserProfile :execresult
+REPLACE INTO `user_profile` (`user_id`, `name`, `uuid`)
+VALUES
+  (?, ?, ?);
+
+
+-- name: GetUserByEmail :one
+SELECT
+  *
+FROM
+  user
+WHERE
+  email = ?
+LIMIT
+  1;

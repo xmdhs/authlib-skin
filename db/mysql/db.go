@@ -25,11 +25,17 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createUserStmt, err = db.PrepareContext(ctx, createUser); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateUser: %w", err)
 	}
+	if q.createUserProfileStmt, err = db.PrepareContext(ctx, createUserProfile); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateUserProfile: %w", err)
+	}
 	if q.deleteUserStmt, err = db.PrepareContext(ctx, deleteUser); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteUser: %w", err)
 	}
 	if q.getUserStmt, err = db.PrepareContext(ctx, getUser); err != nil {
 		return nil, fmt.Errorf("error preparing query GetUser: %w", err)
+	}
+	if q.getUserByEmailStmt, err = db.PrepareContext(ctx, getUserByEmail); err != nil {
+		return nil, fmt.Errorf("error preparing query GetUserByEmail: %w", err)
 	}
 	if q.listUserStmt, err = db.PrepareContext(ctx, listUser); err != nil {
 		return nil, fmt.Errorf("error preparing query ListUser: %w", err)
@@ -44,6 +50,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createUserStmt: %w", cerr)
 		}
 	}
+	if q.createUserProfileStmt != nil {
+		if cerr := q.createUserProfileStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createUserProfileStmt: %w", cerr)
+		}
+	}
 	if q.deleteUserStmt != nil {
 		if cerr := q.deleteUserStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteUserStmt: %w", cerr)
@@ -52,6 +63,11 @@ func (q *Queries) Close() error {
 	if q.getUserStmt != nil {
 		if cerr := q.getUserStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getUserStmt: %w", cerr)
+		}
+	}
+	if q.getUserByEmailStmt != nil {
+		if cerr := q.getUserByEmailStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getUserByEmailStmt: %w", cerr)
 		}
 	}
 	if q.listUserStmt != nil {
@@ -96,21 +112,25 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db             DBTX
-	tx             *sql.Tx
-	createUserStmt *sql.Stmt
-	deleteUserStmt *sql.Stmt
-	getUserStmt    *sql.Stmt
-	listUserStmt   *sql.Stmt
+	db                    DBTX
+	tx                    *sql.Tx
+	createUserStmt        *sql.Stmt
+	createUserProfileStmt *sql.Stmt
+	deleteUserStmt        *sql.Stmt
+	getUserStmt           *sql.Stmt
+	getUserByEmailStmt    *sql.Stmt
+	listUserStmt          *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:             tx,
-		tx:             tx,
-		createUserStmt: q.createUserStmt,
-		deleteUserStmt: q.deleteUserStmt,
-		getUserStmt:    q.getUserStmt,
-		listUserStmt:   q.listUserStmt,
+		db:                    tx,
+		tx:                    tx,
+		createUserStmt:        q.createUserStmt,
+		createUserProfileStmt: q.createUserProfileStmt,
+		deleteUserStmt:        q.deleteUserStmt,
+		getUserStmt:           q.getUserStmt,
+		getUserByEmailStmt:    q.getUserByEmailStmt,
+		listUserStmt:          q.listUserStmt,
 	}
 }

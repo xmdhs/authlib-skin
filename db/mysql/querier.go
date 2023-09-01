@@ -9,8 +9,10 @@ import (
 
 type Querier interface {
 	CreateUser(ctx context.Context, arg CreateUserParams) (sql.Result, error)
+	CreateUserProfile(ctx context.Context, arg CreateUserProfileParams) (sql.Result, error)
 	DeleteUser(ctx context.Context, id int64) error
 	GetUser(ctx context.Context, id int64) (User, error)
+	GetUserByEmail(ctx context.Context, email string) (User, error)
 	ListUser(ctx context.Context) ([]User, error)
 }
 
