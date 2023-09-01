@@ -8,7 +8,7 @@ import (
 	"github.com/xmdhs/authlib-skin/model"
 )
 
-func handleError(ctx context.Context, w http.ResponseWriter, msg string, code int, httpcode int) {
+func handleError(ctx context.Context, w http.ResponseWriter, msg string, code model.APIStatus, httpcode int) {
 	w.WriteHeader(httpcode)
 	b, err := json.Marshal(model.API[any]{Code: code, Msg: msg, Data: nil})
 	if err != nil {

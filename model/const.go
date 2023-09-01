@@ -1,5 +1,9 @@
 package model
 
+type APIStatus int
+
 const (
-	OK = 0
+	OK APIStatus = iota
+	ErrInput
+	ErrService
 )

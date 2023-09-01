@@ -1,9 +1,9 @@
 package model
 
 type API[T any] struct {
-	Code int    `json:"code"`
-	Data T      `json:"data"`
-	Msg  string `json:"msg"`
+	Code APIStatus `json:"code"`
+	Data T         `json:"data"`
+	Msg  string    `json:"msg"`
 }
 
 type User struct {
