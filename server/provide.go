@@ -49,7 +49,7 @@ func ProvideDB(c config.Config) (*sql.DB, func(), error) {
 	return db, func() { db.Close() }, nil
 }
 
-func ProvideQuerier(ctx context.Context, db *sql.DB) (mysql.Querier, func(), error) {
+func ProvideQuerier(ctx context.Context, db *sql.DB) (mysql.QuerierWithTx, func(), error) {
 	q, err := mysql.Prepare(ctx, db)
 	if err != nil {
 		return nil, nil, fmt.Errorf("newQuerier: %w", err)

@@ -26,7 +26,7 @@ func InitializeRoute(ctx context.Context, c config.Config) (*http.Server, func()
 	if err != nil {
 		return nil, nil, err
 	}
-	querier, cleanup2, err := ProvideQuerier(ctx, db)
+	querierWithTx, cleanup2, err := ProvideQuerier(ctx, db)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
@@ -38,7 +38,7 @@ func InitializeRoute(ctx context.Context, c config.Config) (*http.Server, func()
 		cleanup()
 		return nil, nil, err
 	}
-	router, err := route.NewRoute(logger, querier, validate, db, node, c)
+	router, err := route.NewRoute(logger, querierWithTx, validate, node, c)
 	if err != nil {
 		cleanup2()
 		cleanup()

@@ -1,7 +1,6 @@
 package route
 
 import (
-	"database/sql"
 	"fmt"
 	"log/slog"
 
@@ -13,13 +12,13 @@ import (
 	"github.com/xmdhs/authlib-skin/handle"
 )
 
-func NewRoute(l *slog.Logger, q mysql.Querier, v *validator.Validate, db *sql.DB, snow *snowflake.Node, c config.Config) (*httprouter.Router, error) {
+func NewRoute(l *slog.Logger, q mysql.QuerierWithTx, v *validator.Validate, snow *snowflake.Node, c config.Config) (*httprouter.Router, error) {
 	r := httprouter.New()
 	err := newYggdrasil(r)
 	if err != nil {
 		return nil, fmt.Errorf("NewRoute: %w", err)
 	}
-	err = newSkinApi(r, l, q, v, db, snow, c)
+	err = newSkinApi(r, l, q, v, snow, c)
 	if err != nil {
 		return nil, fmt.Errorf("NewRoute: %w", err)
 	}
@@ -31,7 +30,7 @@ func newYggdrasil(r *httprouter.Router) error {
 	return nil
 }
 
-func newSkinApi(r *httprouter.Router, l *slog.Logger, q mysql.Querier, v *validator.Validate, db *sql.DB, snow *snowflake.Node, c config.Config) error {
-	r.PUT("/api/v1/user/reg", handle.Reg(l, q, v, db, snow, c))
+func newSkinApi(r *httprouter.Router, l *slog.Logger, q mysql.QuerierWithTx, v *validator.Validate, snow *snowflake.Node, c config.Config) error {
+	r.PUT("/api/v1/user/reg", handle.Reg(l, q, v, snow, c))
 	return nil
 }

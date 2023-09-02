@@ -23,7 +23,7 @@ var (
 	ErrExitsName = errors.New("用户名已存在")
 )
 
-func Reg(ctx context.Context, u model.User, q mysql.Querier, db *sql.DB, snow *snowflake.Node,
+func Reg(ctx context.Context, u model.User, q mysql.QuerierWithTx, snow *snowflake.Node,
 	c config.Config,
 ) error {
 	ou, err := q.GetUserByEmail(ctx, u.Email)
@@ -33,9 +33,7 @@ func Reg(ctx context.Context, u model.User, q mysql.Querier, db *sql.DB, snow *s
 	if ou.Email != "" {
 		return fmt.Errorf("Reg: %w", ErrExistUser)
 	}
-	err = utils.WithTx(ctx, &sql.TxOptions{
-		Isolation: sql.LevelReadCommitted,
-	}, q, db, func(q mysql.Querier) error {
+	err = q.Tx(ctx, func(q mysql.Querier) error {
 		p, s := utils.Argon2ID(u.Password)
 		userID := snow.Generate().Int64()
 		_, err := q.CreateUser(ctx, mysql.CreateUserParams{
