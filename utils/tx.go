@@ -14,7 +14,6 @@ func WithTx(ctx context.Context, opts *sql.TxOptions, q mysql.Querier, db *sql.D
 	})
 	var tx *sql.Tx
 	if ok {
-		fmt.Println("事务开启") // remove me
 		var err error
 		tx, err = db.BeginTx(ctx, opts)
 		if err != nil {

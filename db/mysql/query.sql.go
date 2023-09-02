@@ -9,16 +9,7 @@ import (
 )
 
 const createUser = `-- name: CreateUser :execresult
-REPLACE INTO user (
-  id,
-  email,
-  password,
-  salt,
-  state,
-  reg_time
-)
-VALUES
-  (?, ?, ?, ?, ?, ?)
+ REPLACE INTO user ( id, email, password, salt, state, reg_time ) VALUES (?, ?, ?, ?, ?, ?)
 `
 
 type CreateUserParams struct {
@@ -42,9 +33,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (sql.Res
 }
 
 const createUserProfile = `-- name: CreateUserProfile :execresult
-REPLACE INTO ` + "`" + `user_profile` + "`" + ` (` + "`" + `user_id` + "`" + `, ` + "`" + `name` + "`" + `, ` + "`" + `uuid` + "`" + `)
-VALUES
-  (?, ?, ?)
+ REPLACE INTO ` + "`" + `user_profile` + "`" + ` (` + "`" + `user_id` + "`" + `, ` + "`" + `name` + "`" + `, ` + "`" + `uuid` + "`" + `) VALUES (?, ?, ?)
 `
 
 type CreateUserProfileParams struct {
@@ -58,10 +47,9 @@ func (q *Queries) CreateUserProfile(ctx context.Context, arg CreateUserProfilePa
 }
 
 const deleteUser = `-- name: DeleteUser :exec
-DELETE FROM
-  user
-WHERE
-  id = ?
+ DELETE
+FROM user
+WHERE id = ?
 `
 
 func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
@@ -70,14 +58,10 @@ func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
 }
 
 const getUser = `-- name: GetUser :one
-SELECT
-  id, email, password, salt, state, reg_time
-FROM
-  user
-WHERE
-  id = ?
-LIMIT
-  1
+SELECT  id, email, password, salt, state, reg_time
+FROM user
+WHERE id = ?
+LIMIT 1
 `
 
 func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
@@ -95,14 +79,10 @@ func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT
-  id, email, password, salt, state, reg_time
-FROM
-  user
-WHERE
-  email = ?
-LIMIT
-  1
+SELECT  id, email, password, salt, state, reg_time
+FROM user
+WHERE email = ?
+LIMIT 1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
@@ -119,13 +99,24 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 	return i, err
 }
 
+const getUserProfileByName = `-- name: GetUserProfileByName :one
+SELECT  user_id, name, uuid
+FROM ` + "`" + `user_profile` + "`" + `
+WHERE ` + "`" + `name` + "`" + ` = ?
+LIMIT 1
+`
+
+func (q *Queries) GetUserProfileByName(ctx context.Context, name string) (UserProfile, error) {
+	row := q.queryRow(ctx, q.getUserProfileByNameStmt, getUserProfileByName, name)
+	var i UserProfile
+	err := row.Scan(&i.UserID, &i.Name, &i.Uuid)
+	return i, err
+}
+
 const listUser = `-- name: ListUser :many
-SELECT
-  id, email, password, salt, state, reg_time
-FROM
-  user
-ORDER BY
-  reg_time
+SELECT  id, email, password, salt, state, reg_time
+FROM user
+ORDER BY reg_time
 `
 
 func (q *Queries) ListUser(ctx context.Context) ([]User, error) {

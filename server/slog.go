@@ -32,11 +32,18 @@ type warpSlogHandle struct {
 }
 
 func (w *warpSlogHandle) Handle(ctx context.Context, r slog.Record) error {
-	if w.Enabled(ctx, slog.LevelDebug) {
+	if w.Enabled(ctx, slog.LevelInfo) {
 		ri := getFromCtx(ctx)
 		if ri != nil {
 			r.AddAttrs(slog.String("ip", ri.IP), slog.String("url", ri.URL), slog.Uint64("trackID", ri.TrackId))
 		}
 	}
 	return w.Handler.Handle(ctx, r)
+}
+
+func NewSlog(h slog.Handler) *slog.Logger {
+	l := slog.New(&warpSlogHandle{
+		Handler: h,
+	})
+	return l
 }

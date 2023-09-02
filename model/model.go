@@ -8,6 +8,6 @@ type API[T any] struct {
 
 type User struct {
 	Email    string `validate:"required,email"`
-	Password string `validate:"required,sha256"`
+	Password string `validate:"required,min=6,max=50"`
 	Name     string `validate:"required,min=3,max=16"`
 }

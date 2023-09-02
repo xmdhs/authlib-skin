@@ -2,6 +2,7 @@ package handle
 
 import (
 	"database/sql"
+	"errors"
 	"log/slog"
 	"net/http"
 
@@ -27,6 +28,11 @@ func Reg(l *slog.Logger, q mysql.Querier, v *validator.Validate, db *sql.DB, sno
 		}
 		err = service.Reg(ctx, u, q, db, snow, c)
 		if err != nil {
+			if errors.Is(err, service.ErrExistUser) {
+				l.DebugContext(ctx, err.Error())
+				handleError(ctx, w, err.Error(), model.ErrExistUser, 400)
+				return
+			}
 			l.WarnContext(ctx, err.Error())
 			handleError(ctx, w, err.Error(), model.ErrService, 500)
 			return

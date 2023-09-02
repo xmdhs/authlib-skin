@@ -32,3 +32,5 @@ CREATE TABLE IF NOT EXISTS `user_profile` (
     name VARCHAR(20) NOT NULL,
     uuid text NOT NULL
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS name_index ON user_profile (name);

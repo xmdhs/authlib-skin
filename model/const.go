@@ -6,4 +6,5 @@ const (
 	OK APIStatus = iota
 	ErrInput
 	ErrService
+	ErrExistUser
 )
