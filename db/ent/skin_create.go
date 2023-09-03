@@ -38,15 +38,15 @@ func (sc *SkinCreate) SetVariant(s string) *SkinCreate {
 	return sc
 }
 
-// SetUserID sets the "user" edge to the User entity by ID.
-func (sc *SkinCreate) SetUserID(id int) *SkinCreate {
-	sc.mutation.SetUserID(id)
+// SetCreatedUserID sets the "created_user" edge to the User entity by ID.
+func (sc *SkinCreate) SetCreatedUserID(id int) *SkinCreate {
+	sc.mutation.SetCreatedUserID(id)
 	return sc
 }
 
-// SetUser sets the "user" edge to the User entity.
-func (sc *SkinCreate) SetUser(u *User) *SkinCreate {
-	return sc.SetUserID(u.ID)
+// SetCreatedUser sets the "created_user" edge to the User entity.
+func (sc *SkinCreate) SetCreatedUser(u *User) *SkinCreate {
+	return sc.SetCreatedUserID(u.ID)
 }
 
 // Mutation returns the SkinMutation object of the builder.
@@ -92,8 +92,8 @@ func (sc *SkinCreate) check() error {
 	if _, ok := sc.mutation.Variant(); !ok {
 		return &ValidationError{Name: "variant", err: errors.New(`ent: missing required field "Skin.variant"`)}
 	}
-	if _, ok := sc.mutation.UserID(); !ok {
-		return &ValidationError{Name: "user", err: errors.New(`ent: missing required edge "Skin.user"`)}
+	if _, ok := sc.mutation.CreatedUserID(); !ok {
+		return &ValidationError{Name: "created_user", err: errors.New(`ent: missing required edge "Skin.created_user"`)}
 	}
 	return nil
 }
@@ -133,12 +133,12 @@ func (sc *SkinCreate) createSpec() (*Skin, *sqlgraph.CreateSpec) {
 		_spec.SetField(skin.FieldVariant, field.TypeString, value)
 		_node.Variant = value
 	}
-	if nodes := sc.mutation.UserIDs(); len(nodes) > 0 {
+	if nodes := sc.mutation.CreatedUserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   skin.UserTable,
-			Columns: []string{skin.UserColumn},
+			Table:   skin.CreatedUserTable,
+			Columns: []string{skin.CreatedUserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
@@ -147,7 +147,7 @@ func (sc *SkinCreate) createSpec() (*Skin, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.skin_user = &nodes[0]
+		_node.skin_created_user = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

@@ -19,13 +19,13 @@ import (
 // SkinQuery is the builder for querying Skin entities.
 type SkinQuery struct {
 	config
-	ctx        *QueryContext
-	order      []skin.OrderOption
-	inters     []Interceptor
-	predicates []predicate.Skin
-	withUser   *UserQuery
-	withFKs    bool
-	modifiers  []func(*sql.Selector)
+	ctx             *QueryContext
+	order           []skin.OrderOption
+	inters          []Interceptor
+	predicates      []predicate.Skin
+	withCreatedUser *UserQuery
+	withFKs         bool
+	modifiers       []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -62,8 +62,8 @@ func (sq *SkinQuery) Order(o ...skin.OrderOption) *SkinQuery {
 	return sq
 }
 
-// QueryUser chains the current query on the "user" edge.
-func (sq *SkinQuery) QueryUser() *UserQuery {
+// QueryCreatedUser chains the current query on the "created_user" edge.
+func (sq *SkinQuery) QueryCreatedUser() *UserQuery {
 	query := (&UserClient{config: sq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := sq.prepareQuery(ctx); err != nil {
@@ -76,7 +76,7 @@ func (sq *SkinQuery) QueryUser() *UserQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(skin.Table, skin.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, skin.UserTable, skin.UserColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, skin.CreatedUserTable, skin.CreatedUserColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(sq.driver.Dialect(), step)
 		return fromU, nil
@@ -271,26 +271,26 @@ func (sq *SkinQuery) Clone() *SkinQuery {
 		return nil
 	}
 	return &SkinQuery{
-		config:     sq.config,
-		ctx:        sq.ctx.Clone(),
-		order:      append([]skin.OrderOption{}, sq.order...),
-		inters:     append([]Interceptor{}, sq.inters...),
-		predicates: append([]predicate.Skin{}, sq.predicates...),
-		withUser:   sq.withUser.Clone(),
+		config:          sq.config,
+		ctx:             sq.ctx.Clone(),
+		order:           append([]skin.OrderOption{}, sq.order...),
+		inters:          append([]Interceptor{}, sq.inters...),
+		predicates:      append([]predicate.Skin{}, sq.predicates...),
+		withCreatedUser: sq.withCreatedUser.Clone(),
 		// clone intermediate query.
 		sql:  sq.sql.Clone(),
 		path: sq.path,
 	}
 }
 
-// WithUser tells the query-builder to eager-load the nodes that are connected to
-// the "user" edge. The optional arguments are used to configure the query builder of the edge.
-func (sq *SkinQuery) WithUser(opts ...func(*UserQuery)) *SkinQuery {
+// WithCreatedUser tells the query-builder to eager-load the nodes that are connected to
+// the "created_user" edge. The optional arguments are used to configure the query builder of the edge.
+func (sq *SkinQuery) WithCreatedUser(opts ...func(*UserQuery)) *SkinQuery {
 	query := (&UserClient{config: sq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	sq.withUser = query
+	sq.withCreatedUser = query
 	return sq
 }
 
@@ -374,10 +374,10 @@ func (sq *SkinQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Skin, e
 		withFKs     = sq.withFKs
 		_spec       = sq.querySpec()
 		loadedTypes = [1]bool{
-			sq.withUser != nil,
+			sq.withCreatedUser != nil,
 		}
 	)
-	if sq.withUser != nil {
+	if sq.withCreatedUser != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -404,23 +404,23 @@ func (sq *SkinQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Skin, e
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := sq.withUser; query != nil {
-		if err := sq.loadUser(ctx, query, nodes, nil,
-			func(n *Skin, e *User) { n.Edges.User = e }); err != nil {
+	if query := sq.withCreatedUser; query != nil {
+		if err := sq.loadCreatedUser(ctx, query, nodes, nil,
+			func(n *Skin, e *User) { n.Edges.CreatedUser = e }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (sq *SkinQuery) loadUser(ctx context.Context, query *UserQuery, nodes []*Skin, init func(*Skin), assign func(*Skin, *User)) error {
+func (sq *SkinQuery) loadCreatedUser(ctx context.Context, query *UserQuery, nodes []*Skin, init func(*Skin), assign func(*Skin, *User)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*Skin)
 	for i := range nodes {
-		if nodes[i].skin_user == nil {
+		if nodes[i].skin_created_user == nil {
 			continue
 		}
-		fk := *nodes[i].skin_user
+		fk := *nodes[i].skin_created_user
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -437,7 +437,7 @@ func (sq *SkinQuery) loadUser(ctx context.Context, query *UserQuery, nodes []*Sk
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "skin_user" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "skin_created_user" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)

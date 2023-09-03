@@ -4,6 +4,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 )
 
 // Skin holds the schema definition for the Skin entity.
@@ -23,6 +24,12 @@ func (Skin) Fields() []ent.Field {
 // Edges of the Skin.
 func (Skin) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("user", User.Type).Unique().Required(),
+		edge.To("created_user", User.Type).Unique().Required(),
+	}
+}
+
+func (Skin) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("skin_hash"),
 	}
 }

@@ -24,6 +24,7 @@ func main() {
 		},
 		Node:  0,
 		Epoch: 1693645718534,
+		Debug: true,
 	}
 	s, c, err := server.InitializeRoute(ctx, config)
 	if err != nil {

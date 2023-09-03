@@ -18,17 +18,17 @@ const (
 	FieldType = "type"
 	// FieldVariant holds the string denoting the variant field in the database.
 	FieldVariant = "variant"
-	// EdgeUser holds the string denoting the user edge name in mutations.
-	EdgeUser = "user"
+	// EdgeCreatedUser holds the string denoting the created_user edge name in mutations.
+	EdgeCreatedUser = "created_user"
 	// Table holds the table name of the skin in the database.
 	Table = "skins"
-	// UserTable is the table that holds the user relation/edge.
-	UserTable = "skins"
-	// UserInverseTable is the table name for the User entity.
+	// CreatedUserTable is the table that holds the created_user relation/edge.
+	CreatedUserTable = "skins"
+	// CreatedUserInverseTable is the table name for the User entity.
 	// It exists in this package in order to avoid circular dependency with the "user" package.
-	UserInverseTable = "users"
-	// UserColumn is the table column denoting the user relation/edge.
-	UserColumn = "skin_user"
+	CreatedUserInverseTable = "users"
+	// CreatedUserColumn is the table column denoting the created_user relation/edge.
+	CreatedUserColumn = "skin_created_user"
 )
 
 // Columns holds all SQL columns for skin fields.
@@ -42,7 +42,7 @@ var Columns = []string{
 // ForeignKeys holds the SQL foreign-keys that are owned by the "skins"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
-	"skin_user",
+	"skin_created_user",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -83,16 +83,16 @@ func ByVariant(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldVariant, opts...).ToFunc()
 }
 
-// ByUserField orders the results by user field.
-func ByUserField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByCreatedUserField orders the results by created_user field.
+func ByCreatedUserField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newUserStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborTerms(s, newCreatedUserStep(), sql.OrderByField(field, opts...))
 	}
 }
-func newUserStep() *sqlgraph.Step {
+func newCreatedUserStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(UserInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, false, UserTable, UserColumn),
+		sqlgraph.To(CreatedUserInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, false, CreatedUserTable, CreatedUserColumn),
 	)
 }

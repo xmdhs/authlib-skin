@@ -15,6 +15,7 @@ import (
 	"github.com/xmdhs/authlib-skin/db/ent/skin"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
+	"github.com/xmdhs/authlib-skin/db/ent/usertoken"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -78,6 +79,7 @@ func checkColumn(table, column string) error {
 			skin.Table:        skin.ValidColumn,
 			user.Table:        user.ValidColumn,
 			userprofile.Table: userprofile.ValidColumn,
+			usertoken.Table:   usertoken.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

@@ -238,21 +238,21 @@ func VariantContainsFold(v string) predicate.Skin {
 	return predicate.Skin(sql.FieldContainsFold(FieldVariant, v))
 }
 
-// HasUser applies the HasEdge predicate on the "user" edge.
-func HasUser() predicate.Skin {
+// HasCreatedUser applies the HasEdge predicate on the "created_user" edge.
+func HasCreatedUser() predicate.Skin {
 	return predicate.Skin(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, UserTable, UserColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, CreatedUserTable, CreatedUserColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasUserWith applies the HasEdge predicate on the "user" edge with a given conditions (other predicates).
-func HasUserWith(preds ...predicate.User) predicate.Skin {
+// HasCreatedUserWith applies the HasEdge predicate on the "created_user" edge with a given conditions (other predicates).
+func HasCreatedUserWith(preds ...predicate.User) predicate.Skin {
 	return predicate.Skin(func(s *sql.Selector) {
-		step := newUserStep()
+		step := newCreatedUserStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

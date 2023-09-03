@@ -5,6 +5,7 @@ import (
 	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 )
 
 // User holds the schema definition for the User entity.
@@ -26,7 +27,15 @@ func (User) Fields() []ent.Field {
 // Edges of the User.
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("skin", Skin.Type).Ref("user").Annotations(entsql.OnDelete(entsql.Cascade)),
+		edge.From("created_skin", Skin.Type).Ref("created_user").Annotations(entsql.OnDelete(entsql.Cascade)),
 		edge.To("profile", UserProfile.Type).Unique().Annotations(entsql.OnDelete(entsql.Cascade)),
+		edge.To("token", UserToken.Type).Unique().Annotations(entsql.OnDelete(entsql.Cascade)),
+		edge.To("skin", Skin.Type).Unique(),
+	}
+}
+
+func (User) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("email").Unique(),
 	}
 }

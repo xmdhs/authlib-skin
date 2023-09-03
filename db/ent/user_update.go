@@ -14,6 +14,7 @@ import (
 	"github.com/xmdhs/authlib-skin/db/ent/skin"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
+	"github.com/xmdhs/authlib-skin/db/ent/usertoken"
 )
 
 // UserUpdate is the builder for updating User entities.
@@ -73,19 +74,19 @@ func (uu *UserUpdate) AddRegTime(i int64) *UserUpdate {
 	return uu
 }
 
-// AddSkinIDs adds the "skin" edge to the Skin entity by IDs.
-func (uu *UserUpdate) AddSkinIDs(ids ...int) *UserUpdate {
-	uu.mutation.AddSkinIDs(ids...)
+// AddCreatedSkinIDs adds the "created_skin" edge to the Skin entity by IDs.
+func (uu *UserUpdate) AddCreatedSkinIDs(ids ...int) *UserUpdate {
+	uu.mutation.AddCreatedSkinIDs(ids...)
 	return uu
 }
 
-// AddSkin adds the "skin" edges to the Skin entity.
-func (uu *UserUpdate) AddSkin(s ...*Skin) *UserUpdate {
+// AddCreatedSkin adds the "created_skin" edges to the Skin entity.
+func (uu *UserUpdate) AddCreatedSkin(s ...*Skin) *UserUpdate {
 	ids := make([]int, len(s))
 	for i := range s {
 		ids[i] = s[i].ID
 	}
-	return uu.AddSkinIDs(ids...)
+	return uu.AddCreatedSkinIDs(ids...)
 }
 
 // SetProfileID sets the "profile" edge to the UserProfile entity by ID.
@@ -107,35 +108,85 @@ func (uu *UserUpdate) SetProfile(u *UserProfile) *UserUpdate {
 	return uu.SetProfileID(u.ID)
 }
 
+// SetTokenID sets the "token" edge to the UserToken entity by ID.
+func (uu *UserUpdate) SetTokenID(id int) *UserUpdate {
+	uu.mutation.SetTokenID(id)
+	return uu
+}
+
+// SetNillableTokenID sets the "token" edge to the UserToken entity by ID if the given value is not nil.
+func (uu *UserUpdate) SetNillableTokenID(id *int) *UserUpdate {
+	if id != nil {
+		uu = uu.SetTokenID(*id)
+	}
+	return uu
+}
+
+// SetToken sets the "token" edge to the UserToken entity.
+func (uu *UserUpdate) SetToken(u *UserToken) *UserUpdate {
+	return uu.SetTokenID(u.ID)
+}
+
+// SetSkinID sets the "skin" edge to the Skin entity by ID.
+func (uu *UserUpdate) SetSkinID(id int) *UserUpdate {
+	uu.mutation.SetSkinID(id)
+	return uu
+}
+
+// SetNillableSkinID sets the "skin" edge to the Skin entity by ID if the given value is not nil.
+func (uu *UserUpdate) SetNillableSkinID(id *int) *UserUpdate {
+	if id != nil {
+		uu = uu.SetSkinID(*id)
+	}
+	return uu
+}
+
+// SetSkin sets the "skin" edge to the Skin entity.
+func (uu *UserUpdate) SetSkin(s *Skin) *UserUpdate {
+	return uu.SetSkinID(s.ID)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
 }
 
-// ClearSkin clears all "skin" edges to the Skin entity.
-func (uu *UserUpdate) ClearSkin() *UserUpdate {
-	uu.mutation.ClearSkin()
+// ClearCreatedSkin clears all "created_skin" edges to the Skin entity.
+func (uu *UserUpdate) ClearCreatedSkin() *UserUpdate {
+	uu.mutation.ClearCreatedSkin()
 	return uu
 }
 
-// RemoveSkinIDs removes the "skin" edge to Skin entities by IDs.
-func (uu *UserUpdate) RemoveSkinIDs(ids ...int) *UserUpdate {
-	uu.mutation.RemoveSkinIDs(ids...)
+// RemoveCreatedSkinIDs removes the "created_skin" edge to Skin entities by IDs.
+func (uu *UserUpdate) RemoveCreatedSkinIDs(ids ...int) *UserUpdate {
+	uu.mutation.RemoveCreatedSkinIDs(ids...)
 	return uu
 }
 
-// RemoveSkin removes "skin" edges to Skin entities.
-func (uu *UserUpdate) RemoveSkin(s ...*Skin) *UserUpdate {
+// RemoveCreatedSkin removes "created_skin" edges to Skin entities.
+func (uu *UserUpdate) RemoveCreatedSkin(s ...*Skin) *UserUpdate {
 	ids := make([]int, len(s))
 	for i := range s {
 		ids[i] = s[i].ID
 	}
-	return uu.RemoveSkinIDs(ids...)
+	return uu.RemoveCreatedSkinIDs(ids...)
 }
 
 // ClearProfile clears the "profile" edge to the UserProfile entity.
 func (uu *UserUpdate) ClearProfile() *UserUpdate {
 	uu.mutation.ClearProfile()
+	return uu
+}
+
+// ClearToken clears the "token" edge to the UserToken entity.
+func (uu *UserUpdate) ClearToken() *UserUpdate {
+	uu.mutation.ClearToken()
+	return uu
+}
+
+// ClearSkin clears the "skin" edge to the Skin entity.
+func (uu *UserUpdate) ClearSkin() *UserUpdate {
+	uu.mutation.ClearSkin()
 	return uu
 }
 
@@ -196,12 +247,12 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := uu.mutation.AddedRegTime(); ok {
 		_spec.AddField(user.FieldRegTime, field.TypeInt64, value)
 	}
-	if uu.mutation.SkinCleared() {
+	if uu.mutation.CreatedSkinCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: true,
-			Table:   user.SkinTable,
-			Columns: []string{user.SkinColumn},
+			Table:   user.CreatedSkinTable,
+			Columns: []string{user.CreatedSkinColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(skin.FieldID, field.TypeInt),
@@ -209,12 +260,12 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uu.mutation.RemovedSkinIDs(); len(nodes) > 0 && !uu.mutation.SkinCleared() {
+	if nodes := uu.mutation.RemovedCreatedSkinIDs(); len(nodes) > 0 && !uu.mutation.CreatedSkinCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: true,
-			Table:   user.SkinTable,
-			Columns: []string{user.SkinColumn},
+			Table:   user.CreatedSkinTable,
+			Columns: []string{user.CreatedSkinColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(skin.FieldID, field.TypeInt),
@@ -225,12 +276,12 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uu.mutation.SkinIDs(); len(nodes) > 0 {
+	if nodes := uu.mutation.CreatedSkinIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: true,
-			Table:   user.SkinTable,
-			Columns: []string{user.SkinColumn},
+			Table:   user.CreatedSkinTable,
+			Columns: []string{user.CreatedSkinColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(skin.FieldID, field.TypeInt),
@@ -263,6 +314,64 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(userprofile.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uu.mutation.TokenCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   user.TokenTable,
+			Columns: []string{user.TokenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usertoken.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.TokenIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   user.TokenTable,
+			Columns: []string{user.TokenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usertoken.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uu.mutation.SkinCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   user.SkinTable,
+			Columns: []string{user.SkinColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(skin.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.SkinIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   user.SkinTable,
+			Columns: []string{user.SkinColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(skin.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -334,19 +443,19 @@ func (uuo *UserUpdateOne) AddRegTime(i int64) *UserUpdateOne {
 	return uuo
 }
 
-// AddSkinIDs adds the "skin" edge to the Skin entity by IDs.
-func (uuo *UserUpdateOne) AddSkinIDs(ids ...int) *UserUpdateOne {
-	uuo.mutation.AddSkinIDs(ids...)
+// AddCreatedSkinIDs adds the "created_skin" edge to the Skin entity by IDs.
+func (uuo *UserUpdateOne) AddCreatedSkinIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.AddCreatedSkinIDs(ids...)
 	return uuo
 }
 
-// AddSkin adds the "skin" edges to the Skin entity.
-func (uuo *UserUpdateOne) AddSkin(s ...*Skin) *UserUpdateOne {
+// AddCreatedSkin adds the "created_skin" edges to the Skin entity.
+func (uuo *UserUpdateOne) AddCreatedSkin(s ...*Skin) *UserUpdateOne {
 	ids := make([]int, len(s))
 	for i := range s {
 		ids[i] = s[i].ID
 	}
-	return uuo.AddSkinIDs(ids...)
+	return uuo.AddCreatedSkinIDs(ids...)
 }
 
 // SetProfileID sets the "profile" edge to the UserProfile entity by ID.
@@ -368,35 +477,85 @@ func (uuo *UserUpdateOne) SetProfile(u *UserProfile) *UserUpdateOne {
 	return uuo.SetProfileID(u.ID)
 }
 
+// SetTokenID sets the "token" edge to the UserToken entity by ID.
+func (uuo *UserUpdateOne) SetTokenID(id int) *UserUpdateOne {
+	uuo.mutation.SetTokenID(id)
+	return uuo
+}
+
+// SetNillableTokenID sets the "token" edge to the UserToken entity by ID if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableTokenID(id *int) *UserUpdateOne {
+	if id != nil {
+		uuo = uuo.SetTokenID(*id)
+	}
+	return uuo
+}
+
+// SetToken sets the "token" edge to the UserToken entity.
+func (uuo *UserUpdateOne) SetToken(u *UserToken) *UserUpdateOne {
+	return uuo.SetTokenID(u.ID)
+}
+
+// SetSkinID sets the "skin" edge to the Skin entity by ID.
+func (uuo *UserUpdateOne) SetSkinID(id int) *UserUpdateOne {
+	uuo.mutation.SetSkinID(id)
+	return uuo
+}
+
+// SetNillableSkinID sets the "skin" edge to the Skin entity by ID if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableSkinID(id *int) *UserUpdateOne {
+	if id != nil {
+		uuo = uuo.SetSkinID(*id)
+	}
+	return uuo
+}
+
+// SetSkin sets the "skin" edge to the Skin entity.
+func (uuo *UserUpdateOne) SetSkin(s *Skin) *UserUpdateOne {
+	return uuo.SetSkinID(s.ID)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
 }
 
-// ClearSkin clears all "skin" edges to the Skin entity.
-func (uuo *UserUpdateOne) ClearSkin() *UserUpdateOne {
-	uuo.mutation.ClearSkin()
+// ClearCreatedSkin clears all "created_skin" edges to the Skin entity.
+func (uuo *UserUpdateOne) ClearCreatedSkin() *UserUpdateOne {
+	uuo.mutation.ClearCreatedSkin()
 	return uuo
 }
 
-// RemoveSkinIDs removes the "skin" edge to Skin entities by IDs.
-func (uuo *UserUpdateOne) RemoveSkinIDs(ids ...int) *UserUpdateOne {
-	uuo.mutation.RemoveSkinIDs(ids...)
+// RemoveCreatedSkinIDs removes the "created_skin" edge to Skin entities by IDs.
+func (uuo *UserUpdateOne) RemoveCreatedSkinIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.RemoveCreatedSkinIDs(ids...)
 	return uuo
 }
 
-// RemoveSkin removes "skin" edges to Skin entities.
-func (uuo *UserUpdateOne) RemoveSkin(s ...*Skin) *UserUpdateOne {
+// RemoveCreatedSkin removes "created_skin" edges to Skin entities.
+func (uuo *UserUpdateOne) RemoveCreatedSkin(s ...*Skin) *UserUpdateOne {
 	ids := make([]int, len(s))
 	for i := range s {
 		ids[i] = s[i].ID
 	}
-	return uuo.RemoveSkinIDs(ids...)
+	return uuo.RemoveCreatedSkinIDs(ids...)
 }
 
 // ClearProfile clears the "profile" edge to the UserProfile entity.
 func (uuo *UserUpdateOne) ClearProfile() *UserUpdateOne {
 	uuo.mutation.ClearProfile()
+	return uuo
+}
+
+// ClearToken clears the "token" edge to the UserToken entity.
+func (uuo *UserUpdateOne) ClearToken() *UserUpdateOne {
+	uuo.mutation.ClearToken()
+	return uuo
+}
+
+// ClearSkin clears the "skin" edge to the Skin entity.
+func (uuo *UserUpdateOne) ClearSkin() *UserUpdateOne {
+	uuo.mutation.ClearSkin()
 	return uuo
 }
 
@@ -487,12 +646,12 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	if value, ok := uuo.mutation.AddedRegTime(); ok {
 		_spec.AddField(user.FieldRegTime, field.TypeInt64, value)
 	}
-	if uuo.mutation.SkinCleared() {
+	if uuo.mutation.CreatedSkinCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: true,
-			Table:   user.SkinTable,
-			Columns: []string{user.SkinColumn},
+			Table:   user.CreatedSkinTable,
+			Columns: []string{user.CreatedSkinColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(skin.FieldID, field.TypeInt),
@@ -500,12 +659,12 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uuo.mutation.RemovedSkinIDs(); len(nodes) > 0 && !uuo.mutation.SkinCleared() {
+	if nodes := uuo.mutation.RemovedCreatedSkinIDs(); len(nodes) > 0 && !uuo.mutation.CreatedSkinCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: true,
-			Table:   user.SkinTable,
-			Columns: []string{user.SkinColumn},
+			Table:   user.CreatedSkinTable,
+			Columns: []string{user.CreatedSkinColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(skin.FieldID, field.TypeInt),
@@ -516,12 +675,12 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uuo.mutation.SkinIDs(); len(nodes) > 0 {
+	if nodes := uuo.mutation.CreatedSkinIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: true,
-			Table:   user.SkinTable,
-			Columns: []string{user.SkinColumn},
+			Table:   user.CreatedSkinTable,
+			Columns: []string{user.CreatedSkinColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(skin.FieldID, field.TypeInt),
@@ -554,6 +713,64 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(userprofile.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.TokenCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   user.TokenTable,
+			Columns: []string{user.TokenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usertoken.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.TokenIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   user.TokenTable,
+			Columns: []string{user.TokenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usertoken.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.SkinCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   user.SkinTable,
+			Columns: []string{user.SkinColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(skin.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.SkinIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   user.SkinTable,
+			Columns: []string{user.SkinColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(skin.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

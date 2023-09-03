@@ -17,6 +17,7 @@ import (
 	"github.com/xmdhs/authlib-skin/db/ent/skin"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
+	"github.com/xmdhs/authlib-skin/db/ent/usertoken"
 )
 
 // Client is the client that holds all ent builders.
@@ -30,6 +31,8 @@ type Client struct {
 	User *UserClient
 	// UserProfile is the client for interacting with the UserProfile builders.
 	UserProfile *UserProfileClient
+	// UserToken is the client for interacting with the UserToken builders.
+	UserToken *UserTokenClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -46,6 +49,7 @@ func (c *Client) init() {
 	c.Skin = NewSkinClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.UserProfile = NewUserProfileClient(c.config)
+	c.UserToken = NewUserTokenClient(c.config)
 }
 
 type (
@@ -131,6 +135,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Skin:        NewSkinClient(cfg),
 		User:        NewUserClient(cfg),
 		UserProfile: NewUserProfileClient(cfg),
+		UserToken:   NewUserTokenClient(cfg),
 	}, nil
 }
 
@@ -153,6 +158,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Skin:        NewSkinClient(cfg),
 		User:        NewUserClient(cfg),
 		UserProfile: NewUserProfileClient(cfg),
+		UserToken:   NewUserTokenClient(cfg),
 	}, nil
 }
 
@@ -184,6 +190,7 @@ func (c *Client) Use(hooks ...Hook) {
 	c.Skin.Use(hooks...)
 	c.User.Use(hooks...)
 	c.UserProfile.Use(hooks...)
+	c.UserToken.Use(hooks...)
 }
 
 // Intercept adds the query interceptors to all the entity clients.
@@ -192,6 +199,7 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 	c.Skin.Intercept(interceptors...)
 	c.User.Intercept(interceptors...)
 	c.UserProfile.Intercept(interceptors...)
+	c.UserToken.Intercept(interceptors...)
 }
 
 // Mutate implements the ent.Mutator interface.
@@ -203,6 +211,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.User.mutate(ctx, m)
 	case *UserProfileMutation:
 		return c.UserProfile.mutate(ctx, m)
+	case *UserTokenMutation:
+		return c.UserToken.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -301,15 +311,15 @@ func (c *SkinClient) GetX(ctx context.Context, id int) *Skin {
 	return obj
 }
 
-// QueryUser queries the user edge of a Skin.
-func (c *SkinClient) QueryUser(s *Skin) *UserQuery {
+// QueryCreatedUser queries the created_user edge of a Skin.
+func (c *SkinClient) QueryCreatedUser(s *Skin) *UserQuery {
 	query := (&UserClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := s.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(skin.Table, skin.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, skin.UserTable, skin.UserColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, skin.CreatedUserTable, skin.CreatedUserColumn),
 		)
 		fromV = sqlgraph.Neighbors(s.driver.Dialect(), step)
 		return fromV, nil
@@ -435,15 +445,15 @@ func (c *UserClient) GetX(ctx context.Context, id int) *User {
 	return obj
 }
 
-// QuerySkin queries the skin edge of a User.
-func (c *UserClient) QuerySkin(u *User) *SkinQuery {
+// QueryCreatedSkin queries the created_skin edge of a User.
+func (c *UserClient) QueryCreatedSkin(u *User) *SkinQuery {
 	query := (&SkinClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := u.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(skin.Table, skin.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, true, user.SkinTable, user.SkinColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, user.CreatedSkinTable, user.CreatedSkinColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil
@@ -460,6 +470,38 @@ func (c *UserClient) QueryProfile(u *User) *UserProfileQuery {
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(userprofile.Table, userprofile.FieldID),
 			sqlgraph.Edge(sqlgraph.O2O, false, user.ProfileTable, user.ProfileColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryToken queries the token edge of a User.
+func (c *UserClient) QueryToken(u *User) *UserTokenQuery {
+	query := (&UserTokenClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(usertoken.Table, usertoken.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, user.TokenTable, user.TokenColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QuerySkin queries the skin edge of a User.
+func (c *UserClient) QuerySkin(u *User) *SkinQuery {
+	query := (&SkinClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(skin.Table, skin.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, user.SkinTable, user.SkinColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil
@@ -626,12 +668,130 @@ func (c *UserProfileClient) mutate(ctx context.Context, m *UserProfileMutation) 
 	}
 }
 
+// UserTokenClient is a client for the UserToken schema.
+type UserTokenClient struct {
+	config
+}
+
+// NewUserTokenClient returns a client for the UserToken from the given config.
+func NewUserTokenClient(c config) *UserTokenClient {
+	return &UserTokenClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `usertoken.Hooks(f(g(h())))`.
+func (c *UserTokenClient) Use(hooks ...Hook) {
+	c.hooks.UserToken = append(c.hooks.UserToken, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `usertoken.Intercept(f(g(h())))`.
+func (c *UserTokenClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UserToken = append(c.inters.UserToken, interceptors...)
+}
+
+// Create returns a builder for creating a UserToken entity.
+func (c *UserTokenClient) Create() *UserTokenCreate {
+	mutation := newUserTokenMutation(c.config, OpCreate)
+	return &UserTokenCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UserToken entities.
+func (c *UserTokenClient) CreateBulk(builders ...*UserTokenCreate) *UserTokenCreateBulk {
+	return &UserTokenCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UserToken.
+func (c *UserTokenClient) Update() *UserTokenUpdate {
+	mutation := newUserTokenMutation(c.config, OpUpdate)
+	return &UserTokenUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UserTokenClient) UpdateOne(ut *UserToken) *UserTokenUpdateOne {
+	mutation := newUserTokenMutation(c.config, OpUpdateOne, withUserToken(ut))
+	return &UserTokenUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UserTokenClient) UpdateOneID(id int) *UserTokenUpdateOne {
+	mutation := newUserTokenMutation(c.config, OpUpdateOne, withUserTokenID(id))
+	return &UserTokenUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UserToken.
+func (c *UserTokenClient) Delete() *UserTokenDelete {
+	mutation := newUserTokenMutation(c.config, OpDelete)
+	return &UserTokenDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UserTokenClient) DeleteOne(ut *UserToken) *UserTokenDeleteOne {
+	return c.DeleteOneID(ut.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UserTokenClient) DeleteOneID(id int) *UserTokenDeleteOne {
+	builder := c.Delete().Where(usertoken.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UserTokenDeleteOne{builder}
+}
+
+// Query returns a query builder for UserToken.
+func (c *UserTokenClient) Query() *UserTokenQuery {
+	return &UserTokenQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUserToken},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a UserToken entity by its id.
+func (c *UserTokenClient) Get(ctx context.Context, id int) (*UserToken, error) {
+	return c.Query().Where(usertoken.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UserTokenClient) GetX(ctx context.Context, id int) *UserToken {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *UserTokenClient) Hooks() []Hook {
+	return c.hooks.UserToken
+}
+
+// Interceptors returns the client interceptors.
+func (c *UserTokenClient) Interceptors() []Interceptor {
+	return c.inters.UserToken
+}
+
+func (c *UserTokenClient) mutate(ctx context.Context, m *UserTokenMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UserTokenCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UserTokenUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UserTokenUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UserTokenDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown UserToken mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Skin, User, UserProfile []ent.Hook
+		Skin, User, UserProfile, UserToken []ent.Hook
 	}
 	inters struct {
-		Skin, User, UserProfile []ent.Interceptor
+		Skin, User, UserProfile, UserToken []ent.Interceptor
 	}
 )

@@ -12,6 +12,7 @@ import (
 	"github.com/xmdhs/authlib-skin/db/ent/skin"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
+	"github.com/xmdhs/authlib-skin/db/ent/usertoken"
 )
 
 // UserCreate is the builder for creating a User entity.
@@ -51,19 +52,19 @@ func (uc *UserCreate) SetRegTime(i int64) *UserCreate {
 	return uc
 }
 
-// AddSkinIDs adds the "skin" edge to the Skin entity by IDs.
-func (uc *UserCreate) AddSkinIDs(ids ...int) *UserCreate {
-	uc.mutation.AddSkinIDs(ids...)
+// AddCreatedSkinIDs adds the "created_skin" edge to the Skin entity by IDs.
+func (uc *UserCreate) AddCreatedSkinIDs(ids ...int) *UserCreate {
+	uc.mutation.AddCreatedSkinIDs(ids...)
 	return uc
 }
 
-// AddSkin adds the "skin" edges to the Skin entity.
-func (uc *UserCreate) AddSkin(s ...*Skin) *UserCreate {
+// AddCreatedSkin adds the "created_skin" edges to the Skin entity.
+func (uc *UserCreate) AddCreatedSkin(s ...*Skin) *UserCreate {
 	ids := make([]int, len(s))
 	for i := range s {
 		ids[i] = s[i].ID
 	}
-	return uc.AddSkinIDs(ids...)
+	return uc.AddCreatedSkinIDs(ids...)
 }
 
 // SetProfileID sets the "profile" edge to the UserProfile entity by ID.
@@ -83,6 +84,44 @@ func (uc *UserCreate) SetNillableProfileID(id *int) *UserCreate {
 // SetProfile sets the "profile" edge to the UserProfile entity.
 func (uc *UserCreate) SetProfile(u *UserProfile) *UserCreate {
 	return uc.SetProfileID(u.ID)
+}
+
+// SetTokenID sets the "token" edge to the UserToken entity by ID.
+func (uc *UserCreate) SetTokenID(id int) *UserCreate {
+	uc.mutation.SetTokenID(id)
+	return uc
+}
+
+// SetNillableTokenID sets the "token" edge to the UserToken entity by ID if the given value is not nil.
+func (uc *UserCreate) SetNillableTokenID(id *int) *UserCreate {
+	if id != nil {
+		uc = uc.SetTokenID(*id)
+	}
+	return uc
+}
+
+// SetToken sets the "token" edge to the UserToken entity.
+func (uc *UserCreate) SetToken(u *UserToken) *UserCreate {
+	return uc.SetTokenID(u.ID)
+}
+
+// SetSkinID sets the "skin" edge to the Skin entity by ID.
+func (uc *UserCreate) SetSkinID(id int) *UserCreate {
+	uc.mutation.SetSkinID(id)
+	return uc
+}
+
+// SetNillableSkinID sets the "skin" edge to the Skin entity by ID if the given value is not nil.
+func (uc *UserCreate) SetNillableSkinID(id *int) *UserCreate {
+	if id != nil {
+		uc = uc.SetSkinID(*id)
+	}
+	return uc
+}
+
+// SetSkin sets the "skin" edge to the Skin entity.
+func (uc *UserCreate) SetSkin(s *Skin) *UserCreate {
+	return uc.SetSkinID(s.ID)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -180,12 +219,12 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec.SetField(user.FieldRegTime, field.TypeInt64, value)
 		_node.RegTime = value
 	}
-	if nodes := uc.mutation.SkinIDs(); len(nodes) > 0 {
+	if nodes := uc.mutation.CreatedSkinIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: true,
-			Table:   user.SkinTable,
-			Columns: []string{user.SkinColumn},
+			Table:   user.CreatedSkinTable,
+			Columns: []string{user.CreatedSkinColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(skin.FieldID, field.TypeInt),
@@ -210,6 +249,40 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.TokenIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   user.TokenTable,
+			Columns: []string{user.TokenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usertoken.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.user_token = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.SkinIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   user.SkinTable,
+			Columns: []string{user.SkinColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(skin.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.user_skin = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

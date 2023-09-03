@@ -25,31 +25,31 @@ type Skin struct {
 	Variant string `json:"variant,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the SkinQuery when eager-loading is set.
-	Edges        SkinEdges `json:"edges"`
-	skin_user    *int
-	selectValues sql.SelectValues
+	Edges             SkinEdges `json:"edges"`
+	skin_created_user *int
+	selectValues      sql.SelectValues
 }
 
 // SkinEdges holds the relations/edges for other nodes in the graph.
 type SkinEdges struct {
-	// User holds the value of the user edge.
-	User *User `json:"user,omitempty"`
+	// CreatedUser holds the value of the created_user edge.
+	CreatedUser *User `json:"created_user,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [1]bool
 }
 
-// UserOrErr returns the User value or an error if the edge
+// CreatedUserOrErr returns the CreatedUser value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e SkinEdges) UserOrErr() (*User, error) {
+func (e SkinEdges) CreatedUserOrErr() (*User, error) {
 	if e.loadedTypes[0] {
-		if e.User == nil {
+		if e.CreatedUser == nil {
 			// Edge was loaded but was not found.
 			return nil, &NotFoundError{label: user.Label}
 		}
-		return e.User, nil
+		return e.CreatedUser, nil
 	}
-	return nil, &NotLoadedError{edge: "user"}
+	return nil, &NotLoadedError{edge: "created_user"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -61,7 +61,7 @@ func (*Skin) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case skin.FieldSkinHash, skin.FieldVariant:
 			values[i] = new(sql.NullString)
-		case skin.ForeignKeys[0]: // skin_user
+		case skin.ForeignKeys[0]: // skin_created_user
 			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -104,10 +104,10 @@ func (s *Skin) assignValues(columns []string, values []any) error {
 			}
 		case skin.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field skin_user", value)
+				return fmt.Errorf("unexpected type %T for edge-field skin_created_user", value)
 			} else if value.Valid {
-				s.skin_user = new(int)
-				*s.skin_user = int(value.Int64)
+				s.skin_created_user = new(int)
+				*s.skin_created_user = int(value.Int64)
 			}
 		default:
 			s.selectValues.Set(columns[i], values[i])
@@ -122,9 +122,9 @@ func (s *Skin) Value(name string) (ent.Value, error) {
 	return s.selectValues.Get(name)
 }
 
-// QueryUser queries the "user" edge of the Skin entity.
-func (s *Skin) QueryUser() *UserQuery {
-	return NewSkinClient(s.config).QueryUser(s)
+// QueryCreatedUser queries the "created_user" edge of the Skin entity.
+func (s *Skin) QueryCreatedUser() *UserQuery {
+	return NewSkinClient(s.config).QueryCreatedUser(s)
 }
 
 // Update returns a builder for updating this Skin.

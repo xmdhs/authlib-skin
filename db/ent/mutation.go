@@ -14,6 +14,7 @@ import (
 	"github.com/xmdhs/authlib-skin/db/ent/skin"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
+	"github.com/xmdhs/authlib-skin/db/ent/usertoken"
 )
 
 const (
@@ -28,24 +29,25 @@ const (
 	TypeSkin        = "Skin"
 	TypeUser        = "User"
 	TypeUserProfile = "UserProfile"
+	TypeUserToken   = "UserToken"
 )
 
 // SkinMutation represents an operation that mutates the Skin nodes in the graph.
 type SkinMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *int
-	skin_hash     *string
-	_type         *uint8
-	add_type      *int8
-	variant       *string
-	clearedFields map[string]struct{}
-	user          *int
-	cleareduser   bool
-	done          bool
-	oldValue      func(context.Context) (*Skin, error)
-	predicates    []predicate.Skin
+	op                  Op
+	typ                 string
+	id                  *int
+	skin_hash           *string
+	_type               *uint8
+	add_type            *int8
+	variant             *string
+	clearedFields       map[string]struct{}
+	created_user        *int
+	clearedcreated_user bool
+	done                bool
+	oldValue            func(context.Context) (*Skin, error)
+	predicates          []predicate.Skin
 }
 
 var _ ent.Mutation = (*SkinMutation)(nil)
@@ -274,43 +276,43 @@ func (m *SkinMutation) ResetVariant() {
 	m.variant = nil
 }
 
-// SetUserID sets the "user" edge to the User entity by id.
-func (m *SkinMutation) SetUserID(id int) {
-	m.user = &id
+// SetCreatedUserID sets the "created_user" edge to the User entity by id.
+func (m *SkinMutation) SetCreatedUserID(id int) {
+	m.created_user = &id
 }
 
-// ClearUser clears the "user" edge to the User entity.
-func (m *SkinMutation) ClearUser() {
-	m.cleareduser = true
+// ClearCreatedUser clears the "created_user" edge to the User entity.
+func (m *SkinMutation) ClearCreatedUser() {
+	m.clearedcreated_user = true
 }
 
-// UserCleared reports if the "user" edge to the User entity was cleared.
-func (m *SkinMutation) UserCleared() bool {
-	return m.cleareduser
+// CreatedUserCleared reports if the "created_user" edge to the User entity was cleared.
+func (m *SkinMutation) CreatedUserCleared() bool {
+	return m.clearedcreated_user
 }
 
-// UserID returns the "user" edge ID in the mutation.
-func (m *SkinMutation) UserID() (id int, exists bool) {
-	if m.user != nil {
-		return *m.user, true
+// CreatedUserID returns the "created_user" edge ID in the mutation.
+func (m *SkinMutation) CreatedUserID() (id int, exists bool) {
+	if m.created_user != nil {
+		return *m.created_user, true
 	}
 	return
 }
 
-// UserIDs returns the "user" edge IDs in the mutation.
+// CreatedUserIDs returns the "created_user" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// UserID instead. It exists only for internal usage by the builders.
-func (m *SkinMutation) UserIDs() (ids []int) {
-	if id := m.user; id != nil {
+// CreatedUserID instead. It exists only for internal usage by the builders.
+func (m *SkinMutation) CreatedUserIDs() (ids []int) {
+	if id := m.created_user; id != nil {
 		ids = append(ids, *id)
 	}
 	return
 }
 
-// ResetUser resets all changes to the "user" edge.
-func (m *SkinMutation) ResetUser() {
-	m.user = nil
-	m.cleareduser = false
+// ResetCreatedUser resets all changes to the "created_user" edge.
+func (m *SkinMutation) ResetCreatedUser() {
+	m.created_user = nil
+	m.clearedcreated_user = false
 }
 
 // Where appends a list predicates to the SkinMutation builder.
@@ -496,8 +498,8 @@ func (m *SkinMutation) ResetField(name string) error {
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *SkinMutation) AddedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.user != nil {
-		edges = append(edges, skin.EdgeUser)
+	if m.created_user != nil {
+		edges = append(edges, skin.EdgeCreatedUser)
 	}
 	return edges
 }
@@ -506,8 +508,8 @@ func (m *SkinMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *SkinMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case skin.EdgeUser:
-		if id := m.user; id != nil {
+	case skin.EdgeCreatedUser:
+		if id := m.created_user; id != nil {
 			return []ent.Value{*id}
 		}
 	}
@@ -529,8 +531,8 @@ func (m *SkinMutation) RemovedIDs(name string) []ent.Value {
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *SkinMutation) ClearedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.cleareduser {
-		edges = append(edges, skin.EdgeUser)
+	if m.clearedcreated_user {
+		edges = append(edges, skin.EdgeCreatedUser)
 	}
 	return edges
 }
@@ -539,8 +541,8 @@ func (m *SkinMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *SkinMutation) EdgeCleared(name string) bool {
 	switch name {
-	case skin.EdgeUser:
-		return m.cleareduser
+	case skin.EdgeCreatedUser:
+		return m.clearedcreated_user
 	}
 	return false
 }
@@ -549,8 +551,8 @@ func (m *SkinMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *SkinMutation) ClearEdge(name string) error {
 	switch name {
-	case skin.EdgeUser:
-		m.ClearUser()
+	case skin.EdgeCreatedUser:
+		m.ClearCreatedUser()
 		return nil
 	}
 	return fmt.Errorf("unknown Skin unique edge %s", name)
@@ -560,8 +562,8 @@ func (m *SkinMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *SkinMutation) ResetEdge(name string) error {
 	switch name {
-	case skin.EdgeUser:
-		m.ResetUser()
+	case skin.EdgeCreatedUser:
+		m.ResetCreatedUser()
 		return nil
 	}
 	return fmt.Errorf("unknown Skin edge %s", name)
@@ -570,25 +572,29 @@ func (m *SkinMutation) ResetEdge(name string) error {
 // UserMutation represents an operation that mutates the User nodes in the graph.
 type UserMutation struct {
 	config
-	op             Op
-	typ            string
-	id             *int
-	email          *string
-	password       *string
-	salt           *string
-	state          *int
-	addstate       *int
-	reg_time       *int64
-	addreg_time    *int64
-	clearedFields  map[string]struct{}
-	skin           map[int]struct{}
-	removedskin    map[int]struct{}
-	clearedskin    bool
-	profile        *int
-	clearedprofile bool
-	done           bool
-	oldValue       func(context.Context) (*User, error)
-	predicates     []predicate.User
+	op                  Op
+	typ                 string
+	id                  *int
+	email               *string
+	password            *string
+	salt                *string
+	state               *int
+	addstate            *int
+	reg_time            *int64
+	addreg_time         *int64
+	clearedFields       map[string]struct{}
+	created_skin        map[int]struct{}
+	removedcreated_skin map[int]struct{}
+	clearedcreated_skin bool
+	profile             *int
+	clearedprofile      bool
+	token               *int
+	clearedtoken        bool
+	skin                *int
+	clearedskin         bool
+	done                bool
+	oldValue            func(context.Context) (*User, error)
+	predicates          []predicate.User
 }
 
 var _ ent.Mutation = (*UserMutation)(nil)
@@ -909,58 +915,58 @@ func (m *UserMutation) ResetRegTime() {
 	m.addreg_time = nil
 }
 
-// AddSkinIDs adds the "skin" edge to the Skin entity by ids.
-func (m *UserMutation) AddSkinIDs(ids ...int) {
-	if m.skin == nil {
-		m.skin = make(map[int]struct{})
+// AddCreatedSkinIDs adds the "created_skin" edge to the Skin entity by ids.
+func (m *UserMutation) AddCreatedSkinIDs(ids ...int) {
+	if m.created_skin == nil {
+		m.created_skin = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.skin[ids[i]] = struct{}{}
+		m.created_skin[ids[i]] = struct{}{}
 	}
 }
 
-// ClearSkin clears the "skin" edge to the Skin entity.
-func (m *UserMutation) ClearSkin() {
-	m.clearedskin = true
+// ClearCreatedSkin clears the "created_skin" edge to the Skin entity.
+func (m *UserMutation) ClearCreatedSkin() {
+	m.clearedcreated_skin = true
 }
 
-// SkinCleared reports if the "skin" edge to the Skin entity was cleared.
-func (m *UserMutation) SkinCleared() bool {
-	return m.clearedskin
+// CreatedSkinCleared reports if the "created_skin" edge to the Skin entity was cleared.
+func (m *UserMutation) CreatedSkinCleared() bool {
+	return m.clearedcreated_skin
 }
 
-// RemoveSkinIDs removes the "skin" edge to the Skin entity by IDs.
-func (m *UserMutation) RemoveSkinIDs(ids ...int) {
-	if m.removedskin == nil {
-		m.removedskin = make(map[int]struct{})
+// RemoveCreatedSkinIDs removes the "created_skin" edge to the Skin entity by IDs.
+func (m *UserMutation) RemoveCreatedSkinIDs(ids ...int) {
+	if m.removedcreated_skin == nil {
+		m.removedcreated_skin = make(map[int]struct{})
 	}
 	for i := range ids {
-		delete(m.skin, ids[i])
-		m.removedskin[ids[i]] = struct{}{}
+		delete(m.created_skin, ids[i])
+		m.removedcreated_skin[ids[i]] = struct{}{}
 	}
 }
 
-// RemovedSkin returns the removed IDs of the "skin" edge to the Skin entity.
-func (m *UserMutation) RemovedSkinIDs() (ids []int) {
-	for id := range m.removedskin {
+// RemovedCreatedSkin returns the removed IDs of the "created_skin" edge to the Skin entity.
+func (m *UserMutation) RemovedCreatedSkinIDs() (ids []int) {
+	for id := range m.removedcreated_skin {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// SkinIDs returns the "skin" edge IDs in the mutation.
-func (m *UserMutation) SkinIDs() (ids []int) {
-	for id := range m.skin {
+// CreatedSkinIDs returns the "created_skin" edge IDs in the mutation.
+func (m *UserMutation) CreatedSkinIDs() (ids []int) {
+	for id := range m.created_skin {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ResetSkin resets all changes to the "skin" edge.
-func (m *UserMutation) ResetSkin() {
-	m.skin = nil
-	m.clearedskin = false
-	m.removedskin = nil
+// ResetCreatedSkin resets all changes to the "created_skin" edge.
+func (m *UserMutation) ResetCreatedSkin() {
+	m.created_skin = nil
+	m.clearedcreated_skin = false
+	m.removedcreated_skin = nil
 }
 
 // SetProfileID sets the "profile" edge to the UserProfile entity by id.
@@ -1000,6 +1006,84 @@ func (m *UserMutation) ProfileIDs() (ids []int) {
 func (m *UserMutation) ResetProfile() {
 	m.profile = nil
 	m.clearedprofile = false
+}
+
+// SetTokenID sets the "token" edge to the UserToken entity by id.
+func (m *UserMutation) SetTokenID(id int) {
+	m.token = &id
+}
+
+// ClearToken clears the "token" edge to the UserToken entity.
+func (m *UserMutation) ClearToken() {
+	m.clearedtoken = true
+}
+
+// TokenCleared reports if the "token" edge to the UserToken entity was cleared.
+func (m *UserMutation) TokenCleared() bool {
+	return m.clearedtoken
+}
+
+// TokenID returns the "token" edge ID in the mutation.
+func (m *UserMutation) TokenID() (id int, exists bool) {
+	if m.token != nil {
+		return *m.token, true
+	}
+	return
+}
+
+// TokenIDs returns the "token" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// TokenID instead. It exists only for internal usage by the builders.
+func (m *UserMutation) TokenIDs() (ids []int) {
+	if id := m.token; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetToken resets all changes to the "token" edge.
+func (m *UserMutation) ResetToken() {
+	m.token = nil
+	m.clearedtoken = false
+}
+
+// SetSkinID sets the "skin" edge to the Skin entity by id.
+func (m *UserMutation) SetSkinID(id int) {
+	m.skin = &id
+}
+
+// ClearSkin clears the "skin" edge to the Skin entity.
+func (m *UserMutation) ClearSkin() {
+	m.clearedskin = true
+}
+
+// SkinCleared reports if the "skin" edge to the Skin entity was cleared.
+func (m *UserMutation) SkinCleared() bool {
+	return m.clearedskin
+}
+
+// SkinID returns the "skin" edge ID in the mutation.
+func (m *UserMutation) SkinID() (id int, exists bool) {
+	if m.skin != nil {
+		return *m.skin, true
+	}
+	return
+}
+
+// SkinIDs returns the "skin" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// SkinID instead. It exists only for internal usage by the builders.
+func (m *UserMutation) SkinIDs() (ids []int) {
+	if id := m.skin; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetSkin resets all changes to the "skin" edge.
+func (m *UserMutation) ResetSkin() {
+	m.skin = nil
+	m.clearedskin = false
 }
 
 // Where appends a list predicates to the UserMutation builder.
@@ -1230,12 +1314,18 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
-	if m.skin != nil {
-		edges = append(edges, user.EdgeSkin)
+	edges := make([]string, 0, 4)
+	if m.created_skin != nil {
+		edges = append(edges, user.EdgeCreatedSkin)
 	}
 	if m.profile != nil {
 		edges = append(edges, user.EdgeProfile)
+	}
+	if m.token != nil {
+		edges = append(edges, user.EdgeToken)
+	}
+	if m.skin != nil {
+		edges = append(edges, user.EdgeSkin)
 	}
 	return edges
 }
@@ -1244,14 +1334,22 @@ func (m *UserMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *UserMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case user.EdgeSkin:
-		ids := make([]ent.Value, 0, len(m.skin))
-		for id := range m.skin {
+	case user.EdgeCreatedSkin:
+		ids := make([]ent.Value, 0, len(m.created_skin))
+		for id := range m.created_skin {
 			ids = append(ids, id)
 		}
 		return ids
 	case user.EdgeProfile:
 		if id := m.profile; id != nil {
+			return []ent.Value{*id}
+		}
+	case user.EdgeToken:
+		if id := m.token; id != nil {
+			return []ent.Value{*id}
+		}
+	case user.EdgeSkin:
+		if id := m.skin; id != nil {
 			return []ent.Value{*id}
 		}
 	}
@@ -1260,9 +1358,9 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
-	if m.removedskin != nil {
-		edges = append(edges, user.EdgeSkin)
+	edges := make([]string, 0, 4)
+	if m.removedcreated_skin != nil {
+		edges = append(edges, user.EdgeCreatedSkin)
 	}
 	return edges
 }
@@ -1271,9 +1369,9 @@ func (m *UserMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case user.EdgeSkin:
-		ids := make([]ent.Value, 0, len(m.removedskin))
-		for id := range m.removedskin {
+	case user.EdgeCreatedSkin:
+		ids := make([]ent.Value, 0, len(m.removedcreated_skin))
+		for id := range m.removedcreated_skin {
 			ids = append(ids, id)
 		}
 		return ids
@@ -1283,12 +1381,18 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
-	if m.clearedskin {
-		edges = append(edges, user.EdgeSkin)
+	edges := make([]string, 0, 4)
+	if m.clearedcreated_skin {
+		edges = append(edges, user.EdgeCreatedSkin)
 	}
 	if m.clearedprofile {
 		edges = append(edges, user.EdgeProfile)
+	}
+	if m.clearedtoken {
+		edges = append(edges, user.EdgeToken)
+	}
+	if m.clearedskin {
+		edges = append(edges, user.EdgeSkin)
 	}
 	return edges
 }
@@ -1297,10 +1401,14 @@ func (m *UserMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *UserMutation) EdgeCleared(name string) bool {
 	switch name {
-	case user.EdgeSkin:
-		return m.clearedskin
+	case user.EdgeCreatedSkin:
+		return m.clearedcreated_skin
 	case user.EdgeProfile:
 		return m.clearedprofile
+	case user.EdgeToken:
+		return m.clearedtoken
+	case user.EdgeSkin:
+		return m.clearedskin
 	}
 	return false
 }
@@ -1312,6 +1420,12 @@ func (m *UserMutation) ClearEdge(name string) error {
 	case user.EdgeProfile:
 		m.ClearProfile()
 		return nil
+	case user.EdgeToken:
+		m.ClearToken()
+		return nil
+	case user.EdgeSkin:
+		m.ClearSkin()
+		return nil
 	}
 	return fmt.Errorf("unknown User unique edge %s", name)
 }
@@ -1320,11 +1434,17 @@ func (m *UserMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *UserMutation) ResetEdge(name string) error {
 	switch name {
-	case user.EdgeSkin:
-		m.ResetSkin()
+	case user.EdgeCreatedSkin:
+		m.ResetCreatedSkin()
 		return nil
 	case user.EdgeProfile:
 		m.ResetProfile()
+		return nil
+	case user.EdgeToken:
+		m.ResetToken()
+		return nil
+	case user.EdgeSkin:
+		m.ResetSkin()
 		return nil
 	}
 	return fmt.Errorf("unknown User edge %s", name)
@@ -1775,4 +1895,366 @@ func (m *UserProfileMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown UserProfile edge %s", name)
+}
+
+// UserTokenMutation represents an operation that mutates the UserToken nodes in the graph.
+type UserTokenMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *int
+	token_id      *uint64
+	addtoken_id   *int64
+	clearedFields map[string]struct{}
+	done          bool
+	oldValue      func(context.Context) (*UserToken, error)
+	predicates    []predicate.UserToken
+}
+
+var _ ent.Mutation = (*UserTokenMutation)(nil)
+
+// usertokenOption allows management of the mutation configuration using functional options.
+type usertokenOption func(*UserTokenMutation)
+
+// newUserTokenMutation creates new mutation for the UserToken entity.
+func newUserTokenMutation(c config, op Op, opts ...usertokenOption) *UserTokenMutation {
+	m := &UserTokenMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeUserToken,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withUserTokenID sets the ID field of the mutation.
+func withUserTokenID(id int) usertokenOption {
+	return func(m *UserTokenMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *UserToken
+		)
+		m.oldValue = func(ctx context.Context) (*UserToken, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().UserToken.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withUserToken sets the old UserToken of the mutation.
+func withUserToken(node *UserToken) usertokenOption {
+	return func(m *UserTokenMutation) {
+		m.oldValue = func(context.Context) (*UserToken, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m UserTokenMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m UserTokenMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *UserTokenMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *UserTokenMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().UserToken.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTokenID sets the "token_id" field.
+func (m *UserTokenMutation) SetTokenID(u uint64) {
+	m.token_id = &u
+	m.addtoken_id = nil
+}
+
+// TokenID returns the value of the "token_id" field in the mutation.
+func (m *UserTokenMutation) TokenID() (r uint64, exists bool) {
+	v := m.token_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTokenID returns the old "token_id" field's value of the UserToken entity.
+// If the UserToken object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserTokenMutation) OldTokenID(ctx context.Context) (v uint64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTokenID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTokenID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTokenID: %w", err)
+	}
+	return oldValue.TokenID, nil
+}
+
+// AddTokenID adds u to the "token_id" field.
+func (m *UserTokenMutation) AddTokenID(u int64) {
+	if m.addtoken_id != nil {
+		*m.addtoken_id += u
+	} else {
+		m.addtoken_id = &u
+	}
+}
+
+// AddedTokenID returns the value that was added to the "token_id" field in this mutation.
+func (m *UserTokenMutation) AddedTokenID() (r int64, exists bool) {
+	v := m.addtoken_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTokenID resets all changes to the "token_id" field.
+func (m *UserTokenMutation) ResetTokenID() {
+	m.token_id = nil
+	m.addtoken_id = nil
+}
+
+// Where appends a list predicates to the UserTokenMutation builder.
+func (m *UserTokenMutation) Where(ps ...predicate.UserToken) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the UserTokenMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *UserTokenMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.UserToken, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *UserTokenMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *UserTokenMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (UserToken).
+func (m *UserTokenMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *UserTokenMutation) Fields() []string {
+	fields := make([]string, 0, 1)
+	if m.token_id != nil {
+		fields = append(fields, usertoken.FieldTokenID)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *UserTokenMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case usertoken.FieldTokenID:
+		return m.TokenID()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *UserTokenMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case usertoken.FieldTokenID:
+		return m.OldTokenID(ctx)
+	}
+	return nil, fmt.Errorf("unknown UserToken field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UserTokenMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case usertoken.FieldTokenID:
+		v, ok := value.(uint64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTokenID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown UserToken field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *UserTokenMutation) AddedFields() []string {
+	var fields []string
+	if m.addtoken_id != nil {
+		fields = append(fields, usertoken.FieldTokenID)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *UserTokenMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case usertoken.FieldTokenID:
+		return m.AddedTokenID()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *UserTokenMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case usertoken.FieldTokenID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTokenID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown UserToken numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *UserTokenMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *UserTokenMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *UserTokenMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown UserToken nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *UserTokenMutation) ResetField(name string) error {
+	switch name {
+	case usertoken.FieldTokenID:
+		m.ResetTokenID()
+		return nil
+	}
+	return fmt.Errorf("unknown UserToken field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *UserTokenMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *UserTokenMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *UserTokenMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *UserTokenMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *UserTokenMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *UserTokenMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *UserTokenMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown UserToken unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *UserTokenMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown UserToken edge %s", name)
 }

@@ -8,8 +8,10 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/xmdhs/authlib-skin/db/ent/skin"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
+	"github.com/xmdhs/authlib-skin/db/ent/usertoken"
 )
 
 // User is the model entity for the User schema.
@@ -30,27 +32,33 @@ type User struct {
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges        UserEdges `json:"edges"`
+	user_token   *int
+	user_skin    *int
 	selectValues sql.SelectValues
 }
 
 // UserEdges holds the relations/edges for other nodes in the graph.
 type UserEdges struct {
-	// Skin holds the value of the skin edge.
-	Skin []*Skin `json:"skin,omitempty"`
+	// CreatedSkin holds the value of the created_skin edge.
+	CreatedSkin []*Skin `json:"created_skin,omitempty"`
 	// Profile holds the value of the profile edge.
 	Profile *UserProfile `json:"profile,omitempty"`
+	// Token holds the value of the token edge.
+	Token *UserToken `json:"token,omitempty"`
+	// Skin holds the value of the skin edge.
+	Skin *Skin `json:"skin,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [4]bool
 }
 
-// SkinOrErr returns the Skin value or an error if the edge
+// CreatedSkinOrErr returns the CreatedSkin value or an error if the edge
 // was not loaded in eager-loading.
-func (e UserEdges) SkinOrErr() ([]*Skin, error) {
+func (e UserEdges) CreatedSkinOrErr() ([]*Skin, error) {
 	if e.loadedTypes[0] {
-		return e.Skin, nil
+		return e.CreatedSkin, nil
 	}
-	return nil, &NotLoadedError{edge: "skin"}
+	return nil, &NotLoadedError{edge: "created_skin"}
 }
 
 // ProfileOrErr returns the Profile value or an error if the edge
@@ -66,6 +74,32 @@ func (e UserEdges) ProfileOrErr() (*UserProfile, error) {
 	return nil, &NotLoadedError{edge: "profile"}
 }
 
+// TokenOrErr returns the Token value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e UserEdges) TokenOrErr() (*UserToken, error) {
+	if e.loadedTypes[2] {
+		if e.Token == nil {
+			// Edge was loaded but was not found.
+			return nil, &NotFoundError{label: usertoken.Label}
+		}
+		return e.Token, nil
+	}
+	return nil, &NotLoadedError{edge: "token"}
+}
+
+// SkinOrErr returns the Skin value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e UserEdges) SkinOrErr() (*Skin, error) {
+	if e.loadedTypes[3] {
+		if e.Skin == nil {
+			// Edge was loaded but was not found.
+			return nil, &NotFoundError{label: skin.Label}
+		}
+		return e.Skin, nil
+	}
+	return nil, &NotLoadedError{edge: "skin"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -75,6 +109,10 @@ func (*User) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case user.FieldEmail, user.FieldPassword, user.FieldSalt:
 			values[i] = new(sql.NullString)
+		case user.ForeignKeys[0]: // user_token
+			values[i] = new(sql.NullInt64)
+		case user.ForeignKeys[1]: // user_skin
+			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -126,6 +164,20 @@ func (u *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				u.RegTime = value.Int64
 			}
+		case user.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field user_token", value)
+			} else if value.Valid {
+				u.user_token = new(int)
+				*u.user_token = int(value.Int64)
+			}
+		case user.ForeignKeys[1]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field user_skin", value)
+			} else if value.Valid {
+				u.user_skin = new(int)
+				*u.user_skin = int(value.Int64)
+			}
 		default:
 			u.selectValues.Set(columns[i], values[i])
 		}
@@ -139,14 +191,24 @@ func (u *User) Value(name string) (ent.Value, error) {
 	return u.selectValues.Get(name)
 }
 
-// QuerySkin queries the "skin" edge of the User entity.
-func (u *User) QuerySkin() *SkinQuery {
-	return NewUserClient(u.config).QuerySkin(u)
+// QueryCreatedSkin queries the "created_skin" edge of the User entity.
+func (u *User) QueryCreatedSkin() *SkinQuery {
+	return NewUserClient(u.config).QueryCreatedSkin(u)
 }
 
 // QueryProfile queries the "profile" edge of the User entity.
 func (u *User) QueryProfile() *UserProfileQuery {
 	return NewUserClient(u.config).QueryProfile(u)
+}
+
+// QueryToken queries the "token" edge of the User entity.
+func (u *User) QueryToken() *UserTokenQuery {
+	return NewUserClient(u.config).QueryToken(u)
+}
+
+// QuerySkin queries the "skin" edge of the User entity.
+func (u *User) QuerySkin() *SkinQuery {
+	return NewUserClient(u.config).QuerySkin(u)
 }
 
 // Update returns a builder for updating this User.

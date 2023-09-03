@@ -22,19 +22,23 @@ const (
 	FieldState = "state"
 	// FieldRegTime holds the string denoting the reg_time field in the database.
 	FieldRegTime = "reg_time"
-	// EdgeSkin holds the string denoting the skin edge name in mutations.
-	EdgeSkin = "skin"
+	// EdgeCreatedSkin holds the string denoting the created_skin edge name in mutations.
+	EdgeCreatedSkin = "created_skin"
 	// EdgeProfile holds the string denoting the profile edge name in mutations.
 	EdgeProfile = "profile"
+	// EdgeToken holds the string denoting the token edge name in mutations.
+	EdgeToken = "token"
+	// EdgeSkin holds the string denoting the skin edge name in mutations.
+	EdgeSkin = "skin"
 	// Table holds the table name of the user in the database.
 	Table = "users"
-	// SkinTable is the table that holds the skin relation/edge.
-	SkinTable = "skins"
-	// SkinInverseTable is the table name for the Skin entity.
+	// CreatedSkinTable is the table that holds the created_skin relation/edge.
+	CreatedSkinTable = "skins"
+	// CreatedSkinInverseTable is the table name for the Skin entity.
 	// It exists in this package in order to avoid circular dependency with the "skin" package.
-	SkinInverseTable = "skins"
-	// SkinColumn is the table column denoting the skin relation/edge.
-	SkinColumn = "skin_user"
+	CreatedSkinInverseTable = "skins"
+	// CreatedSkinColumn is the table column denoting the created_skin relation/edge.
+	CreatedSkinColumn = "skin_created_user"
 	// ProfileTable is the table that holds the profile relation/edge.
 	ProfileTable = "user_profiles"
 	// ProfileInverseTable is the table name for the UserProfile entity.
@@ -42,6 +46,20 @@ const (
 	ProfileInverseTable = "user_profiles"
 	// ProfileColumn is the table column denoting the profile relation/edge.
 	ProfileColumn = "user_profile"
+	// TokenTable is the table that holds the token relation/edge.
+	TokenTable = "users"
+	// TokenInverseTable is the table name for the UserToken entity.
+	// It exists in this package in order to avoid circular dependency with the "usertoken" package.
+	TokenInverseTable = "user_tokens"
+	// TokenColumn is the table column denoting the token relation/edge.
+	TokenColumn = "user_token"
+	// SkinTable is the table that holds the skin relation/edge.
+	SkinTable = "users"
+	// SkinInverseTable is the table name for the Skin entity.
+	// It exists in this package in order to avoid circular dependency with the "skin" package.
+	SkinInverseTable = "skins"
+	// SkinColumn is the table column denoting the skin relation/edge.
+	SkinColumn = "user_skin"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -54,10 +72,22 @@ var Columns = []string{
 	FieldRegTime,
 }
 
+// ForeignKeys holds the SQL foreign-keys that are owned by the "users"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"user_token",
+	"user_skin",
+}
+
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -97,17 +127,17 @@ func ByRegTime(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRegTime, opts...).ToFunc()
 }
 
-// BySkinCount orders the results by skin count.
-func BySkinCount(opts ...sql.OrderTermOption) OrderOption {
+// ByCreatedSkinCount orders the results by created_skin count.
+func ByCreatedSkinCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newSkinStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newCreatedSkinStep(), opts...)
 	}
 }
 
-// BySkin orders the results by skin terms.
-func BySkin(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByCreatedSkin orders the results by created_skin terms.
+func ByCreatedSkin(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newSkinStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newCreatedSkinStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
@@ -117,11 +147,25 @@ func ByProfileField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newProfileStep(), sql.OrderByField(field, opts...))
 	}
 }
-func newSkinStep() *sqlgraph.Step {
+
+// ByTokenField orders the results by token field.
+func ByTokenField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTokenStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// BySkinField orders the results by skin field.
+func BySkinField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newSkinStep(), sql.OrderByField(field, opts...))
+	}
+}
+func newCreatedSkinStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(SkinInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, true, SkinTable, SkinColumn),
+		sqlgraph.To(CreatedSkinInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, true, CreatedSkinTable, CreatedSkinColumn),
 	)
 }
 func newProfileStep() *sqlgraph.Step {
@@ -129,5 +173,19 @@ func newProfileStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ProfileInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2O, false, ProfileTable, ProfileColumn),
+	)
+}
+func newTokenStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TokenInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, false, TokenTable, TokenColumn),
+	)
+}
+func newSkinStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(SkinInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, false, SkinTable, SkinColumn),
 	)
 }

@@ -43,14 +43,14 @@ func ProvideSlog(c config.Config) slog.Handler {
 func ProvideDB(c config.Config) (*sql.DB, func(), error) {
 	db, err := sql.Open("mysql", c.Sql.MysqlDsn)
 	if err != nil {
-		return nil, nil, fmt.Errorf("newDB: %w", err)
+		return nil, nil, fmt.Errorf("ProvideDB: %w", err)
 	}
 	db.SetMaxOpenConns(20)
 	db.SetMaxIdleConns(10)
 	return db, func() { db.Close() }, nil
 }
 
-func ProvideEnt(ctx context.Context, db *sql.DB, c config.Config, sl *slog.Logger) (*ent.Client, func()) {
+func ProvideEnt(ctx context.Context, db *sql.DB, c config.Config, sl *slog.Logger) (*ent.Client, func(), error) {
 	drv := entsql.OpenDB("mysql", db)
 	opts := []ent.Option{ent.Driver(drv), ent.Log(
 		func(a ...any) {
@@ -61,7 +61,11 @@ func ProvideEnt(ctx context.Context, db *sql.DB, c config.Config, sl *slog.Logge
 		opts = append(opts, ent.Debug())
 	}
 	e := ent.NewClient(opts...)
-	return e, func() { e.Close() }
+	err := e.Schema.Create(ctx)
+	if err != nil {
+		return nil, nil, fmt.Errorf("ProvideEnt: %w", err)
+	}
+	return e, func() { e.Close() }, nil
 }
 
 func ProvideValidate() *validator.Validate {
@@ -72,7 +76,7 @@ func ProvideSnowflake(c config.Config) (*snowflake.Node, error) {
 	snowflake.Epoch = c.Epoch
 	n, err := snowflake.NewNode(c.Node)
 	if err != nil {
-		return nil, fmt.Errorf("newSnowflake: %w", err)
+		return nil, fmt.Errorf("ProvideSnowflake: %w", err)
 	}
 	return n, nil
 }

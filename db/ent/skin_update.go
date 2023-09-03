@@ -53,15 +53,15 @@ func (su *SkinUpdate) SetVariant(s string) *SkinUpdate {
 	return su
 }
 
-// SetUserID sets the "user" edge to the User entity by ID.
-func (su *SkinUpdate) SetUserID(id int) *SkinUpdate {
-	su.mutation.SetUserID(id)
+// SetCreatedUserID sets the "created_user" edge to the User entity by ID.
+func (su *SkinUpdate) SetCreatedUserID(id int) *SkinUpdate {
+	su.mutation.SetCreatedUserID(id)
 	return su
 }
 
-// SetUser sets the "user" edge to the User entity.
-func (su *SkinUpdate) SetUser(u *User) *SkinUpdate {
-	return su.SetUserID(u.ID)
+// SetCreatedUser sets the "created_user" edge to the User entity.
+func (su *SkinUpdate) SetCreatedUser(u *User) *SkinUpdate {
+	return su.SetCreatedUserID(u.ID)
 }
 
 // Mutation returns the SkinMutation object of the builder.
@@ -69,9 +69,9 @@ func (su *SkinUpdate) Mutation() *SkinMutation {
 	return su.mutation
 }
 
-// ClearUser clears the "user" edge to the User entity.
-func (su *SkinUpdate) ClearUser() *SkinUpdate {
-	su.mutation.ClearUser()
+// ClearCreatedUser clears the "created_user" edge to the User entity.
+func (su *SkinUpdate) ClearCreatedUser() *SkinUpdate {
+	su.mutation.ClearCreatedUser()
 	return su
 }
 
@@ -104,8 +104,8 @@ func (su *SkinUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (su *SkinUpdate) check() error {
-	if _, ok := su.mutation.UserID(); su.mutation.UserCleared() && !ok {
-		return errors.New(`ent: clearing a required unique edge "Skin.user"`)
+	if _, ok := su.mutation.CreatedUserID(); su.mutation.CreatedUserCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Skin.created_user"`)
 	}
 	return nil
 }
@@ -134,12 +134,12 @@ func (su *SkinUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := su.mutation.Variant(); ok {
 		_spec.SetField(skin.FieldVariant, field.TypeString, value)
 	}
-	if su.mutation.UserCleared() {
+	if su.mutation.CreatedUserCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   skin.UserTable,
-			Columns: []string{skin.UserColumn},
+			Table:   skin.CreatedUserTable,
+			Columns: []string{skin.CreatedUserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
@@ -147,12 +147,12 @@ func (su *SkinUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := su.mutation.UserIDs(); len(nodes) > 0 {
+	if nodes := su.mutation.CreatedUserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   skin.UserTable,
-			Columns: []string{skin.UserColumn},
+			Table:   skin.CreatedUserTable,
+			Columns: []string{skin.CreatedUserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
@@ -208,15 +208,15 @@ func (suo *SkinUpdateOne) SetVariant(s string) *SkinUpdateOne {
 	return suo
 }
 
-// SetUserID sets the "user" edge to the User entity by ID.
-func (suo *SkinUpdateOne) SetUserID(id int) *SkinUpdateOne {
-	suo.mutation.SetUserID(id)
+// SetCreatedUserID sets the "created_user" edge to the User entity by ID.
+func (suo *SkinUpdateOne) SetCreatedUserID(id int) *SkinUpdateOne {
+	suo.mutation.SetCreatedUserID(id)
 	return suo
 }
 
-// SetUser sets the "user" edge to the User entity.
-func (suo *SkinUpdateOne) SetUser(u *User) *SkinUpdateOne {
-	return suo.SetUserID(u.ID)
+// SetCreatedUser sets the "created_user" edge to the User entity.
+func (suo *SkinUpdateOne) SetCreatedUser(u *User) *SkinUpdateOne {
+	return suo.SetCreatedUserID(u.ID)
 }
 
 // Mutation returns the SkinMutation object of the builder.
@@ -224,9 +224,9 @@ func (suo *SkinUpdateOne) Mutation() *SkinMutation {
 	return suo.mutation
 }
 
-// ClearUser clears the "user" edge to the User entity.
-func (suo *SkinUpdateOne) ClearUser() *SkinUpdateOne {
-	suo.mutation.ClearUser()
+// ClearCreatedUser clears the "created_user" edge to the User entity.
+func (suo *SkinUpdateOne) ClearCreatedUser() *SkinUpdateOne {
+	suo.mutation.ClearCreatedUser()
 	return suo
 }
 
@@ -272,8 +272,8 @@ func (suo *SkinUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (suo *SkinUpdateOne) check() error {
-	if _, ok := suo.mutation.UserID(); suo.mutation.UserCleared() && !ok {
-		return errors.New(`ent: clearing a required unique edge "Skin.user"`)
+	if _, ok := suo.mutation.CreatedUserID(); suo.mutation.CreatedUserCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Skin.created_user"`)
 	}
 	return nil
 }
@@ -319,12 +319,12 @@ func (suo *SkinUpdateOne) sqlSave(ctx context.Context) (_node *Skin, err error) 
 	if value, ok := suo.mutation.Variant(); ok {
 		_spec.SetField(skin.FieldVariant, field.TypeString, value)
 	}
-	if suo.mutation.UserCleared() {
+	if suo.mutation.CreatedUserCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   skin.UserTable,
-			Columns: []string{skin.UserColumn},
+			Table:   skin.CreatedUserTable,
+			Columns: []string{skin.CreatedUserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
@@ -332,12 +332,12 @@ func (suo *SkinUpdateOne) sqlSave(ctx context.Context) (_node *Skin, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := suo.mutation.UserIDs(); len(nodes) > 0 {
+	if nodes := suo.mutation.CreatedUserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   skin.UserTable,
-			Columns: []string{skin.UserColumn},
+			Table:   skin.CreatedUserTable,
+			Columns: []string{skin.CreatedUserColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),

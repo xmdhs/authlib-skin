@@ -18,6 +18,8 @@ type Tx struct {
 	User *UserClient
 	// UserProfile is the client for interacting with the UserProfile builders.
 	UserProfile *UserProfileClient
+	// UserToken is the client for interacting with the UserToken builders.
+	UserToken *UserTokenClient
 
 	// lazily loaded.
 	client     *Client
@@ -152,6 +154,7 @@ func (tx *Tx) init() {
 	tx.Skin = NewSkinClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.UserProfile = NewUserProfileClient(tx.config)
+	tx.UserToken = NewUserTokenClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

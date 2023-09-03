@@ -353,21 +353,21 @@ func RegTimeLTE(v int64) predicate.User {
 	return predicate.User(sql.FieldLTE(FieldRegTime, v))
 }
 
-// HasSkin applies the HasEdge predicate on the "skin" edge.
-func HasSkin() predicate.User {
+// HasCreatedSkin applies the HasEdge predicate on the "created_skin" edge.
+func HasCreatedSkin() predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, true, SkinTable, SkinColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, CreatedSkinTable, CreatedSkinColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasSkinWith applies the HasEdge predicate on the "skin" edge with a given conditions (other predicates).
-func HasSkinWith(preds ...predicate.Skin) predicate.User {
+// HasCreatedSkinWith applies the HasEdge predicate on the "created_skin" edge with a given conditions (other predicates).
+func HasCreatedSkinWith(preds ...predicate.Skin) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
-		step := newSkinStep()
+		step := newCreatedSkinStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -391,6 +391,52 @@ func HasProfile() predicate.User {
 func HasProfileWith(preds ...predicate.UserProfile) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := newProfileStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasToken applies the HasEdge predicate on the "token" edge.
+func HasToken() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, TokenTable, TokenColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTokenWith applies the HasEdge predicate on the "token" edge with a given conditions (other predicates).
+func HasTokenWith(preds ...predicate.UserToken) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newTokenStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasSkin applies the HasEdge predicate on the "skin" edge.
+func HasSkin() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, SkinTable, SkinColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasSkinWith applies the HasEdge predicate on the "skin" edge with a given conditions (other predicates).
+func HasSkinWith(preds ...predicate.Skin) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newSkinStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

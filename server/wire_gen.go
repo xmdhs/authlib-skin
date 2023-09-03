@@ -26,7 +26,11 @@ func InitializeRoute(ctx context.Context, c config.Config) (*http.Server, func()
 	if err != nil {
 		return nil, nil, err
 	}
-	client, cleanup2 := ProvideEnt(ctx, db, c, logger)
+	client, cleanup2, err := ProvideEnt(ctx, db, c, logger)
+	if err != nil {
+		cleanup()
+		return nil, nil, err
+	}
 	validate := ProvideValidate()
 	node, err := ProvideSnowflake(c)
 	if err != nil {
