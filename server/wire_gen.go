@@ -26,11 +26,7 @@ func InitializeRoute(ctx context.Context, c config.Config) (*http.Server, func()
 	if err != nil {
 		return nil, nil, err
 	}
-	querierWithTx, cleanup2, err := ProvideQuerier(ctx, db)
-	if err != nil {
-		cleanup()
-		return nil, nil, err
-	}
+	client, cleanup2 := ProvideEnt(ctx, db, c, logger)
 	validate := ProvideValidate()
 	node, err := ProvideSnowflake(c)
 	if err != nil {
@@ -38,7 +34,7 @@ func InitializeRoute(ctx context.Context, c config.Config) (*http.Server, func()
 		cleanup()
 		return nil, nil, err
 	}
-	router, err := route.NewRoute(logger, querierWithTx, validate, node, c)
+	router, err := route.NewRoute(logger, client, validate, node, c)
 	if err != nil {
 		cleanup2()
 		cleanup()

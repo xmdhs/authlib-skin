@@ -13,7 +13,8 @@ import (
 	"github.com/bwmarrin/snowflake"
 	"github.com/google/uuid"
 	"github.com/xmdhs/authlib-skin/config"
-	"github.com/xmdhs/authlib-skin/db/mysql"
+	"github.com/xmdhs/authlib-skin/db/ent"
+	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/utils"
 )
@@ -23,51 +24,52 @@ var (
 	ErrExitsName = errors.New("用户名已存在")
 )
 
-func Reg(ctx context.Context, u model.User, q mysql.QuerierWithTx, snow *snowflake.Node,
-	c config.Config,
+func Reg(ctx context.Context, u model.User, snow *snowflake.Node,
+	c config.Config, e *ent.Client,
 ) error {
-	ou, err := q.GetUserByEmail(ctx, u.Email)
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+	tx, err := e.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelReadCommitted})
+	if err != nil {
 		return fmt.Errorf("Reg: %w", err)
 	}
-	if ou.Email != "" {
+	defer tx.Rollback()
+	count, err := tx.User.Query().Where(user.EmailEQ(u.Email)).ForUpdate().Count(ctx)
+	if err != nil {
+		return fmt.Errorf("Reg: %w", err)
+	}
+	if count != 0 {
 		return fmt.Errorf("Reg: %w", ErrExistUser)
 	}
-	err = q.Tx(ctx, func(q mysql.Querier) error {
-		p, s := utils.Argon2ID(u.Password)
-		userID := snow.Generate().Int64()
-		_, err := q.CreateUser(ctx, mysql.CreateUserParams{
-			ID:       userID,
-			Email:    u.Email,
-			Password: p,
-			Salt:     s,
-			State:    0,
-			RegTime:  time.Now().Unix(),
-		})
-		if err != nil {
-			return err
-		}
-		var userUuid string
-		if c.OfflineUUID {
-			userUuid = uuidGen(u.Name)
-		} else {
-			userUuid = strings.ReplaceAll(uuid.New().String(), "-", "")
-		}
+	p, s := utils.Argon2ID(u.Password)
 
-		_, err = q.CreateUserProfile(ctx, mysql.CreateUserProfileParams{
-			UserID: userID,
-			Name:   u.Name,
-			Uuid:   userUuid,
-		})
-		if err != nil {
-			return err
-		}
-		return nil
-	})
+	du, err := e.User.Create().
+		SetEmail(u.Email).
+		SetPassword(p).
+		SetSalt(s).
+		SetRegTime(time.Now().Unix()).
+		SetState(0).Save(ctx)
 	if err != nil {
 		return fmt.Errorf("Reg: %w", err)
 	}
 
+	var userUuid string
+	if c.OfflineUUID {
+		userUuid = uuidGen(u.Name)
+	} else {
+		userUuid = strings.ReplaceAll(uuid.New().String(), "-", "")
+	}
+
+	_, err = e.UserProfile.Create().
+		SetUser(du).
+		SetName(u.Name).
+		SetUUID(userUuid).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("Reg: %w", err)
+	}
+	err = tx.Commit()
+	if err != nil {
+		return fmt.Errorf("Reg: %w", err)
+	}
 	return nil
 }
 

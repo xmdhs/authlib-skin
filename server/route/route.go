@@ -8,17 +8,17 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/julienschmidt/httprouter"
 	"github.com/xmdhs/authlib-skin/config"
-	"github.com/xmdhs/authlib-skin/db/mysql"
+	"github.com/xmdhs/authlib-skin/db/ent"
 	"github.com/xmdhs/authlib-skin/handle"
 )
 
-func NewRoute(l *slog.Logger, q mysql.QuerierWithTx, v *validator.Validate, snow *snowflake.Node, c config.Config) (*httprouter.Router, error) {
+func NewRoute(l *slog.Logger, client *ent.Client, v *validator.Validate, snow *snowflake.Node, c config.Config) (*httprouter.Router, error) {
 	r := httprouter.New()
 	err := newYggdrasil(r)
 	if err != nil {
 		return nil, fmt.Errorf("NewRoute: %w", err)
 	}
-	err = newSkinApi(r, l, q, v, snow, c)
+	err = newSkinApi(r, l, client, v, snow, c)
 	if err != nil {
 		return nil, fmt.Errorf("NewRoute: %w", err)
 	}
@@ -30,7 +30,7 @@ func newYggdrasil(r *httprouter.Router) error {
 	return nil
 }
 
-func newSkinApi(r *httprouter.Router, l *slog.Logger, q mysql.QuerierWithTx, v *validator.Validate, snow *snowflake.Node, c config.Config) error {
-	r.PUT("/api/v1/user/reg", handle.Reg(l, q, v, snow, c))
+func newSkinApi(r *httprouter.Router, l *slog.Logger, client *ent.Client, v *validator.Validate, snow *snowflake.Node, c config.Config) error {
+	r.PUT("/api/v1/user/reg", handle.Reg(l, client, v, snow, c))
 	return nil
 }

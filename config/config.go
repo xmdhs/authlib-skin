@@ -12,4 +12,5 @@ type Config struct {
 	}
 	Node  int64
 	Epoch int64
+	Debug bool
 }

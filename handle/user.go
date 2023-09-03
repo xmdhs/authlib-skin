@@ -9,13 +9,13 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/julienschmidt/httprouter"
 	"github.com/xmdhs/authlib-skin/config"
-	"github.com/xmdhs/authlib-skin/db/mysql"
+	"github.com/xmdhs/authlib-skin/db/ent"
 	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/service"
 	"github.com/xmdhs/authlib-skin/utils"
 )
 
-func Reg(l *slog.Logger, q mysql.QuerierWithTx, v *validator.Validate, snow *snowflake.Node, c config.Config) httprouter.Handle {
+func Reg(l *slog.Logger, client *ent.Client, v *validator.Validate, snow *snowflake.Node, c config.Config) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		ctx := r.Context()
 
@@ -25,7 +25,7 @@ func Reg(l *slog.Logger, q mysql.QuerierWithTx, v *validator.Validate, snow *sno
 			handleError(ctx, w, err.Error(), model.ErrInput, 400)
 			return
 		}
-		err = service.Reg(ctx, u, q, snow, c)
+		err = service.Reg(ctx, u, snow, c, client)
 		if err != nil {
 			if errors.Is(err, service.ErrExistUser) {
 				l.DebugContext(ctx, err.Error())

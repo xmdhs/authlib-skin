@@ -7,12 +7,13 @@ import (
 	"log/slog"
 	"os"
 
+	entsql "entgo.io/ent/dialect/sql"
 	"github.com/bwmarrin/snowflake"
 	"github.com/go-playground/validator/v10"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/google/wire"
 	"github.com/xmdhs/authlib-skin/config"
-	"github.com/xmdhs/authlib-skin/db/mysql"
+	"github.com/xmdhs/authlib-skin/db/ent"
 )
 
 func ProvideSlog(c config.Config) slog.Handler {
@@ -49,12 +50,18 @@ func ProvideDB(c config.Config) (*sql.DB, func(), error) {
 	return db, func() { db.Close() }, nil
 }
 
-func ProvideQuerier(ctx context.Context, db *sql.DB) (mysql.QuerierWithTx, func(), error) {
-	q, err := mysql.Prepare(ctx, db)
-	if err != nil {
-		return nil, nil, fmt.Errorf("newQuerier: %w", err)
+func ProvideEnt(ctx context.Context, db *sql.DB, c config.Config, sl *slog.Logger) (*ent.Client, func()) {
+	drv := entsql.OpenDB("mysql", db)
+	opts := []ent.Option{ent.Driver(drv), ent.Log(
+		func(a ...any) {
+			sl.Debug(fmt.Sprint(a))
+		},
+	)}
+	if c.Debug {
+		opts = append(opts, ent.Debug())
 	}
-	return q, func() { q.Close() }, nil
+	e := ent.NewClient(opts...)
+	return e, func() { e.Close() }
 }
 
 func ProvideValidate() *validator.Validate {
@@ -70,4 +77,4 @@ func ProvideSnowflake(c config.Config) (*snowflake.Node, error) {
 	return n, nil
 }
 
-var Set = wire.NewSet(ProvideSlog, ProvideDB, ProvideQuerier, ProvideValidate, ProvideSnowflake)
+var Set = wire.NewSet(ProvideSlog, ProvideDB, ProvideEnt, ProvideValidate, ProvideSnowflake)
