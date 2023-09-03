@@ -11,6 +11,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"github.com/xmdhs/authlib-skin/db/cache"
 	"github.com/xmdhs/authlib-skin/db/ent"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/model"
@@ -24,22 +25,7 @@ var (
 )
 
 func (y *Yggdrasil) Authenticate(cxt context.Context, auth yggdrasil.Authenticate) (yggdrasil.Token, error) {
-	key := []byte("Authenticate" + auth.Username)
-
-	v, err := y.cache.Get(key)
-	if err != nil {
-		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", err)
-	}
-	if v != nil {
-		u := binary.BigEndian.Uint64(v)
-		t := time.Unix(int64(u), 0)
-		if time.Now().Before(t) {
-			return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", ErrRate)
-		}
-	}
-	b := make([]byte, 8)
-	binary.BigEndian.PutUint64(b, uint64(time.Now().Add(5*time.Second).Unix()))
-	err = y.cache.Put(key, b, time.Now().Add(20*time.Second))
+	err := rate("Authenticate"+auth.Username, y.cache, 5*time.Second)
 	if err != nil {
 		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", err)
 	}
@@ -115,4 +101,26 @@ func (y *Yggdrasil) Authenticate(cxt context.Context, auth yggdrasil.Authenticat
 			Properties: []any{},
 		},
 	}, nil
+}
+
+func rate(k string, c cache.Cache, d time.Duration) error {
+	key := []byte(k)
+	v, err := c.Get([]byte(key))
+	if err != nil {
+		return fmt.Errorf("rate: %w", err)
+	}
+	if v != nil {
+		u := binary.BigEndian.Uint64(v)
+		t := time.Unix(int64(u), 0)
+		if time.Now().Before(t) {
+			return fmt.Errorf("rate: %w", ErrRate)
+		}
+	}
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, uint64(time.Now().Add(d).Unix()))
+	err = c.Put(key, b, time.Now().Add(d))
+	if err != nil {
+		return fmt.Errorf("rate: %w", err)
+	}
+	return nil
 }
