@@ -40,6 +40,10 @@ func (f *FastCache) Del(k []byte) error {
 
 func (f *FastCache) Get(k []byte) ([]byte, error) {
 	b := f.c.GetBig(nil, k)
+	if b == nil {
+		return nil, nil
+	}
+
 	me := ttlCache{}
 	err := binary.Unmarshal(b, &me)
 	if err != nil {

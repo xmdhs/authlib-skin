@@ -15,7 +15,7 @@ type UserProfile struct {
 // Fields of the UserProfile.
 func (UserProfile) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("name"),
+		field.String("name").Unique(),
 		field.String("uuid"),
 	}
 }

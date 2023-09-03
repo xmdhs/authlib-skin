@@ -19,7 +19,7 @@ func Argon2ID(pass string) (password string, salt string) {
 }
 
 func Argon2Compare(pass, hashPass string, salt string) bool {
-	s, err := base64.StdEncoding.DecodeString(hashPass)
+	s, err := base64.StdEncoding.DecodeString(salt)
 	if err != nil {
 		return false
 	}

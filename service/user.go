@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"crypto/md5"
-	"database/sql"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -11,7 +10,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/xmdhs/authlib-skin/db/ent"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
+	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
 	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/utils"
 )
@@ -22,46 +23,48 @@ var (
 )
 
 func (w *WebService) Reg(ctx context.Context, u model.User) error {
-	tx, err := w.client.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelReadCommitted})
-	if err != nil {
-		return fmt.Errorf("Reg: %w", err)
-	}
-	defer tx.Rollback()
-	count, err := tx.User.Query().Where(user.EmailEQ(u.Email)).ForUpdate().Count(ctx)
-	if err != nil {
-		return fmt.Errorf("Reg: %w", err)
-	}
-	if count != 0 {
-		return fmt.Errorf("Reg: %w", ErrExistUser)
-	}
-	p, s := utils.Argon2ID(u.Password)
-
-	du, err := w.client.User.Create().
-		SetEmail(u.Email).
-		SetPassword(p).
-		SetSalt(s).
-		SetRegTime(time.Now().Unix()).
-		SetState(0).Save(ctx)
-	if err != nil {
-		return fmt.Errorf("Reg: %w", err)
-	}
-
 	var userUuid string
 	if w.config.OfflineUUID {
 		userUuid = uuidGen(u.Name)
 	} else {
 		userUuid = strings.ReplaceAll(uuid.New().String(), "-", "")
 	}
+	p, s := utils.Argon2ID(u.Password)
 
-	_, err = w.client.UserProfile.Create().
-		SetUser(du).
-		SetName(u.Name).
-		SetUUID(userUuid).
-		Save(ctx)
-	if err != nil {
-		return fmt.Errorf("Reg: %w", err)
-	}
-	err = tx.Commit()
+	err := utils.WithTx(ctx, w.client, func(tx *ent.Tx) error {
+		count, err := tx.User.Query().Where(user.EmailEQ(u.Email)).ForUpdate().Count(ctx)
+		if err != nil {
+			return err
+		}
+		if count != 0 {
+			return ErrExistUser
+		}
+		nameCount, err := tx.UserProfile.Query().Where(userprofile.NameEQ(u.Name)).ForUpdate().Count(ctx)
+		if err != nil {
+			return err
+		}
+		if nameCount != 0 {
+			return ErrExitsName
+		}
+		du, err := tx.User.Create().
+			SetEmail(u.Email).
+			SetPassword(p).
+			SetSalt(s).
+			SetRegTime(time.Now().Unix()).
+			SetState(0).Save(ctx)
+		if err != nil {
+			return err
+		}
+		_, err = tx.UserProfile.Create().
+			SetUser(du).
+			SetName(u.Name).
+			SetUUID(userUuid).
+			Save(ctx)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
 		return fmt.Errorf("Reg: %w", err)
 	}

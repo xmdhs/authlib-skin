@@ -10,7 +10,7 @@ import (
 
 func NewRoute(yggService *yggdrasil.Yggdrasil, handel *handle.Handel) (*httprouter.Router, error) {
 	r := httprouter.New()
-	err := newYggdrasil(r)
+	err := newYggdrasil(r, *yggService)
 	if err != nil {
 		return nil, fmt.Errorf("NewRoute: %w", err)
 	}
@@ -21,8 +21,8 @@ func NewRoute(yggService *yggdrasil.Yggdrasil, handel *handle.Handel) (*httprout
 	return r, nil
 }
 
-func newYggdrasil(r *httprouter.Router) error {
-	r.POST("/api/authserver/authenticate", nil)
+func newYggdrasil(r *httprouter.Router, handelY yggdrasil.Yggdrasil) error {
+	r.POST("/api/authserver/authenticate", warpHJSON(handelY.Authenticate()))
 	return nil
 }
 

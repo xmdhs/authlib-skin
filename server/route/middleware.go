@@ -6,7 +6,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-func warpCtJSON(handle httprouter.Handle) httprouter.Handle {
+func warpHJSON(handle httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		handle(w, r, p)

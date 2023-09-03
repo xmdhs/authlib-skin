@@ -1,28 +1,31 @@
 package utils
 
-// func WithTx(ctx context.Context, opts *sql.TxOptions, q mysql.Querier, db *sql.DB, f func(mysql.Querier) error) error {
-// 	w, ok := q.(interface {
-// 		WithTx(tx *sql.Tx) *mysql.Queries
-// 	})
-// 	var tx *sql.Tx
-// 	if ok {
-// 		var err error
-// 		tx, err = db.BeginTx(ctx, opts)
-// 		if err != nil {
-// 			return fmt.Errorf("WithTx: %w", err)
-// 		}
-// 		defer tx.Rollback()
-// 		q = w.WithTx(tx)
-// 	}
-// 	err := f(q)
-// 	if err != nil {
-// 		return fmt.Errorf("WithTx: %w", err)
-// 	}
-// 	if tx != nil {
-// 		err := tx.Commit()
-// 		if err != nil {
-// 			return fmt.Errorf("WithTx: %w", err)
-// 		}
-// 	}
-// 	return nil
-// }
+import (
+	"context"
+	"fmt"
+
+	"github.com/xmdhs/authlib-skin/db/ent"
+)
+
+func WithTx(ctx context.Context, client *ent.Client, fn func(tx *ent.Tx) error) error {
+	tx, err := client.Tx(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if v := recover(); v != nil {
+			tx.Rollback()
+			panic(v)
+		}
+	}()
+	if err := fn(tx); err != nil {
+		if rerr := tx.Rollback(); rerr != nil {
+			err = fmt.Errorf("%w: rolling back transaction: %v", err, rerr)
+		}
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("committing transaction: %w", err)
+	}
+	return nil
+}

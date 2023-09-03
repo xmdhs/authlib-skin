@@ -25,6 +25,12 @@ func main() {
 		Node:  0,
 		Epoch: 1693645718534,
 		Debug: true,
+		Cache: struct {
+			Type string
+			Ram  int
+		}{
+			Ram: 1000 * 1000 * 50,
+		},
 	}
 	s, c, err := server.InitializeRoute(ctx, config)
 	if err != nil {

@@ -9,13 +9,13 @@ import (
 type Yggdrasil struct {
 	client *ent.Client
 	cache  cache.Cache
-	c      config.Config
+	config config.Config
 }
 
 func NewYggdrasil(client *ent.Client, cache cache.Cache, c config.Config) *Yggdrasil {
 	return &Yggdrasil{
 		client: client,
 		cache:  cache,
-		c:      c,
+		config: c,
 	}
 }
