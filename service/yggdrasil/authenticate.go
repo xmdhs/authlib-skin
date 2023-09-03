@@ -25,7 +25,7 @@ var (
 )
 
 func (y *Yggdrasil) Authenticate(cxt context.Context, auth yggdrasil.Authenticate) (yggdrasil.Token, error) {
-	err := rate("Authenticate"+auth.Username, y.cache, 5*time.Second)
+	err := rate("Authenticate"+auth.Username, y.cache, 10*time.Second, 3)
 	if err != nil {
 		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", err)
 	}
@@ -103,22 +103,34 @@ func (y *Yggdrasil) Authenticate(cxt context.Context, auth yggdrasil.Authenticat
 	}, nil
 }
 
-func rate(k string, c cache.Cache, d time.Duration) error {
+func rate(k string, c cache.Cache, d time.Duration, count uint) error {
 	key := []byte(k)
 	v, err := c.Get([]byte(key))
 	if err != nil {
 		return fmt.Errorf("rate: %w", err)
 	}
-	if v != nil {
-		u := binary.BigEndian.Uint64(v)
-		t := time.Unix(int64(u), 0)
-		if time.Now().Before(t) {
-			return fmt.Errorf("rate: %w", ErrRate)
+	if v == nil {
+		err := putUint(1, c, key, d)
+		if err != nil {
+			return fmt.Errorf("rate: %w", err)
 		}
+		return nil
 	}
+	n := binary.BigEndian.Uint64(v)
+	if n > uint64(count) {
+		return fmt.Errorf("rate: %w", ErrRate)
+	}
+	err = putUint(n+1, c, key, d)
+	if err != nil {
+		return fmt.Errorf("rate: %w", err)
+	}
+	return nil
+}
+
+func putUint(n uint64, c cache.Cache, key []byte, d time.Duration) error {
 	b := make([]byte, 8)
-	binary.BigEndian.PutUint64(b, uint64(time.Now().Add(d).Unix()))
-	err = c.Put(key, b, time.Now().Add(d))
+	binary.BigEndian.PutUint64(b, n)
+	err := c.Put(key, b, time.Now().Add(d))
 	if err != nil {
 		return fmt.Errorf("rate: %w", err)
 	}

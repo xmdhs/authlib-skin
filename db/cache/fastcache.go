@@ -43,11 +43,13 @@ func (f *FastCache) Get(k []byte) ([]byte, error) {
 	if b == nil {
 		return nil, nil
 	}
-
 	me := ttlCache{}
 	err := binary.Unmarshal(b, &me)
 	if err != nil {
 		return nil, fmt.Errorf("FastCache.Get: %w", err)
+	}
+	if time.Unix(me.TimeOut, 0).Before(time.Now()) {
+		return nil, nil
 	}
 	return me.V, nil
 }
