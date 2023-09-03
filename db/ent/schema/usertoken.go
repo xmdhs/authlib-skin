@@ -13,6 +13,7 @@ type UserToken struct {
 // Fields of the UserToken.
 func (UserToken) Fields() []ent.Field {
 	return []ent.Field{
+		// 用于验证 jwt token 是否被注销，若相同则有效
 		field.Uint64("token_id"),
 	}
 }

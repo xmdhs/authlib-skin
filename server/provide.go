@@ -13,6 +13,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/google/wire"
 	"github.com/xmdhs/authlib-skin/config"
+	"github.com/xmdhs/authlib-skin/db/cache"
 	"github.com/xmdhs/authlib-skin/db/ent"
 )
 
@@ -81,4 +82,8 @@ func ProvideSnowflake(c config.Config) (*snowflake.Node, error) {
 	return n, nil
 }
 
-var Set = wire.NewSet(ProvideSlog, ProvideDB, ProvideEnt, ProvideValidate, ProvideSnowflake)
+func ProvideCache(c config.Config) cache.Cache {
+	return cache.NewFastCache(c.Cache.Ram)
+}
+
+var Set = wire.NewSet(ProvideSlog, ProvideDB, ProvideEnt, ProvideValidate, ProvideSnowflake, ProvideCache)

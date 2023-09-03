@@ -10,10 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bwmarrin/snowflake"
 	"github.com/google/uuid"
-	"github.com/xmdhs/authlib-skin/config"
-	"github.com/xmdhs/authlib-skin/db/ent"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/utils"
@@ -24,10 +21,8 @@ var (
 	ErrExitsName = errors.New("用户名已存在")
 )
 
-func Reg(ctx context.Context, u model.User, snow *snowflake.Node,
-	c config.Config, e *ent.Client,
-) error {
-	tx, err := e.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelReadCommitted})
+func (w *WebService) Reg(ctx context.Context, u model.User) error {
+	tx, err := w.client.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelReadCommitted})
 	if err != nil {
 		return fmt.Errorf("Reg: %w", err)
 	}
@@ -41,7 +36,7 @@ func Reg(ctx context.Context, u model.User, snow *snowflake.Node,
 	}
 	p, s := utils.Argon2ID(u.Password)
 
-	du, err := e.User.Create().
+	du, err := w.client.User.Create().
 		SetEmail(u.Email).
 		SetPassword(p).
 		SetSalt(s).
@@ -52,13 +47,13 @@ func Reg(ctx context.Context, u model.User, snow *snowflake.Node,
 	}
 
 	var userUuid string
-	if c.OfflineUUID {
+	if w.config.OfflineUUID {
 		userUuid = uuidGen(u.Name)
 	} else {
 		userUuid = strings.ReplaceAll(uuid.New().String(), "-", "")
 	}
 
-	_, err = e.UserProfile.Create().
+	_, err = w.client.UserProfile.Create().
 		SetUser(du).
 		SetName(u.Name).
 		SetUUID(userUuid).

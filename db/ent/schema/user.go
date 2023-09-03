@@ -19,6 +19,7 @@ func (User) Fields() []ent.Field {
 		field.String("email").Unique(),
 		field.String("password"),
 		field.String("salt"),
+		// 二进制状态位，保留
 		field.Int("state"),
 		field.Int64("reg_time"),
 	}

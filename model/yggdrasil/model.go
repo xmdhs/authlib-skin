@@ -16,3 +16,21 @@ type Error struct {
 	Error        string `json:"error,omitempty"`
 	ErrorMessage string `json:"errorMessage,omitempty"`
 }
+
+type Token struct {
+	AccessToken       string         `json:"accessToken"`
+	AvailableProfiles []TokenProfile `json:"availableProfiles"`
+	ClientToken       string         `json:"clientToken"`
+	SelectedProfile   TokenProfile   `json:"selectedProfile"`
+	User              TokenUser      `json:"user"`
+}
+
+type TokenProfile struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type TokenUser struct {
+	ID         string `json:"id"`
+	Properties []any  `json:"properties"`
+}

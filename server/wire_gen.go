@@ -9,7 +9,11 @@ package server
 import (
 	"context"
 	"github.com/xmdhs/authlib-skin/config"
+	"github.com/xmdhs/authlib-skin/handle"
+	yggdrasil2 "github.com/xmdhs/authlib-skin/handle/yggdrasil"
 	"github.com/xmdhs/authlib-skin/server/route"
+	"github.com/xmdhs/authlib-skin/service"
+	"github.com/xmdhs/authlib-skin/service/yggdrasil"
 	"net/http"
 )
 
@@ -22,6 +26,7 @@ import (
 func InitializeRoute(ctx context.Context, c config.Config) (*http.Server, func(), error) {
 	handler := ProvideSlog(c)
 	logger := NewSlog(handler)
+	validate := ProvideValidate()
 	db, cleanup, err := ProvideDB(c)
 	if err != nil {
 		return nil, nil, err
@@ -31,14 +36,12 @@ func InitializeRoute(ctx context.Context, c config.Config) (*http.Server, func()
 		cleanup()
 		return nil, nil, err
 	}
-	validate := ProvideValidate()
-	node, err := ProvideSnowflake(c)
-	if err != nil {
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	router, err := route.NewRoute(logger, client, validate, node, c)
+	cache := ProvideCache(c)
+	yggdrasilYggdrasil := yggdrasil.NewYggdrasil(client, cache, c)
+	yggdrasil3 := yggdrasil2.NewYggdrasil(logger, validate, yggdrasilYggdrasil)
+	webService := service.NewWebService(c, client)
+	handel := handle.NewHandel(webService, validate, c, logger)
+	router, err := route.NewRoute(yggdrasil3, handel)
 	if err != nil {
 		cleanup2()
 		cleanup()
