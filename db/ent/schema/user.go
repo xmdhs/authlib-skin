@@ -2,6 +2,7 @@ package schema
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -16,9 +17,15 @@ type User struct {
 // Fields of the User.
 func (User) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("email").Unique(),
-		field.String("password"),
-		field.String("salt"),
+		field.String("email").Unique().SchemaType(map[string]string{
+			dialect.MySQL: "VARCHAR(30)",
+		}),
+		field.String("password").SchemaType(map[string]string{
+			dialect.MySQL: "VARCHAR(80)",
+		}),
+		field.String("salt").SchemaType(map[string]string{
+			dialect.MySQL: "VARCHAR(50)",
+		}),
 		// 二进制状态位，保留
 		field.Int("state"),
 		field.Int64("reg_time"),

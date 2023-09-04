@@ -11,7 +11,7 @@ var (
 	// SkinsColumns holds the columns for the "skins" table.
 	SkinsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "skin_hash", Type: field.TypeString},
+		{Name: "skin_hash", Type: field.TypeString, SchemaType: map[string]string{"mysql": "VARCHAR(100)"}},
 		{Name: "type", Type: field.TypeUint8},
 		{Name: "variant", Type: field.TypeString},
 		{Name: "skin_created_user", Type: field.TypeInt},
@@ -40,9 +40,9 @@ var (
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "email", Type: field.TypeString, Unique: true},
-		{Name: "password", Type: field.TypeString},
-		{Name: "salt", Type: field.TypeString},
+		{Name: "email", Type: field.TypeString, Unique: true, SchemaType: map[string]string{"mysql": "VARCHAR(30)"}},
+		{Name: "password", Type: field.TypeString, SchemaType: map[string]string{"mysql": "VARCHAR(80)"}},
+		{Name: "salt", Type: field.TypeString, SchemaType: map[string]string{"mysql": "VARCHAR(50)"}},
 		{Name: "state", Type: field.TypeInt},
 		{Name: "reg_time", Type: field.TypeInt64},
 		{Name: "user_token", Type: field.TypeInt, Nullable: true},
@@ -78,8 +78,8 @@ var (
 	// UserProfilesColumns holds the columns for the "user_profiles" table.
 	UserProfilesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "name", Type: field.TypeString, Unique: true},
-		{Name: "uuid", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString, Unique: true, SchemaType: map[string]string{"mysql": "VARCHAR(20)"}},
+		{Name: "uuid", Type: field.TypeString, SchemaType: map[string]string{"mysql": "VARCHAR(32)"}},
 		{Name: "user_profile", Type: field.TypeInt, Unique: true},
 	}
 	// UserProfilesTable holds the schema information for the "user_profiles" table.
@@ -107,13 +107,20 @@ var (
 	UserTokensColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "token_id", Type: field.TypeUint64},
-		{Name: "uuid", Type: field.TypeString},
+		{Name: "uuid", Type: field.TypeString, SchemaType: map[string]string{"mysql": "VARCHAR(32)"}},
 	}
 	// UserTokensTable holds the schema information for the "user_tokens" table.
 	UserTokensTable = &schema.Table{
 		Name:       "user_tokens",
 		Columns:    UserTokensColumns,
 		PrimaryKey: []*schema.Column{UserTokensColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "usertoken_uuid",
+				Unique:  false,
+				Columns: []*schema.Column{UserTokensColumns[2]},
+			},
+		},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{

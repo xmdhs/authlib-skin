@@ -56,7 +56,7 @@ func (y *Yggdrasil) Authenticate(cxt context.Context, auth yggdrasil.Authenticat
 			}
 		}
 		if utoken == nil {
-			ut, err := tx.UserToken.Create().SetTokenID(1).Save(cxt)
+			ut, err := tx.UserToken.Create().SetTokenID(1).SetUUID(u.Edges.Profile.UUID).Save(cxt)
 			if err != nil {
 				return err
 			}
@@ -74,6 +74,7 @@ func (y *Yggdrasil) Authenticate(cxt context.Context, auth yggdrasil.Authenticat
 
 	claims := model.TokenClaims{
 		Tid: strconv.FormatUint(utoken.TokenID, 10),
+		CID: clientToken,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(15 * 24 * time.Hour)),
 			Issuer:    "authlib-skin",

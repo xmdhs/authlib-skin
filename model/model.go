@@ -16,5 +16,6 @@ type User struct {
 
 type TokenClaims struct {
 	Tid string `json:"tid"`
+	CID string `json:"cid"`
 	jwt.RegisteredClaims
 }

@@ -2,6 +2,7 @@ package schema
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/dialect"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
@@ -15,7 +16,9 @@ type Skin struct {
 // Fields of the Skin.
 func (Skin) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("skin_hash"),
+		field.String("skin_hash").SchemaType(map[string]string{
+			dialect.MySQL: "VARCHAR(100)",
+		}),
 		field.Uint8("type"),
 		field.String("variant"),
 	}
