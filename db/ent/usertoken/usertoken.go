@@ -13,6 +13,8 @@ const (
 	FieldID = "id"
 	// FieldTokenID holds the string denoting the token_id field in the database.
 	FieldTokenID = "token_id"
+	// FieldUUID holds the string denoting the uuid field in the database.
+	FieldUUID = "uuid"
 	// Table holds the table name of the usertoken in the database.
 	Table = "user_tokens"
 )
@@ -21,6 +23,7 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldTokenID,
+	FieldUUID,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -44,4 +47,9 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 // ByTokenID orders the results by the token_id field.
 func ByTokenID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTokenID, opts...).ToFunc()
+}
+
+// ByUUID orders the results by the uuid field.
+func ByUUID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUUID, opts...).ToFunc()
 }

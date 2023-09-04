@@ -17,7 +17,9 @@ type UserToken struct {
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
 	// TokenID holds the value of the "token_id" field.
-	TokenID      uint64 `json:"token_id,omitempty"`
+	TokenID uint64 `json:"token_id,omitempty"`
+	// UUID holds the value of the "uuid" field.
+	UUID         string `json:"uuid,omitempty"`
 	selectValues sql.SelectValues
 }
 
@@ -28,6 +30,8 @@ func (*UserToken) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case usertoken.FieldID, usertoken.FieldTokenID:
 			values[i] = new(sql.NullInt64)
+		case usertoken.FieldUUID:
+			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -54,6 +58,12 @@ func (ut *UserToken) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field token_id", values[i])
 			} else if value.Valid {
 				ut.TokenID = uint64(value.Int64)
+			}
+		case usertoken.FieldUUID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field uuid", values[i])
+			} else if value.Valid {
+				ut.UUID = value.String
 			}
 		default:
 			ut.selectValues.Set(columns[i], values[i])
@@ -93,6 +103,9 @@ func (ut *UserToken) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v, ", ut.ID))
 	builder.WriteString("token_id=")
 	builder.WriteString(fmt.Sprintf("%v", ut.TokenID))
+	builder.WriteString(", ")
+	builder.WriteString("uuid=")
+	builder.WriteString(ut.UUID)
 	builder.WriteByte(')')
 	return builder.String()
 }

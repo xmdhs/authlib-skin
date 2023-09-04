@@ -107,6 +107,7 @@ var (
 	UserTokensColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "token_id", Type: field.TypeUint64},
+		{Name: "uuid", Type: field.TypeString},
 	}
 	// UserTokensTable holds the schema information for the "user_tokens" table.
 	UserTokensTable = &schema.Table{

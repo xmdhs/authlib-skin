@@ -40,6 +40,12 @@ func (utu *UserTokenUpdate) AddTokenID(u int64) *UserTokenUpdate {
 	return utu
 }
 
+// SetUUID sets the "uuid" field.
+func (utu *UserTokenUpdate) SetUUID(s string) *UserTokenUpdate {
+	utu.mutation.SetUUID(s)
+	return utu
+}
+
 // Mutation returns the UserTokenMutation object of the builder.
 func (utu *UserTokenUpdate) Mutation() *UserTokenMutation {
 	return utu.mutation
@@ -87,6 +93,9 @@ func (utu *UserTokenUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := utu.mutation.AddedTokenID(); ok {
 		_spec.AddField(usertoken.FieldTokenID, field.TypeUint64, value)
 	}
+	if value, ok := utu.mutation.UUID(); ok {
+		_spec.SetField(usertoken.FieldUUID, field.TypeString, value)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, utu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{usertoken.Label}
@@ -117,6 +126,12 @@ func (utuo *UserTokenUpdateOne) SetTokenID(u uint64) *UserTokenUpdateOne {
 // AddTokenID adds u to the "token_id" field.
 func (utuo *UserTokenUpdateOne) AddTokenID(u int64) *UserTokenUpdateOne {
 	utuo.mutation.AddTokenID(u)
+	return utuo
+}
+
+// SetUUID sets the "uuid" field.
+func (utuo *UserTokenUpdateOne) SetUUID(s string) *UserTokenUpdateOne {
+	utuo.mutation.SetUUID(s)
 	return utuo
 }
 
@@ -196,6 +211,9 @@ func (utuo *UserTokenUpdateOne) sqlSave(ctx context.Context) (_node *UserToken, 
 	}
 	if value, ok := utuo.mutation.AddedTokenID(); ok {
 		_spec.AddField(usertoken.FieldTokenID, field.TypeUint64, value)
+	}
+	if value, ok := utuo.mutation.UUID(); ok {
+		_spec.SetField(usertoken.FieldUUID, field.TypeString, value)
 	}
 	_node = &UserToken{config: utuo.config}
 	_spec.Assign = _node.assignValues

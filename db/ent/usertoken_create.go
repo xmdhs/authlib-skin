@@ -25,6 +25,12 @@ func (utc *UserTokenCreate) SetTokenID(u uint64) *UserTokenCreate {
 	return utc
 }
 
+// SetUUID sets the "uuid" field.
+func (utc *UserTokenCreate) SetUUID(s string) *UserTokenCreate {
+	utc.mutation.SetUUID(s)
+	return utc
+}
+
 // Mutation returns the UserTokenMutation object of the builder.
 func (utc *UserTokenCreate) Mutation() *UserTokenMutation {
 	return utc.mutation
@@ -62,6 +68,9 @@ func (utc *UserTokenCreate) check() error {
 	if _, ok := utc.mutation.TokenID(); !ok {
 		return &ValidationError{Name: "token_id", err: errors.New(`ent: missing required field "UserToken.token_id"`)}
 	}
+	if _, ok := utc.mutation.UUID(); !ok {
+		return &ValidationError{Name: "uuid", err: errors.New(`ent: missing required field "UserToken.uuid"`)}
+	}
 	return nil
 }
 
@@ -91,6 +100,10 @@ func (utc *UserTokenCreate) createSpec() (*UserToken, *sqlgraph.CreateSpec) {
 	if value, ok := utc.mutation.TokenID(); ok {
 		_spec.SetField(usertoken.FieldTokenID, field.TypeUint64, value)
 		_node.TokenID = value
+	}
+	if value, ok := utc.mutation.UUID(); ok {
+		_spec.SetField(usertoken.FieldUUID, field.TypeString, value)
+		_node.UUID = value
 	}
 	return _node, _spec
 }
