@@ -2,6 +2,7 @@ package route
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/xmdhs/authlib-skin/handle"
@@ -22,11 +23,23 @@ func NewRoute(yggService *yggdrasil.Yggdrasil, handel *handle.Handel) (*httprout
 }
 
 func newYggdrasil(r *httprouter.Router, handelY yggdrasil.Yggdrasil) error {
-	r.POST("/api/authserver/authenticate", warpHJSON(handelY.Authenticate()))
-	r.POST("/api/authserver/validate", warpHJSON(handelY.Validate()))
-	r.POST("/api/authserver/signout", warpHJSON(handelY.Signout()))
-	r.POST("/api/authserver/invalidate", handelY.Invalidate())
-	r.POST("/api/authserver/refresh", handelY.Refresh())
+	r.POST("/api/yggdrasil/authserver/authenticate", warpHJSON(handelY.Authenticate()))
+	r.POST("/api/yggdrasil/authserver/validate", warpHJSON(handelY.Validate()))
+	r.POST("/api/yggdrasil/authserver/signout", warpHJSON(handelY.Signout()))
+	r.POST("/api/yggdrasil/authserver/invalidate", handelY.Invalidate())
+	r.POST("/api/yggdrasil/authserver/refresh", handelY.Refresh())
+	r.GET("/api/yggdrasil", func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+		w.Write([]byte(`{
+			"meta": {
+				"serverName": "test",
+				"implementationName": "test",
+				"implementationVersion": "999.999.999"
+			},
+			"skinDomains": [
+			],
+			"signaturePublickey": "123"
+		}`))
+	})
 	return nil
 }
 
