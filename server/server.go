@@ -21,7 +21,7 @@ func NewServer(c config.Config, sl *slog.Logger, route *httprouter.Router) (*htt
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 			if sl.Enabled(ctx, slog.LevelInfo) {
-				ip, _ := utils.GetIP(r)
+				ip, _ := utils.GetIP(r, c.RaelIP)
 				trackid.Add(1)
 				ctx = setCtx(ctx, &reqInfo{
 					URL:     r.URL.String(),

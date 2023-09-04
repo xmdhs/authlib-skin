@@ -7,21 +7,23 @@ import (
 	"strings"
 )
 
-func GetIP(r *http.Request) (string, error) {
-	//Get IP from the X-REAL-IP header
-	ip := r.Header.Get("X-REAL-IP")
-	netIP := net.ParseIP(ip)
-	if netIP != nil {
-		return ip, nil
-	}
-
-	//Get IP from X-FORWARDED-FOR header
-	ips := r.Header.Get("X-FORWARDED-FOR")
-	splitIps := strings.Split(ips, ",")
-	for _, ip := range splitIps {
+func GetIP(r *http.Request, fromHeader bool) (string, error) {
+	if fromHeader {
+		//Get IP from the X-REAL-IP header
+		ip := r.Header.Get("X-REAL-IP")
 		netIP := net.ParseIP(ip)
 		if netIP != nil {
 			return ip, nil
+		}
+
+		//Get IP from X-FORWARDED-FOR header
+		ips := r.Header.Get("X-FORWARDED-FOR")
+		splitIps := strings.Split(ips, ",")
+		for _, ip := range splitIps {
+			netIP := net.ParseIP(ip)
+			if netIP != nil {
+				return ip, nil
+			}
 		}
 	}
 
@@ -30,7 +32,7 @@ func GetIP(r *http.Request) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	netIP = net.ParseIP(ip)
+	netIP := net.ParseIP(ip)
 	if netIP != nil {
 		return ip, nil
 	}
