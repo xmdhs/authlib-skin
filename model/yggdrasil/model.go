@@ -26,7 +26,7 @@ type Token struct {
 	AccessToken       string         `json:"accessToken"`
 	AvailableProfiles []TokenProfile `json:"availableProfiles,omitempty"`
 	ClientToken       string         `json:"clientToken"`
-	SelectedProfile   TokenProfile   `json:"selectedProfile,omitempty"`
+	SelectedProfile   TokenProfile   `json:"selectedProfile"`
 	User              TokenUser      `json:"user,omitempty"`
 }
 

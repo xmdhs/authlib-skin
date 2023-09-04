@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/xmdhs/authlib-skin/db/ent"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
+	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
 	"github.com/xmdhs/authlib-skin/db/ent/usertoken"
 	"github.com/xmdhs/authlib-skin/model/yggdrasil"
 	sutils "github.com/xmdhs/authlib-skin/service/utils"
@@ -148,11 +149,22 @@ func (y *Yggdrasil) Refresh(ctx context.Context, token yggdrasil.RefreshToken) (
 	if err != nil {
 		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", err)
 	}
+
+	up, err := y.client.UserProfile.Query().Where(userprofile.UUIDEQ(t.Subject)).First(ctx)
+	if err != nil {
+		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", err)
+	}
+
 	return yggdrasil.Token{
 		AccessToken: jwts,
 		ClientToken: t.CID,
+		SelectedProfile: yggdrasil.TokenProfile{
+			ID:   up.UUID,
+			Name: up.Name,
+		},
 		User: yggdrasil.TokenUser{
-			ID: t.Subject,
+			ID:         t.Subject,
+			Properties: []any{},
 		},
 	}, nil
 }
