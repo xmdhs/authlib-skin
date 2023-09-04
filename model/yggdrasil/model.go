@@ -1,14 +1,18 @@
 package yggdrasil
 
+type Pass struct {
+	Username string `json:"username" validate:"required"`
+	Password string `json:"password" validate:"required"`
+}
+
 type Authenticate struct {
 	Agent struct {
 		Name    string `json:"name" validate:"required,eq=Minecraft"`
 		Version int    `json:"version" validate:"required,eq=1"`
 	} `json:"agent"`
 	ClientToken string `json:"clientToken"`
-	Password    string `json:"password" validate:"required"`
 	RequestUser bool   `json:"requestUser"`
-	Username    string `json:"username" validate:"required"`
+	Pass
 }
 
 type Error struct {

@@ -2,7 +2,6 @@ package yggdrasil
 
 import (
 	"context"
-	"encoding/binary"
 	"errors"
 	"fmt"
 	"strconv"
@@ -11,11 +10,12 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"github.com/xmdhs/authlib-skin/db/cache"
 	"github.com/xmdhs/authlib-skin/db/ent"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
+	"github.com/xmdhs/authlib-skin/db/ent/usertoken"
 	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/model/yggdrasil"
+	sutils "github.com/xmdhs/authlib-skin/service/utils"
 	"github.com/xmdhs/authlib-skin/utils"
 )
 
@@ -24,23 +24,31 @@ var (
 	ErrPassWord = errors.New("错误的密码或邮箱")
 )
 
+func (y *Yggdrasil) validatePass(cxt context.Context, email, pass string) (*ent.User, error) {
+	err := rate("validatePass"+email, y.cache, 10*time.Second, 3)
+	if err != nil {
+		return nil, fmt.Errorf("validatePass: %w", err)
+	}
+	u, err := y.client.User.Query().Where(user.EmailEQ(email)).WithProfile().First(cxt)
+	if err != nil {
+		var nf *ent.NotFoundError
+		if errors.As(err, &nf) {
+			return nil, fmt.Errorf("validatePass: %w", ErrPassWord)
+		}
+		return nil, fmt.Errorf("validatePass: %w", err)
+	}
+	if !utils.Argon2Compare(pass, u.Password, u.Salt) {
+		return nil, fmt.Errorf("validatePass: %w", ErrPassWord)
+	}
+	return u, nil
+}
+
 func (y *Yggdrasil) Authenticate(cxt context.Context, auth yggdrasil.Authenticate) (yggdrasil.Token, error) {
-	err := rate("Authenticate"+auth.Username, y.cache, 10*time.Second, 3)
+	u, err := y.validatePass(cxt, auth.Username, auth.Password)
 	if err != nil {
 		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", err)
 	}
 
-	u, err := y.client.User.Query().Where(user.EmailEQ(auth.Username)).WithProfile().First(cxt)
-	if err != nil {
-		var nf *ent.NotFoundError
-		if errors.As(err, &nf) {
-			return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", ErrPassWord)
-		}
-		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", err)
-	}
-	if !utils.Argon2Compare(auth.Password, u.Password, u.Salt) {
-		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", ErrPassWord)
-	}
 	clientToken := auth.ClientToken
 	if clientToken == "" {
 		clientToken = strings.ReplaceAll(uuid.New().String(), "-", "")
@@ -104,36 +112,42 @@ func (y *Yggdrasil) Authenticate(cxt context.Context, auth yggdrasil.Authenticat
 	}, nil
 }
 
-func rate(k string, c cache.Cache, d time.Duration, count uint) error {
-	key := []byte(k)
-	v, err := c.Get([]byte(key))
+func (y *Yggdrasil) ValidateToken(ctx context.Context, t yggdrasil.ValidateToken) error {
+	_, err := sutils.Auth(ctx, t, y.client, y.config.JwtKey)
 	if err != nil {
-		return fmt.Errorf("rate: %w", err)
-	}
-	if v == nil {
-		err := putUint(1, c, key, d)
-		if err != nil {
-			return fmt.Errorf("rate: %w", err)
-		}
-		return nil
-	}
-	n := binary.BigEndian.Uint64(v)
-	if n > uint64(count) {
-		return fmt.Errorf("rate: %w", ErrRate)
-	}
-	err = putUint(n+1, c, key, d)
-	if err != nil {
-		return fmt.Errorf("rate: %w", err)
+		return fmt.Errorf("ValidateToken: %w", err)
 	}
 	return nil
 }
 
-func putUint(n uint64, c cache.Cache, key []byte, d time.Duration) error {
-	b := make([]byte, 8)
-	binary.BigEndian.PutUint64(b, n)
-	err := c.Put(key, b, time.Now().Add(d))
+func (y *Yggdrasil) SignOut(ctx context.Context, t yggdrasil.Pass) error {
+	u, err := y.validatePass(ctx, t.Username, t.Password)
 	if err != nil {
-		return fmt.Errorf("rate: %w", err)
+		return fmt.Errorf("SignOut: %w", err)
+	}
+	ut, err := y.client.UserToken.Query().Where(usertoken.UUIDEQ(u.Edges.Profile.UUID)).First(ctx)
+	if err != nil {
+		var nf *ent.NotFoundError
+		if !errors.As(err, &nf) {
+			return fmt.Errorf("SignOut: %w", err)
+		}
+		return nil
+	}
+	err = y.client.UserToken.UpdateOne(ut).AddTokenID(1).Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("SignOut: %w", err)
+	}
+	return nil
+}
+
+func (y *Yggdrasil) Invalidate(ctx context.Context, accessToken string) error {
+	t, err := sutils.Auth(ctx, yggdrasil.ValidateToken{AccessToken: accessToken}, y.client, y.config.JwtKey)
+	if err != nil {
+		return fmt.Errorf("Invalidate: %w", err)
+	}
+	err = y.client.UserToken.Update().Where(usertoken.UUIDEQ(t.Subject)).AddTokenID(1).Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("Invalidate: %w", err)
 	}
 	return nil
 }

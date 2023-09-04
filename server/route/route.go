@@ -24,6 +24,9 @@ func NewRoute(yggService *yggdrasil.Yggdrasil, handel *handle.Handel) (*httprout
 func newYggdrasil(r *httprouter.Router, handelY yggdrasil.Yggdrasil) error {
 	r.POST("/api/authserver/authenticate", warpHJSON(handelY.Authenticate()))
 	r.POST("/api/authserver/validate", warpHJSON(handelY.Validate()))
+	r.POST("/api/authserver/signout", warpHJSON(handelY.Signout()))
+	r.POST("/api/authserver/invalidate", handelY.Invalidate())
+	// TODO /authserver/refresh
 	return nil
 }
 
