@@ -96,3 +96,26 @@ func (y *Yggdrasil) Invalidate() httprouter.Handle {
 		}
 	}
 }
+
+func (y *Yggdrasil) Refresh() httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+		cxt := r.Context()
+		a, has := getAnyModel[yggdrasil.RefreshToken](cxt, w, r.Body, y.validate, y.logger)
+		if !has {
+			return
+		}
+		t, err := y.yggdrasilService.Refresh(cxt, a)
+		if err != nil {
+			if errors.Is(err, sutils.ErrTokenInvalid) {
+				y.logger.DebugContext(cxt, err.Error())
+				handleYgError(cxt, w, yggdrasil.Error{ErrorMessage: "Invalid token.", Error: "ForbiddenOperationException"}, 403)
+				return
+			}
+			y.logger.WarnContext(cxt, err.Error())
+			handleYgError(cxt, w, yggdrasil.Error{ErrorMessage: err.Error()}, 500)
+			return
+		}
+		b, _ := json.Marshal(t)
+		w.Write(b)
+	}
+}

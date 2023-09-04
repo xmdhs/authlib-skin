@@ -1,7 +1,8 @@
 package yggdrasil
 
 type Pass struct {
-	Username string `json:"username" validate:"required"`
+	// 目前只能是 email
+	Username string `json:"username" validate:"required,email"`
 	Password string `json:"password" validate:"required"`
 }
 
@@ -23,13 +24,14 @@ type Error struct {
 
 type Token struct {
 	AccessToken       string         `json:"accessToken"`
-	AvailableProfiles []TokenProfile `json:"availableProfiles"`
+	AvailableProfiles []TokenProfile `json:"availableProfiles,omitempty"`
 	ClientToken       string         `json:"clientToken"`
-	SelectedProfile   TokenProfile   `json:"selectedProfile"`
+	SelectedProfile   TokenProfile   `json:"selectedProfile,omitempty"`
 	User              TokenUser      `json:"user,omitempty"`
 }
 
 type TokenProfile struct {
+	// 就是 uuid
 	ID   string `json:"id"`
 	Name string `json:"name"`
 }
@@ -42,4 +44,10 @@ type TokenUser struct {
 type ValidateToken struct {
 	AccessToken string `json:"accessToken" validate:"required,jwt"`
 	ClientToken string `json:"clientToken"`
+}
+
+type RefreshToken struct {
+	ValidateToken
+	RequestUser     bool         `json:"requestUser"`
+	SelectedProfile TokenProfile `json:"selectedProfile"`
 }

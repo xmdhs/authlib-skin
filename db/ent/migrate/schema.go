@@ -97,9 +97,9 @@ var (
 		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "userprofile_name",
+				Name:    "userprofile_uuid",
 				Unique:  false,
-				Columns: []*schema.Column{UserProfilesColumns[1]},
+				Columns: []*schema.Column{UserProfilesColumns[2]},
 			},
 		},
 	}

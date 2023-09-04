@@ -18,7 +18,7 @@ var (
 	ErrTokenInvalid = errors.New("token 无效")
 )
 
-func Auth(ctx context.Context, t yggdrasil.ValidateToken, client *ent.Client, jwtKey string) (*model.TokenClaims, error) {
+func Auth(ctx context.Context, t yggdrasil.ValidateToken, client *ent.Client, jwtKey string, tmpInvalid bool) (*model.TokenClaims, error) {
 	token, err := jwt.ParseWithClaims(t.AccessToken, &model.TokenClaims{}, func(t *jwt.Token) (interface{}, error) {
 		return []byte(jwtKey), nil
 	})
@@ -34,17 +34,19 @@ func Auth(ctx context.Context, t yggdrasil.ValidateToken, client *ent.Client, jw
 		return nil, fmt.Errorf("Auth: %w", ErrTokenInvalid)
 	}
 
-	it, err := claims.GetIssuedAt()
-	if err != nil {
-		return nil, fmt.Errorf("Auth: %w", err)
-	}
-	et, err := claims.GetExpirationTime()
-	if err != nil {
-		return nil, fmt.Errorf("Auth: %w", err)
-	}
-	invalidTime := it.Add(et.Time.Sub(it.Time))
-	if time.Now().After(invalidTime) {
-		return nil, fmt.Errorf("Auth: %w", ErrTokenInvalid)
+	if tmpInvalid {
+		it, err := claims.GetIssuedAt()
+		if err != nil {
+			return nil, fmt.Errorf("Auth: %w", err)
+		}
+		et, err := claims.GetExpirationTime()
+		if err != nil {
+			return nil, fmt.Errorf("Auth: %w", err)
+		}
+		invalidTime := it.Add(et.Time.Sub(it.Time) / 2)
+		if time.Now().After(invalidTime) {
+			return nil, fmt.Errorf("Auth: %w", ErrTokenInvalid)
+		}
 	}
 
 	ut, err := client.UserToken.Query().Where(usertoken.UUIDEQ(claims.Subject)).First(ctx)

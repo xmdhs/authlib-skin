@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/xmdhs/authlib-skin/config"
 	"github.com/xmdhs/authlib-skin/db/cache"
 	"github.com/xmdhs/authlib-skin/db/ent"
+	"github.com/xmdhs/authlib-skin/model"
 )
 
 type Yggdrasil struct {
@@ -56,4 +58,23 @@ func putUint(n uint64, c cache.Cache, key []byte, d time.Duration) error {
 		return fmt.Errorf("rate: %w", err)
 	}
 	return nil
+}
+
+func newJwtToken(jwtKey string, tokenID, clientToken, UUID string) (string, error) {
+	claims := model.TokenClaims{
+		Tid: tokenID,
+		CID: clientToken,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(15 * 24 * time.Hour)),
+			Issuer:    "authlib-skin",
+			Subject:   UUID,
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	jwts, err := token.SignedString([]byte(jwtKey))
+	if err != nil {
+		return "", fmt.Errorf("newJwtToken: %w", err)
+	}
+	return jwts, nil
 }

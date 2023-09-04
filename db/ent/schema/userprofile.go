@@ -34,6 +34,6 @@ func (UserProfile) Edges() []ent.Edge {
 
 func (UserProfile) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("name"),
+		index.Fields("uuid"),
 	}
 }

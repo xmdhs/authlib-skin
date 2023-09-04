@@ -8,12 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/xmdhs/authlib-skin/db/ent"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/usertoken"
-	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/model/yggdrasil"
 	sutils "github.com/xmdhs/authlib-skin/service/utils"
 	"github.com/xmdhs/authlib-skin/utils"
@@ -80,26 +78,15 @@ func (y *Yggdrasil) Authenticate(cxt context.Context, auth yggdrasil.Authenticat
 		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", err)
 	}
 
-	claims := model.TokenClaims{
-		Tid: strconv.FormatUint(utoken.TokenID, 10),
-		CID: clientToken,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(15 * 24 * time.Hour)),
-			Issuer:    "authlib-skin",
-			Subject:   u.Edges.Profile.UUID,
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-		},
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	jwts, err := token.SignedString([]byte(y.config.JwtKey))
+	jwts, err := newJwtToken(y.config.JwtKey, strconv.FormatUint(utoken.TokenID, 10), clientToken, u.Edges.Profile.UUID)
 	if err != nil {
 		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", err)
 	}
+
 	p := yggdrasil.TokenProfile{
 		ID:   u.Edges.Profile.UUID,
 		Name: u.Edges.Profile.Name,
 	}
-
 	return yggdrasil.Token{
 		AccessToken:       jwts,
 		AvailableProfiles: []yggdrasil.TokenProfile{p},
@@ -113,7 +100,7 @@ func (y *Yggdrasil) Authenticate(cxt context.Context, auth yggdrasil.Authenticat
 }
 
 func (y *Yggdrasil) ValidateToken(ctx context.Context, t yggdrasil.ValidateToken) error {
-	_, err := sutils.Auth(ctx, t, y.client, y.config.JwtKey)
+	_, err := sutils.Auth(ctx, t, y.client, y.config.JwtKey, true)
 	if err != nil {
 		return fmt.Errorf("ValidateToken: %w", err)
 	}
@@ -141,7 +128,7 @@ func (y *Yggdrasil) SignOut(ctx context.Context, t yggdrasil.Pass) error {
 }
 
 func (y *Yggdrasil) Invalidate(ctx context.Context, accessToken string) error {
-	t, err := sutils.Auth(ctx, yggdrasil.ValidateToken{AccessToken: accessToken}, y.client, y.config.JwtKey)
+	t, err := sutils.Auth(ctx, yggdrasil.ValidateToken{AccessToken: accessToken}, y.client, y.config.JwtKey, true)
 	if err != nil {
 		return fmt.Errorf("Invalidate: %w", err)
 	}
@@ -150,4 +137,22 @@ func (y *Yggdrasil) Invalidate(ctx context.Context, accessToken string) error {
 		return fmt.Errorf("Invalidate: %w", err)
 	}
 	return nil
+}
+
+func (y *Yggdrasil) Refresh(ctx context.Context, token yggdrasil.RefreshToken) (yggdrasil.Token, error) {
+	t, err := sutils.Auth(ctx, yggdrasil.ValidateToken{AccessToken: token.AccessToken, ClientToken: token.ClientToken}, y.client, y.config.JwtKey, false)
+	if err != nil {
+		return yggdrasil.Token{}, fmt.Errorf("Refresh: %w", err)
+	}
+	jwts, err := newJwtToken(y.config.JwtKey, t.Tid, t.CID, t.Subject)
+	if err != nil {
+		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", err)
+	}
+	return yggdrasil.Token{
+		AccessToken: jwts,
+		ClientToken: t.CID,
+		User: yggdrasil.TokenUser{
+			ID: t.Subject,
+		},
+	}, nil
 }
