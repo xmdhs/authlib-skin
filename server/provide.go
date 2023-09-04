@@ -15,6 +15,7 @@ import (
 	"github.com/xmdhs/authlib-skin/config"
 	"github.com/xmdhs/authlib-skin/db/cache"
 	"github.com/xmdhs/authlib-skin/db/ent"
+	"github.com/xmdhs/authlib-skin/db/ent/migrate"
 )
 
 func ProvideSlog(c config.Config) slog.Handler {
@@ -62,7 +63,7 @@ func ProvideEnt(ctx context.Context, db *sql.DB, c config.Config, sl *slog.Logge
 		opts = append(opts, ent.Debug())
 	}
 	e := ent.NewClient(opts...)
-	err := e.Schema.Create(ctx)
+	err := e.Schema.Create(ctx, migrate.WithForeignKeys(false), migrate.WithDropIndex(true), migrate.WithDropColumn(true))
 	if err != nil {
 		return nil, nil, fmt.Errorf("ProvideEnt: %w", err)
 	}
