@@ -8,7 +8,6 @@ import (
 	"os"
 
 	entsql "entgo.io/ent/dialect/sql"
-	"github.com/bwmarrin/snowflake"
 	"github.com/go-playground/validator/v10"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/google/wire"
@@ -74,17 +73,8 @@ func ProvideValidate() *validator.Validate {
 	return validator.New()
 }
 
-func ProvideSnowflake(c config.Config) (*snowflake.Node, error) {
-	snowflake.Epoch = c.Epoch
-	n, err := snowflake.NewNode(c.Node)
-	if err != nil {
-		return nil, fmt.Errorf("ProvideSnowflake: %w", err)
-	}
-	return n, nil
-}
-
 func ProvideCache(c config.Config) cache.Cache {
 	return cache.NewFastCache(c.Cache.Ram)
 }
 
-var Set = wire.NewSet(ProvideSlog, ProvideDB, ProvideEnt, ProvideValidate, ProvideSnowflake, ProvideCache)
+var Set = wire.NewSet(ProvideSlog, ProvideDB, ProvideEnt, ProvideValidate, ProvideCache)
