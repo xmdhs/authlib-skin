@@ -68,6 +68,11 @@ func Salt(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldSalt, v))
 }
 
+// RegIP applies equality check predicate on the "reg_ip" field. It's identical to RegIPEQ.
+func RegIP(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldRegIP, v))
+}
+
 // State applies equality check predicate on the "state" field. It's identical to StateEQ.
 func State(v int) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldState, v))
@@ -271,6 +276,71 @@ func SaltEqualFold(v string) predicate.User {
 // SaltContainsFold applies the ContainsFold predicate on the "salt" field.
 func SaltContainsFold(v string) predicate.User {
 	return predicate.User(sql.FieldContainsFold(FieldSalt, v))
+}
+
+// RegIPEQ applies the EQ predicate on the "reg_ip" field.
+func RegIPEQ(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldRegIP, v))
+}
+
+// RegIPNEQ applies the NEQ predicate on the "reg_ip" field.
+func RegIPNEQ(v string) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldRegIP, v))
+}
+
+// RegIPIn applies the In predicate on the "reg_ip" field.
+func RegIPIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldIn(FieldRegIP, vs...))
+}
+
+// RegIPNotIn applies the NotIn predicate on the "reg_ip" field.
+func RegIPNotIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldRegIP, vs...))
+}
+
+// RegIPGT applies the GT predicate on the "reg_ip" field.
+func RegIPGT(v string) predicate.User {
+	return predicate.User(sql.FieldGT(FieldRegIP, v))
+}
+
+// RegIPGTE applies the GTE predicate on the "reg_ip" field.
+func RegIPGTE(v string) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldRegIP, v))
+}
+
+// RegIPLT applies the LT predicate on the "reg_ip" field.
+func RegIPLT(v string) predicate.User {
+	return predicate.User(sql.FieldLT(FieldRegIP, v))
+}
+
+// RegIPLTE applies the LTE predicate on the "reg_ip" field.
+func RegIPLTE(v string) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldRegIP, v))
+}
+
+// RegIPContains applies the Contains predicate on the "reg_ip" field.
+func RegIPContains(v string) predicate.User {
+	return predicate.User(sql.FieldContains(FieldRegIP, v))
+}
+
+// RegIPHasPrefix applies the HasPrefix predicate on the "reg_ip" field.
+func RegIPHasPrefix(v string) predicate.User {
+	return predicate.User(sql.FieldHasPrefix(FieldRegIP, v))
+}
+
+// RegIPHasSuffix applies the HasSuffix predicate on the "reg_ip" field.
+func RegIPHasSuffix(v string) predicate.User {
+	return predicate.User(sql.FieldHasSuffix(FieldRegIP, v))
+}
+
+// RegIPEqualFold applies the EqualFold predicate on the "reg_ip" field.
+func RegIPEqualFold(v string) predicate.User {
+	return predicate.User(sql.FieldEqualFold(FieldRegIP, v))
+}
+
+// RegIPContainsFold applies the ContainsFold predicate on the "reg_ip" field.
+func RegIPContainsFold(v string) predicate.User {
+	return predicate.User(sql.FieldContainsFold(FieldRegIP, v))
 }
 
 // StateEQ applies the EQ predicate on the "state" field.

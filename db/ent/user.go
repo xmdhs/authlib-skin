@@ -25,6 +25,8 @@ type User struct {
 	Password string `json:"password,omitempty"`
 	// Salt holds the value of the "salt" field.
 	Salt string `json:"salt,omitempty"`
+	// RegIP holds the value of the "reg_ip" field.
+	RegIP string `json:"reg_ip,omitempty"`
 	// State holds the value of the "state" field.
 	State int `json:"state,omitempty"`
 	// RegTime holds the value of the "reg_time" field.
@@ -107,7 +109,7 @@ func (*User) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case user.FieldID, user.FieldState, user.FieldRegTime:
 			values[i] = new(sql.NullInt64)
-		case user.FieldEmail, user.FieldPassword, user.FieldSalt:
+		case user.FieldEmail, user.FieldPassword, user.FieldSalt, user.FieldRegIP:
 			values[i] = new(sql.NullString)
 		case user.ForeignKeys[0]: // user_token
 			values[i] = new(sql.NullInt64)
@@ -151,6 +153,12 @@ func (u *User) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field salt", values[i])
 			} else if value.Valid {
 				u.Salt = value.String
+			}
+		case user.FieldRegIP:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field reg_ip", values[i])
+			} else if value.Valid {
+				u.RegIP = value.String
 			}
 		case user.FieldState:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -242,6 +250,9 @@ func (u *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("salt=")
 	builder.WriteString(u.Salt)
+	builder.WriteString(", ")
+	builder.WriteString("reg_ip=")
+	builder.WriteString(u.RegIP)
 	builder.WriteString(", ")
 	builder.WriteString("state=")
 	builder.WriteString(fmt.Sprintf("%v", u.State))

@@ -48,6 +48,12 @@ func (uu *UserUpdate) SetSalt(s string) *UserUpdate {
 	return uu
 }
 
+// SetRegIP sets the "reg_ip" field.
+func (uu *UserUpdate) SetRegIP(s string) *UserUpdate {
+	uu.mutation.SetRegIP(s)
+	return uu
+}
+
 // SetState sets the "state" field.
 func (uu *UserUpdate) SetState(i int) *UserUpdate {
 	uu.mutation.ResetState()
@@ -235,6 +241,9 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := uu.mutation.Salt(); ok {
 		_spec.SetField(user.FieldSalt, field.TypeString, value)
 	}
+	if value, ok := uu.mutation.RegIP(); ok {
+		_spec.SetField(user.FieldRegIP, field.TypeString, value)
+	}
 	if value, ok := uu.mutation.State(); ok {
 		_spec.SetField(user.FieldState, field.TypeInt, value)
 	}
@@ -414,6 +423,12 @@ func (uuo *UserUpdateOne) SetPassword(s string) *UserUpdateOne {
 // SetSalt sets the "salt" field.
 func (uuo *UserUpdateOne) SetSalt(s string) *UserUpdateOne {
 	uuo.mutation.SetSalt(s)
+	return uuo
+}
+
+// SetRegIP sets the "reg_ip" field.
+func (uuo *UserUpdateOne) SetRegIP(s string) *UserUpdateOne {
+	uuo.mutation.SetRegIP(s)
 	return uuo
 }
 
@@ -633,6 +648,9 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	}
 	if value, ok := uuo.mutation.Salt(); ok {
 		_spec.SetField(user.FieldSalt, field.TypeString, value)
+	}
+	if value, ok := uuo.mutation.RegIP(); ok {
+		_spec.SetField(user.FieldRegIP, field.TypeString, value)
 	}
 	if value, ok := uuo.mutation.State(); ok {
 		_spec.SetField(user.FieldState, field.TypeInt, value)

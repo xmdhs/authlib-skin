@@ -18,6 +18,8 @@ const (
 	FieldPassword = "password"
 	// FieldSalt holds the string denoting the salt field in the database.
 	FieldSalt = "salt"
+	// FieldRegIP holds the string denoting the reg_ip field in the database.
+	FieldRegIP = "reg_ip"
 	// FieldState holds the string denoting the state field in the database.
 	FieldState = "state"
 	// FieldRegTime holds the string denoting the reg_time field in the database.
@@ -68,6 +70,7 @@ var Columns = []string{
 	FieldEmail,
 	FieldPassword,
 	FieldSalt,
+	FieldRegIP,
 	FieldState,
 	FieldRegTime,
 }
@@ -115,6 +118,11 @@ func ByPassword(opts ...sql.OrderTermOption) OrderOption {
 // BySalt orders the results by the salt field.
 func BySalt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSalt, opts...).ToFunc()
+}
+
+// ByRegIP orders the results by the reg_ip field.
+func ByRegIP(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRegIP, opts...).ToFunc()
 }
 
 // ByState orders the results by the state field.

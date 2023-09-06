@@ -578,6 +578,7 @@ type UserMutation struct {
 	email               *string
 	password            *string
 	salt                *string
+	reg_ip              *string
 	state               *int
 	addstate            *int
 	reg_time            *int64
@@ -801,6 +802,42 @@ func (m *UserMutation) OldSalt(ctx context.Context) (v string, err error) {
 // ResetSalt resets all changes to the "salt" field.
 func (m *UserMutation) ResetSalt() {
 	m.salt = nil
+}
+
+// SetRegIP sets the "reg_ip" field.
+func (m *UserMutation) SetRegIP(s string) {
+	m.reg_ip = &s
+}
+
+// RegIP returns the value of the "reg_ip" field in the mutation.
+func (m *UserMutation) RegIP() (r string, exists bool) {
+	v := m.reg_ip
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRegIP returns the old "reg_ip" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldRegIP(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRegIP is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRegIP requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRegIP: %w", err)
+	}
+	return oldValue.RegIP, nil
+}
+
+// ResetRegIP resets all changes to the "reg_ip" field.
+func (m *UserMutation) ResetRegIP() {
+	m.reg_ip = nil
 }
 
 // SetState sets the "state" field.
@@ -1120,7 +1157,7 @@ func (m *UserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 5)
+	fields := make([]string, 0, 6)
 	if m.email != nil {
 		fields = append(fields, user.FieldEmail)
 	}
@@ -1129,6 +1166,9 @@ func (m *UserMutation) Fields() []string {
 	}
 	if m.salt != nil {
 		fields = append(fields, user.FieldSalt)
+	}
+	if m.reg_ip != nil {
+		fields = append(fields, user.FieldRegIP)
 	}
 	if m.state != nil {
 		fields = append(fields, user.FieldState)
@@ -1150,6 +1190,8 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.Password()
 	case user.FieldSalt:
 		return m.Salt()
+	case user.FieldRegIP:
+		return m.RegIP()
 	case user.FieldState:
 		return m.State()
 	case user.FieldRegTime:
@@ -1169,6 +1211,8 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldPassword(ctx)
 	case user.FieldSalt:
 		return m.OldSalt(ctx)
+	case user.FieldRegIP:
+		return m.OldRegIP(ctx)
 	case user.FieldState:
 		return m.OldState(ctx)
 	case user.FieldRegTime:
@@ -1202,6 +1246,13 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetSalt(v)
+		return nil
+	case user.FieldRegIP:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRegIP(v)
 		return nil
 	case user.FieldState:
 		v, ok := value.(int)
@@ -1301,6 +1352,9 @@ func (m *UserMutation) ResetField(name string) error {
 		return nil
 	case user.FieldSalt:
 		m.ResetSalt()
+		return nil
+	case user.FieldRegIP:
+		m.ResetRegIP()
 		return nil
 	case user.FieldState:
 		m.ResetState()

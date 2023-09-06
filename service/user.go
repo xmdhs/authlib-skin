@@ -22,7 +22,7 @@ var (
 	ErrExitsName = errors.New("用户名已存在")
 )
 
-func (w *WebService) Reg(ctx context.Context, u model.User) error {
+func (w *WebService) Reg(ctx context.Context, u model.User, ip string) error {
 	var userUuid string
 	if w.config.OfflineUUID {
 		userUuid = uuidGen(u.Name)
@@ -51,6 +51,7 @@ func (w *WebService) Reg(ctx context.Context, u model.User) error {
 			SetPassword(p).
 			SetSalt(s).
 			SetRegTime(time.Now().Unix()).
+			SetRegIP("").
 			SetState(0).Save(ctx)
 		if err != nil {
 			return err

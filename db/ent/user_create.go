@@ -40,6 +40,12 @@ func (uc *UserCreate) SetSalt(s string) *UserCreate {
 	return uc
 }
 
+// SetRegIP sets the "reg_ip" field.
+func (uc *UserCreate) SetRegIP(s string) *UserCreate {
+	uc.mutation.SetRegIP(s)
+	return uc
+}
+
 // SetState sets the "state" field.
 func (uc *UserCreate) SetState(i int) *UserCreate {
 	uc.mutation.SetState(i)
@@ -167,6 +173,9 @@ func (uc *UserCreate) check() error {
 	if _, ok := uc.mutation.Salt(); !ok {
 		return &ValidationError{Name: "salt", err: errors.New(`ent: missing required field "User.salt"`)}
 	}
+	if _, ok := uc.mutation.RegIP(); !ok {
+		return &ValidationError{Name: "reg_ip", err: errors.New(`ent: missing required field "User.reg_ip"`)}
+	}
 	if _, ok := uc.mutation.State(); !ok {
 		return &ValidationError{Name: "state", err: errors.New(`ent: missing required field "User.state"`)}
 	}
@@ -210,6 +219,10 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := uc.mutation.Salt(); ok {
 		_spec.SetField(user.FieldSalt, field.TypeString, value)
 		_node.Salt = value
+	}
+	if value, ok := uc.mutation.RegIP(); ok {
+		_spec.SetField(user.FieldRegIP, field.TypeString, value)
+		_node.RegIP = value
 	}
 	if value, ok := uc.mutation.State(); ok {
 		_spec.SetField(user.FieldState, field.TypeInt, value)

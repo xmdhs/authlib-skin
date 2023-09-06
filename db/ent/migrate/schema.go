@@ -43,6 +43,7 @@ var (
 		{Name: "email", Type: field.TypeString, Unique: true, SchemaType: map[string]string{"mysql": "VARCHAR(30)"}},
 		{Name: "password", Type: field.TypeString, SchemaType: map[string]string{"mysql": "VARCHAR(80)"}},
 		{Name: "salt", Type: field.TypeString, SchemaType: map[string]string{"mysql": "VARCHAR(50)"}},
+		{Name: "reg_ip", Type: field.TypeString, SchemaType: map[string]string{"mysql": "VARCHAR(32)"}},
 		{Name: "state", Type: field.TypeInt},
 		{Name: "reg_time", Type: field.TypeInt64},
 		{Name: "user_token", Type: field.TypeInt, Nullable: true},
@@ -56,13 +57,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "users_user_tokens_token",
-				Columns:    []*schema.Column{UsersColumns[6]},
+				Columns:    []*schema.Column{UsersColumns[7]},
 				RefColumns: []*schema.Column{UserTokensColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
 			{
 				Symbol:     "users_skins_skin",
-				Columns:    []*schema.Column{UsersColumns[7]},
+				Columns:    []*schema.Column{UsersColumns[8]},
 				RefColumns: []*schema.Column{SkinsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},

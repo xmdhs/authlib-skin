@@ -26,6 +26,9 @@ func (User) Fields() []ent.Field {
 		field.String("salt").SchemaType(map[string]string{
 			dialect.MySQL: "VARCHAR(50)",
 		}),
+		field.String("reg_ip").SchemaType(map[string]string{
+			dialect.MySQL: "VARCHAR(32)",
+		}),
 		// 二进制状态位，保留
 		field.Int("state"),
 		field.Int64("reg_time"),

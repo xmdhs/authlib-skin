@@ -3,7 +3,8 @@ package model
 type APIStatus int
 
 const (
-	OK APIStatus = iota
+	ErrUnknown APIStatus = iota - 1
+	OK
 	ErrInput
 	ErrService
 	ErrExistUser
