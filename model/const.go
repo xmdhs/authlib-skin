@@ -8,4 +8,5 @@ const (
 	ErrInput
 	ErrService
 	ErrExistUser
+	ErrRegLimit
 )

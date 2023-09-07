@@ -16,5 +16,6 @@ type Config struct {
 		Type string
 		Ram  int
 	}
-	RaelIP bool
+	RaelIP    bool
+	MaxIpUser int
 }

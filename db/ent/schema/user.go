@@ -48,5 +48,6 @@ func (User) Edges() []ent.Edge {
 func (User) Indexes() []ent.Index {
 	return []ent.Index{
 		index.Fields("email").Unique(),
+		index.Fields("reg_ip"),
 	}
 }

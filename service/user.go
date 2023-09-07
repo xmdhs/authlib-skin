@@ -20,6 +20,7 @@ import (
 var (
 	ErrExistUser = errors.New("邮箱已存在")
 	ErrExitsName = errors.New("用户名已存在")
+	ErrRegLimit  = errors.New("超过注册 ip 限制")
 )
 
 func (w *WebService) Reg(ctx context.Context, u model.User, ip string) error {
@@ -30,6 +31,16 @@ func (w *WebService) Reg(ctx context.Context, u model.User, ip string) error {
 		userUuid = strings.ReplaceAll(uuid.New().String(), "-", "")
 	}
 	p, s := utils.Argon2ID(u.Password)
+
+	if w.config.MaxIpUser != 0 {
+		c, err := w.client.User.Query().Where(user.RegIPEQ(ip)).Count(ctx)
+		if err != nil {
+			return fmt.Errorf("Reg: %w", err)
+		}
+		if c >= w.config.MaxIpUser {
+			return fmt.Errorf("Reg: %w", ErrRegLimit)
+		}
+	}
 
 	err := utils.WithTx(ctx, w.client, func(tx *ent.Tx) error {
 		count, err := tx.User.Query().Where(user.EmailEQ(u.Email)).ForUpdate().Count(ctx)
@@ -51,7 +62,7 @@ func (w *WebService) Reg(ctx context.Context, u model.User, ip string) error {
 			SetPassword(p).
 			SetSalt(s).
 			SetRegTime(time.Now().Unix()).
-			SetRegIP("").
+			SetRegIP(ip).
 			SetState(0).Save(ctx)
 		if err != nil {
 			return err

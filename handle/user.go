@@ -36,6 +36,11 @@ func (h *Handel) Reg() httprouter.Handle {
 				handleError(ctx, w, err.Error(), model.ErrExistUser, 400)
 				return
 			}
+			if errors.Is(err, service.ErrRegLimit) {
+				h.logger.DebugContext(ctx, err.Error())
+				handleError(ctx, w, err.Error(), model.ErrRegLimit, 400)
+				return
+			}
 			h.logger.WarnContext(ctx, err.Error())
 			handleError(ctx, w, err.Error(), model.ErrService, 500)
 			return
@@ -55,5 +60,5 @@ func getPrefix(r *http.Request, fromHeader bool) (string, error) {
 	if ipa.Is6() {
 		return lo.Must1(ipa.Prefix(48)).String(), nil
 	}
-	return ipa.String(), nil
+	return lo.Must1(ipa.Prefix(24)).String(), nil
 }
