@@ -38,6 +38,10 @@ func NewAuthlibSignWithKey(key *rsa.PrivateKey) *AuthlibSign {
 	}
 }
 
+func (a *AuthlibSign) GetKey() *rsa.PrivateKey {
+	return a.key
+}
+
 func (a *AuthlibSign) GetPubKey() (string, error) {
 	derBytes := x509.MarshalPKCS1PublicKey(&a.key.PublicKey)
 	pemKey := &pem.Block{

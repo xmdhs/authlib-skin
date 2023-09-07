@@ -1,6 +1,7 @@
 package yggdrasil
 
 import (
+	"crypto/rsa"
 	"encoding/binary"
 	"fmt"
 	"time"
@@ -16,13 +17,15 @@ type Yggdrasil struct {
 	client *ent.Client
 	cache  cache.Cache
 	config config.Config
+	prikey *rsa.PrivateKey
 }
 
-func NewYggdrasil(client *ent.Client, cache cache.Cache, c config.Config) *Yggdrasil {
+func NewYggdrasil(client *ent.Client, cache cache.Cache, c config.Config, prikey *rsa.PrivateKey) *Yggdrasil {
 	return &Yggdrasil{
 		client: client,
 		cache:  cache,
 		config: c,
+		prikey: prikey,
 	}
 }
 
@@ -60,7 +63,7 @@ func putUint(n uint64, c cache.Cache, key []byte, d time.Duration) error {
 	return nil
 }
 
-func newJwtToken(jwtKey string, tokenID, clientToken, UUID string) (string, error) {
+func newJwtToken(jwtKey *rsa.PrivateKey, tokenID, clientToken, UUID string) (string, error) {
 	claims := model.TokenClaims{
 		Tid: tokenID,
 		CID: clientToken,
@@ -71,8 +74,8 @@ func newJwtToken(jwtKey string, tokenID, clientToken, UUID string) (string, erro
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	jwts, err := token.SignedString([]byte(jwtKey))
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	jwts, err := token.SignedString(jwtKey)
 	if err != nil {
 		return "", fmt.Errorf("newJwtToken: %w", err)
 	}

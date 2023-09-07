@@ -79,7 +79,7 @@ func (y *Yggdrasil) Authenticate(cxt context.Context, auth yggdrasil.Authenticat
 		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", err)
 	}
 
-	jwts, err := newJwtToken(y.config.JwtKey, strconv.FormatUint(utoken.TokenID, 10), clientToken, u.Edges.Profile.UUID)
+	jwts, err := newJwtToken(y.prikey, strconv.FormatUint(utoken.TokenID, 10), clientToken, u.Edges.Profile.UUID)
 	if err != nil {
 		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", err)
 	}
@@ -101,7 +101,7 @@ func (y *Yggdrasil) Authenticate(cxt context.Context, auth yggdrasil.Authenticat
 }
 
 func (y *Yggdrasil) ValidateToken(ctx context.Context, t yggdrasil.ValidateToken) error {
-	_, err := sutils.Auth(ctx, t, y.client, y.config.JwtKey, true)
+	_, err := sutils.Auth(ctx, t, y.client, &y.prikey.PublicKey, true)
 	if err != nil {
 		return fmt.Errorf("ValidateToken: %w", err)
 	}
@@ -129,7 +129,7 @@ func (y *Yggdrasil) SignOut(ctx context.Context, t yggdrasil.Pass) error {
 }
 
 func (y *Yggdrasil) Invalidate(ctx context.Context, accessToken string) error {
-	t, err := sutils.Auth(ctx, yggdrasil.ValidateToken{AccessToken: accessToken}, y.client, y.config.JwtKey, true)
+	t, err := sutils.Auth(ctx, yggdrasil.ValidateToken{AccessToken: accessToken}, y.client, &y.prikey.PublicKey, true)
 	if err != nil {
 		return fmt.Errorf("Invalidate: %w", err)
 	}
@@ -141,11 +141,11 @@ func (y *Yggdrasil) Invalidate(ctx context.Context, accessToken string) error {
 }
 
 func (y *Yggdrasil) Refresh(ctx context.Context, token yggdrasil.RefreshToken) (yggdrasil.Token, error) {
-	t, err := sutils.Auth(ctx, yggdrasil.ValidateToken{AccessToken: token.AccessToken, ClientToken: token.ClientToken}, y.client, y.config.JwtKey, false)
+	t, err := sutils.Auth(ctx, yggdrasil.ValidateToken{AccessToken: token.AccessToken, ClientToken: token.ClientToken}, y.client, &y.prikey.PublicKey, false)
 	if err != nil {
 		return yggdrasil.Token{}, fmt.Errorf("Refresh: %w", err)
 	}
-	jwts, err := newJwtToken(y.config.JwtKey, t.Tid, t.CID, t.Subject)
+	jwts, err := newJwtToken(y.prikey, t.Tid, t.CID, t.Subject)
 	if err != nil {
 		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", err)
 	}

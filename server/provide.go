@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"crypto/rsa"
 	"database/sql"
 	"fmt"
 	"log/slog"
@@ -15,6 +16,7 @@ import (
 	"github.com/xmdhs/authlib-skin/db/cache"
 	"github.com/xmdhs/authlib-skin/db/ent"
 	"github.com/xmdhs/authlib-skin/db/ent/migrate"
+	"github.com/xmdhs/authlib-skin/utils/sign"
 )
 
 func ProvideSlog(c config.Config) slog.Handler {
@@ -77,4 +79,12 @@ func ProvideCache(c config.Config) cache.Cache {
 	return cache.NewFastCache(c.Cache.Ram)
 }
 
-var Set = wire.NewSet(ProvideSlog, ProvideDB, ProvideEnt, ProvideValidate, ProvideCache)
+func ProvidePriKey(c config.Config) (*rsa.PrivateKey, error) {
+	a, err := sign.NewAuthlibSign([]byte(c.RsaPriKey))
+	if err != nil {
+		return nil, fmt.Errorf("ProvidePriKey: %w", err)
+	}
+	return a.GetKey(), nil
+}
+
+var Set = wire.NewSet(ProvideSlog, ProvideDB, ProvideEnt, ProvideValidate, ProvideCache, ProvidePriKey)

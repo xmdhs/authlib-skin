@@ -2,6 +2,7 @@ package utils
 
 import (
 	"context"
+	"crypto/rsa"
 	"errors"
 	"fmt"
 	"strconv"
@@ -18,9 +19,9 @@ var (
 	ErrTokenInvalid = errors.New("token 无效")
 )
 
-func Auth(ctx context.Context, t yggdrasil.ValidateToken, client *ent.Client, jwtKey string, tmpInvalid bool) (*model.TokenClaims, error) {
+func Auth(ctx context.Context, t yggdrasil.ValidateToken, client *ent.Client, pubkey *rsa.PublicKey, tmpInvalid bool) (*model.TokenClaims, error) {
 	token, err := jwt.ParseWithClaims(t.AccessToken, &model.TokenClaims{}, func(t *jwt.Token) (interface{}, error) {
-		return []byte(jwtKey), nil
+		return pubkey, nil
 	})
 	if err != nil {
 		return nil, fmt.Errorf("Auth: %w", err)

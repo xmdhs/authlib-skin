@@ -10,12 +10,12 @@ type Config struct {
 	Sql struct {
 		MysqlDsn string
 	}
-	Debug  bool
-	JwtKey string
-	Cache  struct {
+	Debug bool
+	Cache struct {
 		Type string
 		Ram  int
 	}
 	RaelIP    bool
 	MaxIpUser int
+	RsaPriKey string
 }
