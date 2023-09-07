@@ -24,7 +24,7 @@ func Auth(ctx context.Context, t yggdrasil.ValidateToken, client *ent.Client, pu
 		return pubkey, nil
 	})
 	if err != nil {
-		return nil, fmt.Errorf("Auth: %w", err)
+		return nil, fmt.Errorf("Auth: %w", errors.Join(err, ErrTokenInvalid))
 	}
 
 	claims, ok := token.Claims.(*model.TokenClaims)
@@ -38,11 +38,11 @@ func Auth(ctx context.Context, t yggdrasil.ValidateToken, client *ent.Client, pu
 	if tmpInvalid {
 		it, err := claims.GetIssuedAt()
 		if err != nil {
-			return nil, fmt.Errorf("Auth: %w", err)
+			return nil, fmt.Errorf("Auth: %w", errors.Join(err, ErrTokenInvalid))
 		}
 		et, err := claims.GetExpirationTime()
 		if err != nil {
-			return nil, fmt.Errorf("Auth: %w", err)
+			return nil, fmt.Errorf("Auth: %w", errors.Join(err, ErrTokenInvalid))
 		}
 		invalidTime := it.Add(et.Time.Sub(it.Time) / 2)
 		if time.Now().After(invalidTime) {
