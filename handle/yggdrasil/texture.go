@@ -63,7 +63,7 @@ func (y *Yggdrasil) PutTexture() httprouter.Handle {
 			if err != nil {
 				return nil, err
 			}
-			b, err := io.ReadAll(io.LimitReader(f, 5*1000*1000))
+			b, err := io.ReadAll(io.LimitReader(f, 50*1000))
 			if err != nil {
 				return nil, err
 			}
