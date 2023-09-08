@@ -3,7 +3,6 @@ package schema
 import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
-	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
@@ -39,8 +38,8 @@ func (User) Fields() []ent.Field {
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("created_texture", Texture.Type).Ref("created_user"),
-		edge.To("profile", UserProfile.Type).Unique().Annotations(entsql.OnDelete(entsql.Cascade)),
-		edge.To("token", UserToken.Type).Unique().Annotations(entsql.OnDelete(entsql.Cascade)),
+		edge.To("profile", UserProfile.Type).Unique(),
+		edge.To("token", UserToken.Type).Unique(),
 	}
 }
 

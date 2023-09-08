@@ -474,7 +474,7 @@ func HasToken() predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, TokenTable, TokenColumn),
+			sqlgraph.Edge(sqlgraph.O2O, false, TokenTable, TokenColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})

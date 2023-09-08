@@ -64,10 +64,11 @@ func putUint(n uint64, c cache.Cache, key []byte, d time.Duration) error {
 	return nil
 }
 
-func newJwtToken(jwtKey *rsa.PrivateKey, tokenID, clientToken, UUID string) (string, error) {
+func newJwtToken(jwtKey *rsa.PrivateKey, tokenID, clientToken, UUID string, userID int) (string, error) {
 	claims := model.TokenClaims{
 		Tid: tokenID,
 		CID: clientToken,
+		UID: userID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(15 * 24 * time.Hour)),
 			Issuer:    "authlib-skin",

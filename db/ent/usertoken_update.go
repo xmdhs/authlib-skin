@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/xmdhs/authlib-skin/db/ent/predicate"
+	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/usertoken"
 )
 
@@ -40,15 +41,34 @@ func (utu *UserTokenUpdate) AddTokenID(u int64) *UserTokenUpdate {
 	return utu
 }
 
-// SetUUID sets the "uuid" field.
-func (utu *UserTokenUpdate) SetUUID(s string) *UserTokenUpdate {
-	utu.mutation.SetUUID(s)
+// SetUserID sets the "user" edge to the User entity by ID.
+func (utu *UserTokenUpdate) SetUserID(id int) *UserTokenUpdate {
+	utu.mutation.SetUserID(id)
 	return utu
+}
+
+// SetNillableUserID sets the "user" edge to the User entity by ID if the given value is not nil.
+func (utu *UserTokenUpdate) SetNillableUserID(id *int) *UserTokenUpdate {
+	if id != nil {
+		utu = utu.SetUserID(*id)
+	}
+	return utu
+}
+
+// SetUser sets the "user" edge to the User entity.
+func (utu *UserTokenUpdate) SetUser(u *User) *UserTokenUpdate {
+	return utu.SetUserID(u.ID)
 }
 
 // Mutation returns the UserTokenMutation object of the builder.
 func (utu *UserTokenUpdate) Mutation() *UserTokenMutation {
 	return utu.mutation
+}
+
+// ClearUser clears the "user" edge to the User entity.
+func (utu *UserTokenUpdate) ClearUser() *UserTokenUpdate {
+	utu.mutation.ClearUser()
+	return utu
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -93,8 +113,34 @@ func (utu *UserTokenUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := utu.mutation.AddedTokenID(); ok {
 		_spec.AddField(usertoken.FieldTokenID, field.TypeUint64, value)
 	}
-	if value, ok := utu.mutation.UUID(); ok {
-		_spec.SetField(usertoken.FieldUUID, field.TypeString, value)
+	if utu.mutation.UserCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: true,
+			Table:   usertoken.UserTable,
+			Columns: []string{usertoken.UserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := utu.mutation.UserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: true,
+			Table:   usertoken.UserTable,
+			Columns: []string{usertoken.UserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, utu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -129,15 +175,34 @@ func (utuo *UserTokenUpdateOne) AddTokenID(u int64) *UserTokenUpdateOne {
 	return utuo
 }
 
-// SetUUID sets the "uuid" field.
-func (utuo *UserTokenUpdateOne) SetUUID(s string) *UserTokenUpdateOne {
-	utuo.mutation.SetUUID(s)
+// SetUserID sets the "user" edge to the User entity by ID.
+func (utuo *UserTokenUpdateOne) SetUserID(id int) *UserTokenUpdateOne {
+	utuo.mutation.SetUserID(id)
 	return utuo
+}
+
+// SetNillableUserID sets the "user" edge to the User entity by ID if the given value is not nil.
+func (utuo *UserTokenUpdateOne) SetNillableUserID(id *int) *UserTokenUpdateOne {
+	if id != nil {
+		utuo = utuo.SetUserID(*id)
+	}
+	return utuo
+}
+
+// SetUser sets the "user" edge to the User entity.
+func (utuo *UserTokenUpdateOne) SetUser(u *User) *UserTokenUpdateOne {
+	return utuo.SetUserID(u.ID)
 }
 
 // Mutation returns the UserTokenMutation object of the builder.
 func (utuo *UserTokenUpdateOne) Mutation() *UserTokenMutation {
 	return utuo.mutation
+}
+
+// ClearUser clears the "user" edge to the User entity.
+func (utuo *UserTokenUpdateOne) ClearUser() *UserTokenUpdateOne {
+	utuo.mutation.ClearUser()
+	return utuo
 }
 
 // Where appends a list predicates to the UserTokenUpdate builder.
@@ -212,8 +277,34 @@ func (utuo *UserTokenUpdateOne) sqlSave(ctx context.Context) (_node *UserToken, 
 	if value, ok := utuo.mutation.AddedTokenID(); ok {
 		_spec.AddField(usertoken.FieldTokenID, field.TypeUint64, value)
 	}
-	if value, ok := utuo.mutation.UUID(); ok {
-		_spec.SetField(usertoken.FieldUUID, field.TypeString, value)
+	if utuo.mutation.UserCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: true,
+			Table:   usertoken.UserTable,
+			Columns: []string{usertoken.UserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := utuo.mutation.UserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: true,
+			Table:   usertoken.UserTable,
+			Columns: []string{usertoken.UserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &UserToken{config: utuo.config}
 	_spec.Assign = _node.assignValues

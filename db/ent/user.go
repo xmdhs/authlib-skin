@@ -33,7 +33,6 @@ type User struct {
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges        UserEdges `json:"edges"`
-	user_token   *int
 	selectValues sql.SelectValues
 }
 
@@ -94,8 +93,6 @@ func (*User) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case user.FieldEmail, user.FieldPassword, user.FieldSalt, user.FieldRegIP:
 			values[i] = new(sql.NullString)
-		case user.ForeignKeys[0]: // user_token
-			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -152,13 +149,6 @@ func (u *User) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field reg_time", values[i])
 			} else if value.Valid {
 				u.RegTime = value.Int64
-			}
-		case user.ForeignKeys[0]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field user_token", value)
-			} else if value.Valid {
-				u.user_token = new(int)
-				*u.user_token = int(value.Int64)
 			}
 		default:
 			u.selectValues.Set(columns[i], values[i])

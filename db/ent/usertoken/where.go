@@ -4,6 +4,7 @@ package usertoken
 
 import (
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/xmdhs/authlib-skin/db/ent/predicate"
 )
 
@@ -57,11 +58,6 @@ func TokenID(v uint64) predicate.UserToken {
 	return predicate.UserToken(sql.FieldEQ(FieldTokenID, v))
 }
 
-// UUID applies equality check predicate on the "uuid" field. It's identical to UUIDEQ.
-func UUID(v string) predicate.UserToken {
-	return predicate.UserToken(sql.FieldEQ(FieldUUID, v))
-}
-
 // TokenIDEQ applies the EQ predicate on the "token_id" field.
 func TokenIDEQ(v uint64) predicate.UserToken {
 	return predicate.UserToken(sql.FieldEQ(FieldTokenID, v))
@@ -102,69 +98,27 @@ func TokenIDLTE(v uint64) predicate.UserToken {
 	return predicate.UserToken(sql.FieldLTE(FieldTokenID, v))
 }
 
-// UUIDEQ applies the EQ predicate on the "uuid" field.
-func UUIDEQ(v string) predicate.UserToken {
-	return predicate.UserToken(sql.FieldEQ(FieldUUID, v))
+// HasUser applies the HasEdge predicate on the "user" edge.
+func HasUser() predicate.UserToken {
+	return predicate.UserToken(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, true, UserTable, UserColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
 }
 
-// UUIDNEQ applies the NEQ predicate on the "uuid" field.
-func UUIDNEQ(v string) predicate.UserToken {
-	return predicate.UserToken(sql.FieldNEQ(FieldUUID, v))
-}
-
-// UUIDIn applies the In predicate on the "uuid" field.
-func UUIDIn(vs ...string) predicate.UserToken {
-	return predicate.UserToken(sql.FieldIn(FieldUUID, vs...))
-}
-
-// UUIDNotIn applies the NotIn predicate on the "uuid" field.
-func UUIDNotIn(vs ...string) predicate.UserToken {
-	return predicate.UserToken(sql.FieldNotIn(FieldUUID, vs...))
-}
-
-// UUIDGT applies the GT predicate on the "uuid" field.
-func UUIDGT(v string) predicate.UserToken {
-	return predicate.UserToken(sql.FieldGT(FieldUUID, v))
-}
-
-// UUIDGTE applies the GTE predicate on the "uuid" field.
-func UUIDGTE(v string) predicate.UserToken {
-	return predicate.UserToken(sql.FieldGTE(FieldUUID, v))
-}
-
-// UUIDLT applies the LT predicate on the "uuid" field.
-func UUIDLT(v string) predicate.UserToken {
-	return predicate.UserToken(sql.FieldLT(FieldUUID, v))
-}
-
-// UUIDLTE applies the LTE predicate on the "uuid" field.
-func UUIDLTE(v string) predicate.UserToken {
-	return predicate.UserToken(sql.FieldLTE(FieldUUID, v))
-}
-
-// UUIDContains applies the Contains predicate on the "uuid" field.
-func UUIDContains(v string) predicate.UserToken {
-	return predicate.UserToken(sql.FieldContains(FieldUUID, v))
-}
-
-// UUIDHasPrefix applies the HasPrefix predicate on the "uuid" field.
-func UUIDHasPrefix(v string) predicate.UserToken {
-	return predicate.UserToken(sql.FieldHasPrefix(FieldUUID, v))
-}
-
-// UUIDHasSuffix applies the HasSuffix predicate on the "uuid" field.
-func UUIDHasSuffix(v string) predicate.UserToken {
-	return predicate.UserToken(sql.FieldHasSuffix(FieldUUID, v))
-}
-
-// UUIDEqualFold applies the EqualFold predicate on the "uuid" field.
-func UUIDEqualFold(v string) predicate.UserToken {
-	return predicate.UserToken(sql.FieldEqualFold(FieldUUID, v))
-}
-
-// UUIDContainsFold applies the ContainsFold predicate on the "uuid" field.
-func UUIDContainsFold(v string) predicate.UserToken {
-	return predicate.UserToken(sql.FieldContainsFold(FieldUUID, v))
+// HasUserWith applies the HasEdge predicate on the "user" edge with a given conditions (other predicates).
+func HasUserWith(preds ...predicate.User) predicate.UserToken {
+	return predicate.UserToken(func(s *sql.Selector) {
+		step := newUserStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

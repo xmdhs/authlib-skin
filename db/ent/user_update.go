@@ -307,7 +307,7 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if uu.mutation.TokenCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.O2O,
 			Inverse: false,
 			Table:   user.TokenTable,
 			Columns: []string{user.TokenColumn},
@@ -320,7 +320,7 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if nodes := uu.mutation.TokenIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.O2O,
 			Inverse: false,
 			Table:   user.TokenTable,
 			Columns: []string{user.TokenColumn},
@@ -661,7 +661,7 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	}
 	if uuo.mutation.TokenCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.O2O,
 			Inverse: false,
 			Table:   user.TokenTable,
 			Columns: []string{user.TokenColumn},
@@ -674,7 +674,7 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	}
 	if nodes := uuo.mutation.TokenIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.O2O,
 			Inverse: false,
 			Table:   user.TokenTable,
 			Columns: []string{user.TokenColumn},

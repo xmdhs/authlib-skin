@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/xmdhs/authlib-skin/db/ent/texture"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
+	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
 )
 
 // TextureCreate is the builder for creating a Texture entity.
@@ -47,6 +48,17 @@ func (tc *TextureCreate) SetCreatedUserID(id int) *TextureCreate {
 // SetCreatedUser sets the "created_user" edge to the User entity.
 func (tc *TextureCreate) SetCreatedUser(u *User) *TextureCreate {
 	return tc.SetCreatedUserID(u.ID)
+}
+
+// SetUserID sets the "user" edge to the UserProfile entity by ID.
+func (tc *TextureCreate) SetUserID(id int) *TextureCreate {
+	tc.mutation.SetUserID(id)
+	return tc
+}
+
+// SetUser sets the "user" edge to the UserProfile entity.
+func (tc *TextureCreate) SetUser(u *UserProfile) *TextureCreate {
+	return tc.SetUserID(u.ID)
 }
 
 // Mutation returns the TextureMutation object of the builder.
@@ -94,6 +106,9 @@ func (tc *TextureCreate) check() error {
 	}
 	if _, ok := tc.mutation.CreatedUserID(); !ok {
 		return &ValidationError{Name: "created_user", err: errors.New(`ent: missing required edge "Texture.created_user"`)}
+	}
+	if _, ok := tc.mutation.UserID(); !ok {
+		return &ValidationError{Name: "user", err: errors.New(`ent: missing required edge "Texture.user"`)}
 	}
 	return nil
 }
@@ -148,6 +163,23 @@ func (tc *TextureCreate) createSpec() (*Texture, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.texture_created_user = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.UserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   texture.UserTable,
+			Columns: []string{texture.UserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userprofile.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.user_profile_texture = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

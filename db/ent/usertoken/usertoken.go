@@ -4,6 +4,7 @@ package usertoken
 
 import (
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -13,23 +14,40 @@ const (
 	FieldID = "id"
 	// FieldTokenID holds the string denoting the token_id field in the database.
 	FieldTokenID = "token_id"
-	// FieldUUID holds the string denoting the uuid field in the database.
-	FieldUUID = "uuid"
+	// EdgeUser holds the string denoting the user edge name in mutations.
+	EdgeUser = "user"
 	// Table holds the table name of the usertoken in the database.
 	Table = "user_tokens"
+	// UserTable is the table that holds the user relation/edge.
+	UserTable = "user_tokens"
+	// UserInverseTable is the table name for the User entity.
+	// It exists in this package in order to avoid circular dependency with the "user" package.
+	UserInverseTable = "users"
+	// UserColumn is the table column denoting the user relation/edge.
+	UserColumn = "user_token"
 )
 
 // Columns holds all SQL columns for usertoken fields.
 var Columns = []string{
 	FieldID,
 	FieldTokenID,
-	FieldUUID,
+}
+
+// ForeignKeys holds the SQL foreign-keys that are owned by the "user_tokens"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"user_token",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -49,7 +67,16 @@ func ByTokenID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTokenID, opts...).ToFunc()
 }
 
-// ByUUID orders the results by the uuid field.
-func ByUUID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldUUID, opts...).ToFunc()
+// ByUserField orders the results by user field.
+func ByUserField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUserStep(), sql.OrderByField(field, opts...))
+	}
+}
+func newUserStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UserInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2O, true, UserTable, UserColumn),
+	)
 }

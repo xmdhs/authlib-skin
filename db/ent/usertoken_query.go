@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/xmdhs/authlib-skin/db/ent/predicate"
+	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/usertoken"
 )
 
@@ -22,6 +23,8 @@ type UserTokenQuery struct {
 	order      []usertoken.OrderOption
 	inters     []Interceptor
 	predicates []predicate.UserToken
+	withUser   *UserQuery
+	withFKs    bool
 	modifiers  []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -57,6 +60,28 @@ func (utq *UserTokenQuery) Unique(unique bool) *UserTokenQuery {
 func (utq *UserTokenQuery) Order(o ...usertoken.OrderOption) *UserTokenQuery {
 	utq.order = append(utq.order, o...)
 	return utq
+}
+
+// QueryUser chains the current query on the "user" edge.
+func (utq *UserTokenQuery) QueryUser() *UserQuery {
+	query := (&UserClient{config: utq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := utq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := utq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(usertoken.Table, usertoken.FieldID, selector),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, true, usertoken.UserTable, usertoken.UserColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(utq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first UserToken entity from the query.
@@ -251,10 +276,22 @@ func (utq *UserTokenQuery) Clone() *UserTokenQuery {
 		order:      append([]usertoken.OrderOption{}, utq.order...),
 		inters:     append([]Interceptor{}, utq.inters...),
 		predicates: append([]predicate.UserToken{}, utq.predicates...),
+		withUser:   utq.withUser.Clone(),
 		// clone intermediate query.
 		sql:  utq.sql.Clone(),
 		path: utq.path,
 	}
+}
+
+// WithUser tells the query-builder to eager-load the nodes that are connected to
+// the "user" edge. The optional arguments are used to configure the query builder of the edge.
+func (utq *UserTokenQuery) WithUser(opts ...func(*UserQuery)) *UserTokenQuery {
+	query := (&UserClient{config: utq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	utq.withUser = query
+	return utq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -333,15 +370,26 @@ func (utq *UserTokenQuery) prepareQuery(ctx context.Context) error {
 
 func (utq *UserTokenQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*UserToken, error) {
 	var (
-		nodes = []*UserToken{}
-		_spec = utq.querySpec()
+		nodes       = []*UserToken{}
+		withFKs     = utq.withFKs
+		_spec       = utq.querySpec()
+		loadedTypes = [1]bool{
+			utq.withUser != nil,
+		}
 	)
+	if utq.withUser != nil {
+		withFKs = true
+	}
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, usertoken.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*UserToken).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &UserToken{config: utq.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	if len(utq.modifiers) > 0 {
@@ -356,7 +404,46 @@ func (utq *UserTokenQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*U
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := utq.withUser; query != nil {
+		if err := utq.loadUser(ctx, query, nodes, nil,
+			func(n *UserToken, e *User) { n.Edges.User = e }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (utq *UserTokenQuery) loadUser(ctx context.Context, query *UserQuery, nodes []*UserToken, init func(*UserToken), assign func(*UserToken, *User)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*UserToken)
+	for i := range nodes {
+		if nodes[i].user_token == nil {
+			continue
+		}
+		fk := *nodes[i].user_token
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(user.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "user_token" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
 }
 
 func (utq *UserTokenQuery) sqlCount(ctx context.Context) (int, error) {

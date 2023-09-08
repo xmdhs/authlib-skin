@@ -20,6 +20,8 @@ const (
 	FieldVariant = "variant"
 	// EdgeCreatedUser holds the string denoting the created_user edge name in mutations.
 	EdgeCreatedUser = "created_user"
+	// EdgeUser holds the string denoting the user edge name in mutations.
+	EdgeUser = "user"
 	// Table holds the table name of the texture in the database.
 	Table = "textures"
 	// CreatedUserTable is the table that holds the created_user relation/edge.
@@ -29,6 +31,13 @@ const (
 	CreatedUserInverseTable = "users"
 	// CreatedUserColumn is the table column denoting the created_user relation/edge.
 	CreatedUserColumn = "texture_created_user"
+	// UserTable is the table that holds the user relation/edge.
+	UserTable = "textures"
+	// UserInverseTable is the table name for the UserProfile entity.
+	// It exists in this package in order to avoid circular dependency with the "userprofile" package.
+	UserInverseTable = "user_profiles"
+	// UserColumn is the table column denoting the user relation/edge.
+	UserColumn = "user_profile_texture"
 )
 
 // Columns holds all SQL columns for texture fields.
@@ -90,10 +99,24 @@ func ByCreatedUserField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newCreatedUserStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByUserField orders the results by user field.
+func ByUserField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUserStep(), sql.OrderByField(field, opts...))
+	}
+}
 func newCreatedUserStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(CreatedUserInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, false, CreatedUserTable, CreatedUserColumn),
+	)
+}
+func newUserStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UserInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
 	)
 }

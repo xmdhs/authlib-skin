@@ -286,6 +286,29 @@ func HasCreatedUserWith(preds ...predicate.User) predicate.Texture {
 	})
 }
 
+// HasUser applies the HasEdge predicate on the "user" edge.
+func HasUser() predicate.Texture {
+	return predicate.Texture(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUserWith applies the HasEdge predicate on the "user" edge with a given conditions (other predicates).
+func HasUserWith(preds ...predicate.UserProfile) predicate.Texture {
+	return predicate.Texture(func(s *sql.Selector) {
+		step := newUserStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Texture) predicate.Texture {
 	return predicate.Texture(func(s *sql.Selector) {

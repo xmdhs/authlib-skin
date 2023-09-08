@@ -10,6 +10,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/xmdhs/authlib-skin/db/ent/texture"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
+	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
 )
 
 // Texture is the model entity for the Texture schema.
@@ -35,9 +36,11 @@ type Texture struct {
 type TextureEdges struct {
 	// CreatedUser holds the value of the created_user edge.
 	CreatedUser *User `json:"created_user,omitempty"`
+	// User holds the value of the user edge.
+	User *UserProfile `json:"user,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // CreatedUserOrErr returns the CreatedUser value or an error if the edge
@@ -51,6 +54,19 @@ func (e TextureEdges) CreatedUserOrErr() (*User, error) {
 		return e.CreatedUser, nil
 	}
 	return nil, &NotLoadedError{edge: "created_user"}
+}
+
+// UserOrErr returns the User value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e TextureEdges) UserOrErr() (*UserProfile, error) {
+	if e.loadedTypes[1] {
+		if e.User == nil {
+			// Edge was loaded but was not found.
+			return nil, &NotFoundError{label: userprofile.Label}
+		}
+		return e.User, nil
+	}
+	return nil, &NotLoadedError{edge: "user"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -135,6 +151,11 @@ func (t *Texture) Value(name string) (ent.Value, error) {
 // QueryCreatedUser queries the "created_user" edge of the Texture entity.
 func (t *Texture) QueryCreatedUser() *UserQuery {
 	return NewTextureClient(t.config).QueryCreatedUser(t)
+}
+
+// QueryUser queries the "user" edge of the Texture entity.
+func (t *Texture) QueryUser() *UserProfileQuery {
+	return NewTextureClient(t.config).QueryUser(t)
 }
 
 // Update returns a builder for updating this Texture.

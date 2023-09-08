@@ -47,7 +47,7 @@ const (
 	// ProfileColumn is the table column denoting the profile relation/edge.
 	ProfileColumn = "user_profile"
 	// TokenTable is the table that holds the token relation/edge.
-	TokenTable = "users"
+	TokenTable = "user_tokens"
 	// TokenInverseTable is the table name for the UserToken entity.
 	// It exists in this package in order to avoid circular dependency with the "usertoken" package.
 	TokenInverseTable = "user_tokens"
@@ -66,21 +66,10 @@ var Columns = []string{
 	FieldRegTime,
 }
 
-// ForeignKeys holds the SQL foreign-keys that are owned by the "users"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"user_token",
-}
-
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
-			return true
-		}
-	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -170,6 +159,6 @@ func newTokenStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(TokenInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, false, TokenTable, TokenColumn),
+		sqlgraph.Edge(sqlgraph.O2O, false, TokenTable, TokenColumn),
 	)
 }

@@ -30,7 +30,7 @@ func NewServer(c config.Config, sl *slog.Logger, route *httprouter.Router) (*htt
 				})
 				r = r.WithContext(ctx)
 			}
-			if sl.Enabled(ctx, slog.LevelDebug) {
+			if c.Debug && sl.Enabled(ctx, slog.LevelDebug) {
 				sl.DebugContext(ctx, r.Method)
 			}
 			route.ServeHTTP(w, r)

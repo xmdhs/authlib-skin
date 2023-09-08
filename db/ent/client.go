@@ -327,6 +327,22 @@ func (c *TextureClient) QueryCreatedUser(t *Texture) *UserQuery {
 	return query
 }
 
+// QueryUser queries the user edge of a Texture.
+func (c *TextureClient) QueryUser(t *Texture) *UserProfileQuery {
+	query := (&UserProfileClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(texture.Table, texture.FieldID, id),
+			sqlgraph.To(userprofile.Table, userprofile.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, texture.UserTable, texture.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *TextureClient) Hooks() []Hook {
 	return c.hooks.Texture
@@ -485,7 +501,7 @@ func (c *UserClient) QueryToken(u *User) *UserTokenQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(usertoken.Table, usertoken.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, user.TokenTable, user.TokenColumn),
+			sqlgraph.Edge(sqlgraph.O2O, false, user.TokenTable, user.TokenColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil
@@ -759,6 +775,22 @@ func (c *UserTokenClient) GetX(ctx context.Context, id int) *UserToken {
 		panic(err)
 	}
 	return obj
+}
+
+// QueryUser queries the user edge of a UserToken.
+func (c *UserTokenClient) QueryUser(ut *UserToken) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ut.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(usertoken.Table, usertoken.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, true, usertoken.UserTable, usertoken.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(ut.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
 }
 
 // Hooks returns the client hooks.

@@ -63,7 +63,7 @@ func (y *Yggdrasil) Authenticate(cxt context.Context, auth yggdrasil.Authenticat
 			}
 		}
 		if utoken == nil {
-			ut, err := tx.UserToken.Create().SetTokenID(1).SetUUID(u.Edges.Profile.UUID).Save(cxt)
+			ut, err := tx.UserToken.Create().SetTokenID(1).SetUser(u).Save(cxt)
 			if err != nil {
 				return err
 			}
@@ -79,7 +79,7 @@ func (y *Yggdrasil) Authenticate(cxt context.Context, auth yggdrasil.Authenticat
 		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", err)
 	}
 
-	jwts, err := newJwtToken(y.prikey, strconv.FormatUint(utoken.TokenID, 10), clientToken, u.Edges.Profile.UUID)
+	jwts, err := newJwtToken(y.prikey, strconv.FormatUint(utoken.TokenID, 10), clientToken, u.Edges.Profile.UUID, u.ID)
 	if err != nil {
 		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", err)
 	}
@@ -113,7 +113,7 @@ func (y *Yggdrasil) SignOut(ctx context.Context, t yggdrasil.Pass) error {
 	if err != nil {
 		return fmt.Errorf("SignOut: %w", err)
 	}
-	ut, err := y.client.UserToken.Query().Where(usertoken.UUIDEQ(u.Edges.Profile.UUID)).First(ctx)
+	ut, err := y.client.UserToken.Query().Where(usertoken.HasUserWith(user.IDEQ(u.ID))).First(ctx)
 	if err != nil {
 		var nf *ent.NotFoundError
 		if !errors.As(err, &nf) {
@@ -133,7 +133,7 @@ func (y *Yggdrasil) Invalidate(ctx context.Context, accessToken string) error {
 	if err != nil {
 		return fmt.Errorf("Invalidate: %w", err)
 	}
-	err = y.client.UserToken.Update().Where(usertoken.UUIDEQ(t.Subject)).AddTokenID(1).Exec(ctx)
+	err = y.client.UserToken.Update().Where(usertoken.HasUserWith(user.ID(t.UID))).AddTokenID(1).Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("Invalidate: %w", err)
 	}
@@ -145,12 +145,12 @@ func (y *Yggdrasil) Refresh(ctx context.Context, token yggdrasil.RefreshToken) (
 	if err != nil {
 		return yggdrasil.Token{}, fmt.Errorf("Refresh: %w", err)
 	}
-	jwts, err := newJwtToken(y.prikey, t.Tid, t.CID, t.Subject)
+	jwts, err := newJwtToken(y.prikey, t.Tid, t.CID, t.Subject, t.UID)
 	if err != nil {
 		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", err)
 	}
 
-	up, err := y.client.UserProfile.Query().Where(userprofile.UUIDEQ(t.Subject)).First(ctx)
+	up, err := y.client.UserProfile.Query().Where(userprofile.HasUserWith(user.ID(t.UID))).First(ctx)
 	if err != nil {
 		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", err)
 	}

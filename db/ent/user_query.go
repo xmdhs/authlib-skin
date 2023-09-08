@@ -29,7 +29,6 @@ type UserQuery struct {
 	withCreatedTexture *TextureQuery
 	withProfile        *UserProfileQuery
 	withToken          *UserTokenQuery
-	withFKs            bool
 	modifiers          []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -125,7 +124,7 @@ func (uq *UserQuery) QueryToken() *UserTokenQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(usertoken.Table, usertoken.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, user.TokenTable, user.TokenColumn),
+			sqlgraph.Edge(sqlgraph.O2O, false, user.TokenTable, user.TokenColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -444,7 +443,6 @@ func (uq *UserQuery) prepareQuery(ctx context.Context) error {
 func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, error) {
 	var (
 		nodes       = []*User{}
-		withFKs     = uq.withFKs
 		_spec       = uq.querySpec()
 		loadedTypes = [3]bool{
 			uq.withCreatedTexture != nil,
@@ -452,12 +450,6 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			uq.withToken != nil,
 		}
 	)
-	if uq.withToken != nil {
-		withFKs = true
-	}
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, user.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*User).scanValues(nil, columns)
 	}
@@ -561,34 +553,30 @@ func (uq *UserQuery) loadProfile(ctx context.Context, query *UserProfileQuery, n
 	return nil
 }
 func (uq *UserQuery) loadToken(ctx context.Context, query *UserTokenQuery, nodes []*User, init func(*User), assign func(*User, *UserToken)) error {
-	ids := make([]int, 0, len(nodes))
-	nodeids := make(map[int][]*User)
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
 	for i := range nodes {
-		if nodes[i].user_token == nil {
-			continue
-		}
-		fk := *nodes[i].user_token
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
 	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(usertoken.IDIn(ids...))
+	query.withFKs = true
+	query.Where(predicate.UserToken(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.TokenColumn), fks...))
+	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
+		fk := n.user_token
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "user_token" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "user_token" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "user_token" returned %v for node %v`, *fk, n.ID)
 		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
+		assign(node, n)
 	}
 	return nil
 }

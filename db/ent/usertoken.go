@@ -8,6 +8,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/usertoken"
 )
 
@@ -18,9 +19,33 @@ type UserToken struct {
 	ID int `json:"id,omitempty"`
 	// TokenID holds the value of the "token_id" field.
 	TokenID uint64 `json:"token_id,omitempty"`
-	// UUID holds the value of the "uuid" field.
-	UUID         string `json:"uuid,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the UserTokenQuery when eager-loading is set.
+	Edges        UserTokenEdges `json:"edges"`
+	user_token   *int
 	selectValues sql.SelectValues
+}
+
+// UserTokenEdges holds the relations/edges for other nodes in the graph.
+type UserTokenEdges struct {
+	// User holds the value of the user edge.
+	User *User `json:"user,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// UserOrErr returns the User value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e UserTokenEdges) UserOrErr() (*User, error) {
+	if e.loadedTypes[0] {
+		if e.User == nil {
+			// Edge was loaded but was not found.
+			return nil, &NotFoundError{label: user.Label}
+		}
+		return e.User, nil
+	}
+	return nil, &NotLoadedError{edge: "user"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -30,8 +55,8 @@ func (*UserToken) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case usertoken.FieldID, usertoken.FieldTokenID:
 			values[i] = new(sql.NullInt64)
-		case usertoken.FieldUUID:
-			values[i] = new(sql.NullString)
+		case usertoken.ForeignKeys[0]: // user_token
+			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -59,11 +84,12 @@ func (ut *UserToken) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				ut.TokenID = uint64(value.Int64)
 			}
-		case usertoken.FieldUUID:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field uuid", values[i])
+		case usertoken.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field user_token", value)
 			} else if value.Valid {
-				ut.UUID = value.String
+				ut.user_token = new(int)
+				*ut.user_token = int(value.Int64)
 			}
 		default:
 			ut.selectValues.Set(columns[i], values[i])
@@ -76,6 +102,11 @@ func (ut *UserToken) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (ut *UserToken) Value(name string) (ent.Value, error) {
 	return ut.selectValues.Get(name)
+}
+
+// QueryUser queries the "user" edge of the UserToken entity.
+func (ut *UserToken) QueryUser() *UserQuery {
+	return NewUserTokenClient(ut.config).QueryUser(ut)
 }
 
 // Update returns a builder for updating this UserToken.
@@ -103,9 +134,6 @@ func (ut *UserToken) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v, ", ut.ID))
 	builder.WriteString("token_id=")
 	builder.WriteString(fmt.Sprintf("%v", ut.TokenID))
-	builder.WriteString(", ")
-	builder.WriteString("uuid=")
-	builder.WriteString(ut.UUID)
 	builder.WriteByte(')')
 	return builder.String()
 }

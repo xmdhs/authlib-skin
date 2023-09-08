@@ -15,7 +15,7 @@ var (
 		{Name: "type", Type: field.TypeString, SchemaType: map[string]string{"mysql": "VARCHAR(10)"}},
 		{Name: "variant", Type: field.TypeString, SchemaType: map[string]string{"mysql": "VARCHAR(10)"}},
 		{Name: "texture_created_user", Type: field.TypeInt},
-		{Name: "user_profile_texture", Type: field.TypeInt, Nullable: true},
+		{Name: "user_profile_texture", Type: field.TypeInt},
 	}
 	// TexturesTable holds the schema information for the "textures" table.
 	TexturesTable = &schema.Table{
@@ -33,14 +33,7 @@ var (
 				Symbol:     "textures_user_profiles_texture",
 				Columns:    []*schema.Column{TexturesColumns[5]},
 				RefColumns: []*schema.Column{UserProfilesColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-		},
-		Indexes: []*schema.Index{
-			{
-				Name:    "texture_texture_hash",
-				Unique:  false,
-				Columns: []*schema.Column{TexturesColumns[1]},
+				OnDelete:   schema.NoAction,
 			},
 		},
 	}
@@ -53,21 +46,12 @@ var (
 		{Name: "reg_ip", Type: field.TypeString, SchemaType: map[string]string{"mysql": "VARCHAR(32)"}},
 		{Name: "state", Type: field.TypeInt},
 		{Name: "reg_time", Type: field.TypeInt64},
-		{Name: "user_token", Type: field.TypeInt, Nullable: true},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
 		Name:       "users",
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "users_user_tokens_token",
-				Columns:    []*schema.Column{UsersColumns[7]},
-				RefColumns: []*schema.Column{UserTokensColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-		},
 		Indexes: []*schema.Index{
 			{
 				Name:    "user_email",
@@ -98,14 +82,14 @@ var (
 				Symbol:     "user_profiles_users_profile",
 				Columns:    []*schema.Column{UserProfilesColumns[3]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.Cascade,
+				OnDelete:   schema.NoAction,
 			},
 		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "userprofile_uuid",
+				Name:    "userprofile_user_profile",
 				Unique:  false,
-				Columns: []*schema.Column{UserProfilesColumns[2]},
+				Columns: []*schema.Column{UserProfilesColumns[3]},
 			},
 		},
 	}
@@ -113,16 +97,24 @@ var (
 	UserTokensColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "token_id", Type: field.TypeUint64},
-		{Name: "uuid", Type: field.TypeString, SchemaType: map[string]string{"mysql": "VARCHAR(32)"}},
+		{Name: "user_token", Type: field.TypeInt, Unique: true, Nullable: true},
 	}
 	// UserTokensTable holds the schema information for the "user_tokens" table.
 	UserTokensTable = &schema.Table{
 		Name:       "user_tokens",
 		Columns:    UserTokensColumns,
 		PrimaryKey: []*schema.Column{UserTokensColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "user_tokens_users_token",
+				Columns:    []*schema.Column{UserTokensColumns[2]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 		Indexes: []*schema.Index{
 			{
-				Name:    "usertoken_uuid",
+				Name:    "usertoken_user_token",
 				Unique:  false,
 				Columns: []*schema.Column{UserTokensColumns[2]},
 			},
@@ -140,6 +132,6 @@ var (
 func init() {
 	TexturesTable.ForeignKeys[0].RefTable = UsersTable
 	TexturesTable.ForeignKeys[1].RefTable = UserProfilesTable
-	UsersTable.ForeignKeys[0].RefTable = UserTokensTable
 	UserProfilesTable.ForeignKeys[0].RefTable = UsersTable
+	UserTokensTable.ForeignKeys[0].RefTable = UsersTable
 }

@@ -9,6 +9,7 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/usertoken"
 )
 
@@ -25,10 +26,23 @@ func (utc *UserTokenCreate) SetTokenID(u uint64) *UserTokenCreate {
 	return utc
 }
 
-// SetUUID sets the "uuid" field.
-func (utc *UserTokenCreate) SetUUID(s string) *UserTokenCreate {
-	utc.mutation.SetUUID(s)
+// SetUserID sets the "user" edge to the User entity by ID.
+func (utc *UserTokenCreate) SetUserID(id int) *UserTokenCreate {
+	utc.mutation.SetUserID(id)
 	return utc
+}
+
+// SetNillableUserID sets the "user" edge to the User entity by ID if the given value is not nil.
+func (utc *UserTokenCreate) SetNillableUserID(id *int) *UserTokenCreate {
+	if id != nil {
+		utc = utc.SetUserID(*id)
+	}
+	return utc
+}
+
+// SetUser sets the "user" edge to the User entity.
+func (utc *UserTokenCreate) SetUser(u *User) *UserTokenCreate {
+	return utc.SetUserID(u.ID)
 }
 
 // Mutation returns the UserTokenMutation object of the builder.
@@ -68,9 +82,6 @@ func (utc *UserTokenCreate) check() error {
 	if _, ok := utc.mutation.TokenID(); !ok {
 		return &ValidationError{Name: "token_id", err: errors.New(`ent: missing required field "UserToken.token_id"`)}
 	}
-	if _, ok := utc.mutation.UUID(); !ok {
-		return &ValidationError{Name: "uuid", err: errors.New(`ent: missing required field "UserToken.uuid"`)}
-	}
 	return nil
 }
 
@@ -101,9 +112,22 @@ func (utc *UserTokenCreate) createSpec() (*UserToken, *sqlgraph.CreateSpec) {
 		_spec.SetField(usertoken.FieldTokenID, field.TypeUint64, value)
 		_node.TokenID = value
 	}
-	if value, ok := utc.mutation.UUID(); ok {
-		_spec.SetField(usertoken.FieldUUID, field.TypeString, value)
-		_node.UUID = value
+	if nodes := utc.mutation.UserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2O,
+			Inverse: true,
+			Table:   usertoken.UserTable,
+			Columns: []string{usertoken.UserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.user_token = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

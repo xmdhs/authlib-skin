@@ -19,5 +19,7 @@ type TokenClaims struct {
 	Tid string `json:"tid"`
 	// ClientToken Yggdrasil 协议中使用
 	CID string `json:"cid"`
+	// 用户 id
+	UID int `json:"uid"`
 	jwt.RegisteredClaims
 }

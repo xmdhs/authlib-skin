@@ -10,6 +10,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/xmdhs/authlib-skin/db/ent"
+	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/usertoken"
 	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/model/yggdrasil"
@@ -50,7 +51,7 @@ func Auth(ctx context.Context, t yggdrasil.ValidateToken, client *ent.Client, pu
 		}
 	}
 
-	ut, err := client.UserToken.Query().Where(usertoken.UUIDEQ(claims.Subject)).First(ctx)
+	ut, err := client.UserToken.Query().Where(usertoken.HasUserWith(user.ID(claims.UID))).First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("Auth: %w", err)
 	}
