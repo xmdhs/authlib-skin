@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"image/png"
 	"io"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -46,14 +47,14 @@ func (y *Yggdrasil) validTextureType(ctx context.Context, w http.ResponseWriter,
 func (y *Yggdrasil) PutTexture() httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		ctx := r.Context()
-		uuid := p.ByName("uuid")
-		textureType := p.ByName("textureType")
-		if uuid == "" || textureType == "" {
-			y.logger.DebugContext(ctx, "路径中缺少参数 uuid / textureType")
-			handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: "路径中缺少参数 uuid / textureType"}, 400)
+		uuid, textureType, ok := getUUIDbyParams(ctx, p, y.logger, w)
+		if !ok {
 			return
 		}
 		token := y.getTokenbyAuthorization(ctx, w, r)
+		if token == "" {
+			return
+		}
 
 		model := r.FormValue("model")
 
@@ -107,6 +108,43 @@ func (y *Yggdrasil) PutTexture() httprouter.Handle {
 				return
 			}
 
+			y.logger.WarnContext(ctx, err.Error())
+			handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: err.Error()}, 500)
+			return
+		}
+		w.WriteHeader(204)
+	}
+}
+
+func getUUIDbyParams(ctx context.Context, p httprouter.Params, l *slog.Logger, w http.ResponseWriter) (string, string, bool) {
+	uuid := p.ByName("uuid")
+	textureType := p.ByName("textureType")
+	if uuid == "" || textureType == "" {
+		l.DebugContext(ctx, "路径中缺少参数 uuid / textureType")
+		handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: "路径中缺少参数 uuid / textureType"}, 400)
+		return "", "", false
+	}
+	return uuid, textureType, true
+}
+
+func (y *Yggdrasil) DelTexture() httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+		ctx := r.Context()
+		uuid, textureType, ok := getUUIDbyParams(ctx, p, y.logger, w)
+		if !ok {
+			return
+		}
+		token := y.getTokenbyAuthorization(ctx, w, r)
+		if token == "" {
+			return
+		}
+		err := y.yggdrasilService.DelTexture(ctx, uuid, token, textureType)
+		if err != nil {
+			if errors.Is(err, utils.ErrTokenInvalid) {
+				y.logger.DebugContext(ctx, err.Error())
+				w.WriteHeader(401)
+				return
+			}
 			y.logger.WarnContext(ctx, err.Error())
 			handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: err.Error()}, 500)
 			return

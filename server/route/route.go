@@ -29,6 +29,7 @@ func newYggdrasil(r *httprouter.Router, handelY yggdrasil.Yggdrasil) error {
 	r.POST("/api/yggdrasil/authserver/invalidate", handelY.Invalidate())
 	r.POST("/api/yggdrasil/authserver/refresh", handelY.Refresh())
 	r.PUT("/api/yggdrasil/api/user/profile/:uuid/:textureType", handelY.PutTexture())
+	r.DELETE("/api/yggdrasil/api/user/profile/:uuid/:textureType", handelY.DelTexture())
 	r.GET("/api/yggdrasil", func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		w.Write([]byte(`{
 			"meta": {

@@ -24,21 +24,11 @@ var (
 	ErrUUIDNotEq = errors.New("uuid 不相同")
 )
 
-func (y *Yggdrasil) PutTexture(ctx context.Context, token string, texturebyte []byte, model string, uuid string, textureType string) error {
-	t, err := utilsService.Auth(ctx, yggdrasil.ValidateToken{AccessToken: token}, y.client, &y.prikey.PublicKey, true)
-	if err != nil {
-		return fmt.Errorf("PutTexture: %w", err)
-	}
-	if uuid != t.Subject {
-		return fmt.Errorf("PutTexture: %w", ErrUUIDNotEq)
-	}
-
-	up, err := y.client.UserProfile.Query().Where(userprofile.HasUserWith(user.ID(t.UID))).First(ctx)
-
-	err = utils.WithTx(ctx, y.client, func(tx *ent.Tx) error {
+func (y *Yggdrasil) delTexture(ctx context.Context, userProfileID int, textureType string) error {
+	err := utils.WithTx(ctx, y.client, func(tx *ent.Tx) error {
 		// 查找此用户该类型下是否已经存在皮肤
 		tl, err := tx.UserTexture.Query().Where(usertexture.And(
-			usertexture.UserProfileID(up.ID),
+			usertexture.UserProfileID(userProfileID),
 			usertexture.Type(textureType),
 		)).ForUpdate().All(ctx)
 		if err != nil {
@@ -75,11 +65,55 @@ func (y *Yggdrasil) PutTexture(ctx context.Context, token string, texturebyte []
 			return item.UserProfileID
 		})
 		// 中间表删除记录
+		// UserProfile 上没有于此相关的字段，所以无需操作
 		_, err = tx.UserTexture.Delete().Where(usertexture.UserProfileIDIn(ids...)).Exec(ctx)
 		return err
 		// 小概率皮肤上传后，高并发时被此处清理。问题不大重新上传一遍就行。
 		// 条件为使用一个独一无二的皮肤的用户，更换皮肤时，另一个用户同时更换自己的皮肤到这个独一无二的皮肤上。
 	})
+	if err != nil {
+		return fmt.Errorf("delTexture: %w", err)
+	}
+	return nil
+}
+
+func (y *Yggdrasil) DelTexture(ctx context.Context, uuid string, token string, textureType string) error {
+	t, err := utilsService.Auth(ctx, yggdrasil.ValidateToken{AccessToken: token}, y.client, &y.prikey.PublicKey, true)
+	if err != nil {
+		return fmt.Errorf("DelTexture: %w", err)
+	}
+	if uuid != t.Subject {
+		return fmt.Errorf("PutTexture: %w", errors.Join(ErrUUIDNotEq, utilsService.ErrTokenInvalid))
+	}
+	up, err := y.client.UserProfile.Query().Where(userprofile.HasUserWith(user.ID(t.UID))).First(ctx)
+	if err != nil {
+		return fmt.Errorf("DelTexture: %w", err)
+	}
+	err = y.delTexture(ctx, up.ID, textureType)
+	if err != nil {
+		return fmt.Errorf("DelTexture: %w", err)
+	}
+	return nil
+}
+
+func (y *Yggdrasil) PutTexture(ctx context.Context, token string, texturebyte []byte, model string, uuid string, textureType string) error {
+	t, err := utilsService.Auth(ctx, yggdrasil.ValidateToken{AccessToken: token}, y.client, &y.prikey.PublicKey, true)
+	if err != nil {
+		return fmt.Errorf("PutTexture: %w", err)
+	}
+	if uuid != t.Subject {
+		return fmt.Errorf("PutTexture: %w", errors.Join(ErrUUIDNotEq, utilsService.ErrTokenInvalid))
+	}
+
+	up, err := y.client.UserProfile.Query().Where(userprofile.HasUserWith(user.ID(t.UID))).First(ctx)
+	if err != nil {
+		return fmt.Errorf("PutTexture: %w", err)
+	}
+
+	err = y.delTexture(ctx, up.ID, textureType)
+	if err != nil {
+		return fmt.Errorf("PutTexture: %w", err)
+	}
 
 	hashstr, err := createTextureFile(y.config.TexturePath, texturebyte)
 	if err != nil {
