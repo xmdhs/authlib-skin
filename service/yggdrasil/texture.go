@@ -49,9 +49,9 @@ func (y *Yggdrasil) delTexture(ctx context.Context, userProfileID int, textureTy
 				if err != nil {
 					return err
 				}
-				path := filepath.Join(y.TexturePath, t.TextureHash[:2], t.TextureHash[2:4], t.TextureHash)
+				path := filepath.Join(y.config.TexturePath, t.TextureHash[:2], t.TextureHash[2:4], t.TextureHash)
 				err = os.Remove(path)
-				if err != nil {
+				if err != nil && !errors.Is(err, os.ErrNotExist) {
 					return err
 				}
 				// Texture 表中删除记录

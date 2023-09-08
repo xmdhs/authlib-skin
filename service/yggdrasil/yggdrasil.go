@@ -14,11 +14,10 @@ import (
 )
 
 type Yggdrasil struct {
-	client      *ent.Client
-	cache       cache.Cache
-	config      config.Config
-	prikey      *rsa.PrivateKey
-	TexturePath string
+	client *ent.Client
+	cache  cache.Cache
+	config config.Config
+	prikey *rsa.PrivateKey
 }
 
 func NewYggdrasil(client *ent.Client, cache cache.Cache, c config.Config, prikey *rsa.PrivateKey) *Yggdrasil {
