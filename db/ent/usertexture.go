@@ -22,6 +22,10 @@ type UserTexture struct {
 	UserProfileID int `json:"user_profile_id,omitempty"`
 	// TextureID holds the value of the "texture_id" field.
 	TextureID int `json:"texture_id,omitempty"`
+	// Type holds the value of the "type" field.
+	Type string `json:"type,omitempty"`
+	// Variant holds the value of the "variant" field.
+	Variant string `json:"variant,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserTextureQuery when eager-loading is set.
 	Edges        UserTextureEdges `json:"edges"`
@@ -72,6 +76,8 @@ func (*UserTexture) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case usertexture.FieldID, usertexture.FieldUserProfileID, usertexture.FieldTextureID:
 			values[i] = new(sql.NullInt64)
+		case usertexture.FieldType, usertexture.FieldVariant:
+			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -104,6 +110,18 @@ func (ut *UserTexture) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field texture_id", values[i])
 			} else if value.Valid {
 				ut.TextureID = int(value.Int64)
+			}
+		case usertexture.FieldType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field type", values[i])
+			} else if value.Valid {
+				ut.Type = value.String
+			}
+		case usertexture.FieldVariant:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field variant", values[i])
+			} else if value.Valid {
+				ut.Variant = value.String
 			}
 		default:
 			ut.selectValues.Set(columns[i], values[i])
@@ -156,6 +174,12 @@ func (ut *UserTexture) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("texture_id=")
 	builder.WriteString(fmt.Sprintf("%v", ut.TextureID))
+	builder.WriteString(", ")
+	builder.WriteString("type=")
+	builder.WriteString(ut.Type)
+	builder.WriteString(", ")
+	builder.WriteString("variant=")
+	builder.WriteString(ut.Variant)
 	builder.WriteByte(')')
 	return builder.String()
 }

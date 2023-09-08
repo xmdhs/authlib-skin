@@ -12,8 +12,6 @@ var (
 	TexturesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "texture_hash", Type: field.TypeString, SchemaType: map[string]string{"mysql": "VARCHAR(100)"}},
-		{Name: "type", Type: field.TypeString, SchemaType: map[string]string{"mysql": "VARCHAR(10)"}},
-		{Name: "variant", Type: field.TypeString, SchemaType: map[string]string{"mysql": "VARCHAR(10)"}},
 		{Name: "texture_created_user", Type: field.TypeInt},
 	}
 	// TexturesTable holds the schema information for the "textures" table.
@@ -24,9 +22,16 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "textures_users_created_user",
-				Columns:    []*schema.Column{TexturesColumns[4]},
+				Columns:    []*schema.Column{TexturesColumns[2]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "texture_texture_hash",
+				Unique:  true,
+				Columns: []*schema.Column{TexturesColumns[1]},
 			},
 		},
 	}
@@ -89,6 +94,8 @@ var (
 	// UserTexturesColumns holds the columns for the "user_textures" table.
 	UserTexturesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "type", Type: field.TypeString, SchemaType: map[string]string{"mysql": "VARCHAR(10)"}},
+		{Name: "variant", Type: field.TypeString, SchemaType: map[string]string{"mysql": "VARCHAR(10)"}},
 		{Name: "user_profile_id", Type: field.TypeInt},
 		{Name: "texture_id", Type: field.TypeInt},
 	}
@@ -100,13 +107,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "user_textures_user_profiles_user_profile",
-				Columns:    []*schema.Column{UserTexturesColumns[1]},
+				Columns:    []*schema.Column{UserTexturesColumns[3]},
 				RefColumns: []*schema.Column{UserProfilesColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "user_textures_textures_texture",
-				Columns:    []*schema.Column{UserTexturesColumns[2]},
+				Columns:    []*schema.Column{UserTexturesColumns[4]},
 				RefColumns: []*schema.Column{TexturesColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -115,17 +122,17 @@ var (
 			{
 				Name:    "usertexture_user_profile_id",
 				Unique:  false,
-				Columns: []*schema.Column{UserTexturesColumns[1]},
+				Columns: []*schema.Column{UserTexturesColumns[3]},
 			},
 			{
 				Name:    "usertexture_texture_id",
 				Unique:  false,
-				Columns: []*schema.Column{UserTexturesColumns[2]},
+				Columns: []*schema.Column{UserTexturesColumns[4]},
 			},
 			{
-				Name:    "usertexture_user_profile_id_texture_id",
+				Name:    "usertexture_texture_id_user_profile_id",
 				Unique:  true,
-				Columns: []*schema.Column{UserTexturesColumns[1], UserTexturesColumns[2]},
+				Columns: []*schema.Column{UserTexturesColumns[4], UserTexturesColumns[3]},
 			},
 		},
 	}

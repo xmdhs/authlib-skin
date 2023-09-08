@@ -172,7 +172,7 @@ func (upc *UserProfileCreate) createSpec() (*UserProfile, *sqlgraph.CreateSpec) 
 	if nodes := upc.mutation.TextureIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   userprofile.TextureTable,
 			Columns: userprofile.TexturePrimaryKey,
 			Bidi:    false,

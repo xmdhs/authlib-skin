@@ -221,7 +221,7 @@ func HasTexture() predicate.UserProfile {
 	return predicate.UserProfile(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, TextureTable, TexturePrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2M, true, TextureTable, TexturePrimaryKey...),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})

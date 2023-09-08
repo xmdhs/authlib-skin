@@ -19,10 +19,6 @@ type Texture struct {
 	ID int `json:"id,omitempty"`
 	// TextureHash holds the value of the "texture_hash" field.
 	TextureHash string `json:"texture_hash,omitempty"`
-	// Type holds the value of the "type" field.
-	Type string `json:"type,omitempty"`
-	// Variant holds the value of the "variant" field.
-	Variant string `json:"variant,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TextureQuery when eager-loading is set.
 	Edges                TextureEdges `json:"edges"`
@@ -34,8 +30,8 @@ type Texture struct {
 type TextureEdges struct {
 	// CreatedUser holds the value of the created_user edge.
 	CreatedUser *User `json:"created_user,omitempty"`
-	// User holds the value of the user edge.
-	User []*UserProfile `json:"user,omitempty"`
+	// UserProfile holds the value of the user_profile edge.
+	UserProfile []*UserProfile `json:"user_profile,omitempty"`
 	// Usertexture holds the value of the usertexture edge.
 	Usertexture []*UserTexture `json:"usertexture,omitempty"`
 	// loadedTypes holds the information for reporting if a
@@ -56,13 +52,13 @@ func (e TextureEdges) CreatedUserOrErr() (*User, error) {
 	return nil, &NotLoadedError{edge: "created_user"}
 }
 
-// UserOrErr returns the User value or an error if the edge
+// UserProfileOrErr returns the UserProfile value or an error if the edge
 // was not loaded in eager-loading.
-func (e TextureEdges) UserOrErr() ([]*UserProfile, error) {
+func (e TextureEdges) UserProfileOrErr() ([]*UserProfile, error) {
 	if e.loadedTypes[1] {
-		return e.User, nil
+		return e.UserProfile, nil
 	}
-	return nil, &NotLoadedError{edge: "user"}
+	return nil, &NotLoadedError{edge: "user_profile"}
 }
 
 // UsertextureOrErr returns the Usertexture value or an error if the edge
@@ -81,7 +77,7 @@ func (*Texture) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case texture.FieldID:
 			values[i] = new(sql.NullInt64)
-		case texture.FieldTextureHash, texture.FieldType, texture.FieldVariant:
+		case texture.FieldTextureHash:
 			values[i] = new(sql.NullString)
 		case texture.ForeignKeys[0]: // texture_created_user
 			values[i] = new(sql.NullInt64)
@@ -112,18 +108,6 @@ func (t *Texture) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				t.TextureHash = value.String
 			}
-		case texture.FieldType:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field type", values[i])
-			} else if value.Valid {
-				t.Type = value.String
-			}
-		case texture.FieldVariant:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field variant", values[i])
-			} else if value.Valid {
-				t.Variant = value.String
-			}
 		case texture.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field texture_created_user", value)
@@ -149,9 +133,9 @@ func (t *Texture) QueryCreatedUser() *UserQuery {
 	return NewTextureClient(t.config).QueryCreatedUser(t)
 }
 
-// QueryUser queries the "user" edge of the Texture entity.
-func (t *Texture) QueryUser() *UserProfileQuery {
-	return NewTextureClient(t.config).QueryUser(t)
+// QueryUserProfile queries the "user_profile" edge of the Texture entity.
+func (t *Texture) QueryUserProfile() *UserProfileQuery {
+	return NewTextureClient(t.config).QueryUserProfile(t)
 }
 
 // QueryUsertexture queries the "usertexture" edge of the Texture entity.
@@ -184,12 +168,6 @@ func (t *Texture) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v, ", t.ID))
 	builder.WriteString("texture_hash=")
 	builder.WriteString(t.TextureHash)
-	builder.WriteString(", ")
-	builder.WriteString("type=")
-	builder.WriteString(t.Type)
-	builder.WriteString(", ")
-	builder.WriteString("variant=")
-	builder.WriteString(t.Variant)
 	builder.WriteByte(')')
 	return builder.String()
 }

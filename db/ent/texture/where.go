@@ -58,16 +58,6 @@ func TextureHash(v string) predicate.Texture {
 	return predicate.Texture(sql.FieldEQ(FieldTextureHash, v))
 }
 
-// Type applies equality check predicate on the "type" field. It's identical to TypeEQ.
-func Type(v string) predicate.Texture {
-	return predicate.Texture(sql.FieldEQ(FieldType, v))
-}
-
-// Variant applies equality check predicate on the "variant" field. It's identical to VariantEQ.
-func Variant(v string) predicate.Texture {
-	return predicate.Texture(sql.FieldEQ(FieldVariant, v))
-}
-
 // TextureHashEQ applies the EQ predicate on the "texture_hash" field.
 func TextureHashEQ(v string) predicate.Texture {
 	return predicate.Texture(sql.FieldEQ(FieldTextureHash, v))
@@ -133,136 +123,6 @@ func TextureHashContainsFold(v string) predicate.Texture {
 	return predicate.Texture(sql.FieldContainsFold(FieldTextureHash, v))
 }
 
-// TypeEQ applies the EQ predicate on the "type" field.
-func TypeEQ(v string) predicate.Texture {
-	return predicate.Texture(sql.FieldEQ(FieldType, v))
-}
-
-// TypeNEQ applies the NEQ predicate on the "type" field.
-func TypeNEQ(v string) predicate.Texture {
-	return predicate.Texture(sql.FieldNEQ(FieldType, v))
-}
-
-// TypeIn applies the In predicate on the "type" field.
-func TypeIn(vs ...string) predicate.Texture {
-	return predicate.Texture(sql.FieldIn(FieldType, vs...))
-}
-
-// TypeNotIn applies the NotIn predicate on the "type" field.
-func TypeNotIn(vs ...string) predicate.Texture {
-	return predicate.Texture(sql.FieldNotIn(FieldType, vs...))
-}
-
-// TypeGT applies the GT predicate on the "type" field.
-func TypeGT(v string) predicate.Texture {
-	return predicate.Texture(sql.FieldGT(FieldType, v))
-}
-
-// TypeGTE applies the GTE predicate on the "type" field.
-func TypeGTE(v string) predicate.Texture {
-	return predicate.Texture(sql.FieldGTE(FieldType, v))
-}
-
-// TypeLT applies the LT predicate on the "type" field.
-func TypeLT(v string) predicate.Texture {
-	return predicate.Texture(sql.FieldLT(FieldType, v))
-}
-
-// TypeLTE applies the LTE predicate on the "type" field.
-func TypeLTE(v string) predicate.Texture {
-	return predicate.Texture(sql.FieldLTE(FieldType, v))
-}
-
-// TypeContains applies the Contains predicate on the "type" field.
-func TypeContains(v string) predicate.Texture {
-	return predicate.Texture(sql.FieldContains(FieldType, v))
-}
-
-// TypeHasPrefix applies the HasPrefix predicate on the "type" field.
-func TypeHasPrefix(v string) predicate.Texture {
-	return predicate.Texture(sql.FieldHasPrefix(FieldType, v))
-}
-
-// TypeHasSuffix applies the HasSuffix predicate on the "type" field.
-func TypeHasSuffix(v string) predicate.Texture {
-	return predicate.Texture(sql.FieldHasSuffix(FieldType, v))
-}
-
-// TypeEqualFold applies the EqualFold predicate on the "type" field.
-func TypeEqualFold(v string) predicate.Texture {
-	return predicate.Texture(sql.FieldEqualFold(FieldType, v))
-}
-
-// TypeContainsFold applies the ContainsFold predicate on the "type" field.
-func TypeContainsFold(v string) predicate.Texture {
-	return predicate.Texture(sql.FieldContainsFold(FieldType, v))
-}
-
-// VariantEQ applies the EQ predicate on the "variant" field.
-func VariantEQ(v string) predicate.Texture {
-	return predicate.Texture(sql.FieldEQ(FieldVariant, v))
-}
-
-// VariantNEQ applies the NEQ predicate on the "variant" field.
-func VariantNEQ(v string) predicate.Texture {
-	return predicate.Texture(sql.FieldNEQ(FieldVariant, v))
-}
-
-// VariantIn applies the In predicate on the "variant" field.
-func VariantIn(vs ...string) predicate.Texture {
-	return predicate.Texture(sql.FieldIn(FieldVariant, vs...))
-}
-
-// VariantNotIn applies the NotIn predicate on the "variant" field.
-func VariantNotIn(vs ...string) predicate.Texture {
-	return predicate.Texture(sql.FieldNotIn(FieldVariant, vs...))
-}
-
-// VariantGT applies the GT predicate on the "variant" field.
-func VariantGT(v string) predicate.Texture {
-	return predicate.Texture(sql.FieldGT(FieldVariant, v))
-}
-
-// VariantGTE applies the GTE predicate on the "variant" field.
-func VariantGTE(v string) predicate.Texture {
-	return predicate.Texture(sql.FieldGTE(FieldVariant, v))
-}
-
-// VariantLT applies the LT predicate on the "variant" field.
-func VariantLT(v string) predicate.Texture {
-	return predicate.Texture(sql.FieldLT(FieldVariant, v))
-}
-
-// VariantLTE applies the LTE predicate on the "variant" field.
-func VariantLTE(v string) predicate.Texture {
-	return predicate.Texture(sql.FieldLTE(FieldVariant, v))
-}
-
-// VariantContains applies the Contains predicate on the "variant" field.
-func VariantContains(v string) predicate.Texture {
-	return predicate.Texture(sql.FieldContains(FieldVariant, v))
-}
-
-// VariantHasPrefix applies the HasPrefix predicate on the "variant" field.
-func VariantHasPrefix(v string) predicate.Texture {
-	return predicate.Texture(sql.FieldHasPrefix(FieldVariant, v))
-}
-
-// VariantHasSuffix applies the HasSuffix predicate on the "variant" field.
-func VariantHasSuffix(v string) predicate.Texture {
-	return predicate.Texture(sql.FieldHasSuffix(FieldVariant, v))
-}
-
-// VariantEqualFold applies the EqualFold predicate on the "variant" field.
-func VariantEqualFold(v string) predicate.Texture {
-	return predicate.Texture(sql.FieldEqualFold(FieldVariant, v))
-}
-
-// VariantContainsFold applies the ContainsFold predicate on the "variant" field.
-func VariantContainsFold(v string) predicate.Texture {
-	return predicate.Texture(sql.FieldContainsFold(FieldVariant, v))
-}
-
 // HasCreatedUser applies the HasEdge predicate on the "created_user" edge.
 func HasCreatedUser() predicate.Texture {
 	return predicate.Texture(func(s *sql.Selector) {
@@ -286,21 +146,21 @@ func HasCreatedUserWith(preds ...predicate.User) predicate.Texture {
 	})
 }
 
-// HasUser applies the HasEdge predicate on the "user" edge.
-func HasUser() predicate.Texture {
+// HasUserProfile applies the HasEdge predicate on the "user_profile" edge.
+func HasUserProfile() predicate.Texture {
 	return predicate.Texture(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, UserTable, UserPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2M, false, UserProfileTable, UserProfilePrimaryKey...),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasUserWith applies the HasEdge predicate on the "user" edge with a given conditions (other predicates).
-func HasUserWith(preds ...predicate.UserProfile) predicate.Texture {
+// HasUserProfileWith applies the HasEdge predicate on the "user_profile" edge with a given conditions (other predicates).
+func HasUserProfileWith(preds ...predicate.UserProfile) predicate.Texture {
 	return predicate.Texture(func(s *sql.Selector) {
-		step := newUserStep()
+		step := newUserProfileStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

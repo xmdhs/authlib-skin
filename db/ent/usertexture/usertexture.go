@@ -16,6 +16,10 @@ const (
 	FieldUserProfileID = "user_profile_id"
 	// FieldTextureID holds the string denoting the texture_id field in the database.
 	FieldTextureID = "texture_id"
+	// FieldType holds the string denoting the type field in the database.
+	FieldType = "type"
+	// FieldVariant holds the string denoting the variant field in the database.
+	FieldVariant = "variant"
 	// EdgeUserProfile holds the string denoting the user_profile edge name in mutations.
 	EdgeUserProfile = "user_profile"
 	// EdgeTexture holds the string denoting the texture edge name in mutations.
@@ -43,6 +47,8 @@ var Columns = []string{
 	FieldID,
 	FieldUserProfileID,
 	FieldTextureID,
+	FieldType,
+	FieldVariant,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -71,6 +77,16 @@ func ByUserProfileID(opts ...sql.OrderTermOption) OrderOption {
 // ByTextureID orders the results by the texture_id field.
 func ByTextureID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTextureID, opts...).ToFunc()
+}
+
+// ByType orders the results by the type field.
+func ByType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldType, opts...).ToFunc()
+}
+
+// ByVariant orders the results by the variant field.
+func ByVariant(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldVariant, opts...).ToFunc()
 }
 
 // ByUserProfileField orders the results by user_profile field.

@@ -28,18 +28,6 @@ func (tc *TextureCreate) SetTextureHash(s string) *TextureCreate {
 	return tc
 }
 
-// SetType sets the "type" field.
-func (tc *TextureCreate) SetType(s string) *TextureCreate {
-	tc.mutation.SetType(s)
-	return tc
-}
-
-// SetVariant sets the "variant" field.
-func (tc *TextureCreate) SetVariant(s string) *TextureCreate {
-	tc.mutation.SetVariant(s)
-	return tc
-}
-
 // SetCreatedUserID sets the "created_user" edge to the User entity by ID.
 func (tc *TextureCreate) SetCreatedUserID(id int) *TextureCreate {
 	tc.mutation.SetCreatedUserID(id)
@@ -51,19 +39,19 @@ func (tc *TextureCreate) SetCreatedUser(u *User) *TextureCreate {
 	return tc.SetCreatedUserID(u.ID)
 }
 
-// AddUserIDs adds the "user" edge to the UserProfile entity by IDs.
-func (tc *TextureCreate) AddUserIDs(ids ...int) *TextureCreate {
-	tc.mutation.AddUserIDs(ids...)
+// AddUserProfileIDs adds the "user_profile" edge to the UserProfile entity by IDs.
+func (tc *TextureCreate) AddUserProfileIDs(ids ...int) *TextureCreate {
+	tc.mutation.AddUserProfileIDs(ids...)
 	return tc
 }
 
-// AddUser adds the "user" edges to the UserProfile entity.
-func (tc *TextureCreate) AddUser(u ...*UserProfile) *TextureCreate {
+// AddUserProfile adds the "user_profile" edges to the UserProfile entity.
+func (tc *TextureCreate) AddUserProfile(u ...*UserProfile) *TextureCreate {
 	ids := make([]int, len(u))
 	for i := range u {
 		ids[i] = u[i].ID
 	}
-	return tc.AddUserIDs(ids...)
+	return tc.AddUserProfileIDs(ids...)
 }
 
 // AddUsertextureIDs adds the "usertexture" edge to the UserTexture entity by IDs.
@@ -118,12 +106,6 @@ func (tc *TextureCreate) check() error {
 	if _, ok := tc.mutation.TextureHash(); !ok {
 		return &ValidationError{Name: "texture_hash", err: errors.New(`ent: missing required field "Texture.texture_hash"`)}
 	}
-	if _, ok := tc.mutation.GetType(); !ok {
-		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "Texture.type"`)}
-	}
-	if _, ok := tc.mutation.Variant(); !ok {
-		return &ValidationError{Name: "variant", err: errors.New(`ent: missing required field "Texture.variant"`)}
-	}
 	if _, ok := tc.mutation.CreatedUserID(); !ok {
 		return &ValidationError{Name: "created_user", err: errors.New(`ent: missing required edge "Texture.created_user"`)}
 	}
@@ -157,14 +139,6 @@ func (tc *TextureCreate) createSpec() (*Texture, *sqlgraph.CreateSpec) {
 		_spec.SetField(texture.FieldTextureHash, field.TypeString, value)
 		_node.TextureHash = value
 	}
-	if value, ok := tc.mutation.GetType(); ok {
-		_spec.SetField(texture.FieldType, field.TypeString, value)
-		_node.Type = value
-	}
-	if value, ok := tc.mutation.Variant(); ok {
-		_spec.SetField(texture.FieldVariant, field.TypeString, value)
-		_node.Variant = value
-	}
 	if nodes := tc.mutation.CreatedUserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -182,12 +156,12 @@ func (tc *TextureCreate) createSpec() (*Texture, *sqlgraph.CreateSpec) {
 		_node.texture_created_user = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := tc.mutation.UserIDs(); len(nodes) > 0 {
+	if nodes := tc.mutation.UserProfileIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   texture.UserTable,
-			Columns: texture.UserPrimaryKey,
+			Inverse: false,
+			Table:   texture.UserProfileTable,
+			Columns: texture.UserProfilePrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(userprofile.FieldID, field.TypeInt),

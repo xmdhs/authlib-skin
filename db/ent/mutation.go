@@ -41,14 +41,12 @@ type TextureMutation struct {
 	typ                 string
 	id                  *int
 	texture_hash        *string
-	_type               *string
-	variant             *string
 	clearedFields       map[string]struct{}
 	created_user        *int
 	clearedcreated_user bool
-	user                map[int]struct{}
-	removeduser         map[int]struct{}
-	cleareduser         bool
+	user_profile        map[int]struct{}
+	removeduser_profile map[int]struct{}
+	cleareduser_profile bool
 	usertexture         map[int]struct{}
 	removedusertexture  map[int]struct{}
 	clearedusertexture  bool
@@ -191,78 +189,6 @@ func (m *TextureMutation) ResetTextureHash() {
 	m.texture_hash = nil
 }
 
-// SetType sets the "type" field.
-func (m *TextureMutation) SetType(s string) {
-	m._type = &s
-}
-
-// GetType returns the value of the "type" field in the mutation.
-func (m *TextureMutation) GetType() (r string, exists bool) {
-	v := m._type
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldType returns the old "type" field's value of the Texture entity.
-// If the Texture object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *TextureMutation) OldType(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldType is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldType requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldType: %w", err)
-	}
-	return oldValue.Type, nil
-}
-
-// ResetType resets all changes to the "type" field.
-func (m *TextureMutation) ResetType() {
-	m._type = nil
-}
-
-// SetVariant sets the "variant" field.
-func (m *TextureMutation) SetVariant(s string) {
-	m.variant = &s
-}
-
-// Variant returns the value of the "variant" field in the mutation.
-func (m *TextureMutation) Variant() (r string, exists bool) {
-	v := m.variant
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldVariant returns the old "variant" field's value of the Texture entity.
-// If the Texture object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *TextureMutation) OldVariant(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldVariant is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldVariant requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldVariant: %w", err)
-	}
-	return oldValue.Variant, nil
-}
-
-// ResetVariant resets all changes to the "variant" field.
-func (m *TextureMutation) ResetVariant() {
-	m.variant = nil
-}
-
 // SetCreatedUserID sets the "created_user" edge to the User entity by id.
 func (m *TextureMutation) SetCreatedUserID(id int) {
 	m.created_user = &id
@@ -302,58 +228,58 @@ func (m *TextureMutation) ResetCreatedUser() {
 	m.clearedcreated_user = false
 }
 
-// AddUserIDs adds the "user" edge to the UserProfile entity by ids.
-func (m *TextureMutation) AddUserIDs(ids ...int) {
-	if m.user == nil {
-		m.user = make(map[int]struct{})
+// AddUserProfileIDs adds the "user_profile" edge to the UserProfile entity by ids.
+func (m *TextureMutation) AddUserProfileIDs(ids ...int) {
+	if m.user_profile == nil {
+		m.user_profile = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.user[ids[i]] = struct{}{}
+		m.user_profile[ids[i]] = struct{}{}
 	}
 }
 
-// ClearUser clears the "user" edge to the UserProfile entity.
-func (m *TextureMutation) ClearUser() {
-	m.cleareduser = true
+// ClearUserProfile clears the "user_profile" edge to the UserProfile entity.
+func (m *TextureMutation) ClearUserProfile() {
+	m.cleareduser_profile = true
 }
 
-// UserCleared reports if the "user" edge to the UserProfile entity was cleared.
-func (m *TextureMutation) UserCleared() bool {
-	return m.cleareduser
+// UserProfileCleared reports if the "user_profile" edge to the UserProfile entity was cleared.
+func (m *TextureMutation) UserProfileCleared() bool {
+	return m.cleareduser_profile
 }
 
-// RemoveUserIDs removes the "user" edge to the UserProfile entity by IDs.
-func (m *TextureMutation) RemoveUserIDs(ids ...int) {
-	if m.removeduser == nil {
-		m.removeduser = make(map[int]struct{})
+// RemoveUserProfileIDs removes the "user_profile" edge to the UserProfile entity by IDs.
+func (m *TextureMutation) RemoveUserProfileIDs(ids ...int) {
+	if m.removeduser_profile == nil {
+		m.removeduser_profile = make(map[int]struct{})
 	}
 	for i := range ids {
-		delete(m.user, ids[i])
-		m.removeduser[ids[i]] = struct{}{}
+		delete(m.user_profile, ids[i])
+		m.removeduser_profile[ids[i]] = struct{}{}
 	}
 }
 
-// RemovedUser returns the removed IDs of the "user" edge to the UserProfile entity.
-func (m *TextureMutation) RemovedUserIDs() (ids []int) {
-	for id := range m.removeduser {
+// RemovedUserProfile returns the removed IDs of the "user_profile" edge to the UserProfile entity.
+func (m *TextureMutation) RemovedUserProfileIDs() (ids []int) {
+	for id := range m.removeduser_profile {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// UserIDs returns the "user" edge IDs in the mutation.
-func (m *TextureMutation) UserIDs() (ids []int) {
-	for id := range m.user {
+// UserProfileIDs returns the "user_profile" edge IDs in the mutation.
+func (m *TextureMutation) UserProfileIDs() (ids []int) {
+	for id := range m.user_profile {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ResetUser resets all changes to the "user" edge.
-func (m *TextureMutation) ResetUser() {
-	m.user = nil
-	m.cleareduser = false
-	m.removeduser = nil
+// ResetUserProfile resets all changes to the "user_profile" edge.
+func (m *TextureMutation) ResetUserProfile() {
+	m.user_profile = nil
+	m.cleareduser_profile = false
+	m.removeduser_profile = nil
 }
 
 // AddUsertextureIDs adds the "usertexture" edge to the UserTexture entity by ids.
@@ -444,15 +370,9 @@ func (m *TextureMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *TextureMutation) Fields() []string {
-	fields := make([]string, 0, 3)
+	fields := make([]string, 0, 1)
 	if m.texture_hash != nil {
 		fields = append(fields, texture.FieldTextureHash)
-	}
-	if m._type != nil {
-		fields = append(fields, texture.FieldType)
-	}
-	if m.variant != nil {
-		fields = append(fields, texture.FieldVariant)
 	}
 	return fields
 }
@@ -464,10 +384,6 @@ func (m *TextureMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case texture.FieldTextureHash:
 		return m.TextureHash()
-	case texture.FieldType:
-		return m.GetType()
-	case texture.FieldVariant:
-		return m.Variant()
 	}
 	return nil, false
 }
@@ -479,10 +395,6 @@ func (m *TextureMutation) OldField(ctx context.Context, name string) (ent.Value,
 	switch name {
 	case texture.FieldTextureHash:
 		return m.OldTextureHash(ctx)
-	case texture.FieldType:
-		return m.OldType(ctx)
-	case texture.FieldVariant:
-		return m.OldVariant(ctx)
 	}
 	return nil, fmt.Errorf("unknown Texture field %s", name)
 }
@@ -498,20 +410,6 @@ func (m *TextureMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetTextureHash(v)
-		return nil
-	case texture.FieldType:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetType(v)
-		return nil
-	case texture.FieldVariant:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetVariant(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Texture field %s", name)
@@ -565,12 +463,6 @@ func (m *TextureMutation) ResetField(name string) error {
 	case texture.FieldTextureHash:
 		m.ResetTextureHash()
 		return nil
-	case texture.FieldType:
-		m.ResetType()
-		return nil
-	case texture.FieldVariant:
-		m.ResetVariant()
-		return nil
 	}
 	return fmt.Errorf("unknown Texture field %s", name)
 }
@@ -581,8 +473,8 @@ func (m *TextureMutation) AddedEdges() []string {
 	if m.created_user != nil {
 		edges = append(edges, texture.EdgeCreatedUser)
 	}
-	if m.user != nil {
-		edges = append(edges, texture.EdgeUser)
+	if m.user_profile != nil {
+		edges = append(edges, texture.EdgeUserProfile)
 	}
 	if m.usertexture != nil {
 		edges = append(edges, texture.EdgeUsertexture)
@@ -598,9 +490,9 @@ func (m *TextureMutation) AddedIDs(name string) []ent.Value {
 		if id := m.created_user; id != nil {
 			return []ent.Value{*id}
 		}
-	case texture.EdgeUser:
-		ids := make([]ent.Value, 0, len(m.user))
-		for id := range m.user {
+	case texture.EdgeUserProfile:
+		ids := make([]ent.Value, 0, len(m.user_profile))
+		for id := range m.user_profile {
 			ids = append(ids, id)
 		}
 		return ids
@@ -617,8 +509,8 @@ func (m *TextureMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *TextureMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 3)
-	if m.removeduser != nil {
-		edges = append(edges, texture.EdgeUser)
+	if m.removeduser_profile != nil {
+		edges = append(edges, texture.EdgeUserProfile)
 	}
 	if m.removedusertexture != nil {
 		edges = append(edges, texture.EdgeUsertexture)
@@ -630,9 +522,9 @@ func (m *TextureMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *TextureMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case texture.EdgeUser:
-		ids := make([]ent.Value, 0, len(m.removeduser))
-		for id := range m.removeduser {
+	case texture.EdgeUserProfile:
+		ids := make([]ent.Value, 0, len(m.removeduser_profile))
+		for id := range m.removeduser_profile {
 			ids = append(ids, id)
 		}
 		return ids
@@ -652,8 +544,8 @@ func (m *TextureMutation) ClearedEdges() []string {
 	if m.clearedcreated_user {
 		edges = append(edges, texture.EdgeCreatedUser)
 	}
-	if m.cleareduser {
-		edges = append(edges, texture.EdgeUser)
+	if m.cleareduser_profile {
+		edges = append(edges, texture.EdgeUserProfile)
 	}
 	if m.clearedusertexture {
 		edges = append(edges, texture.EdgeUsertexture)
@@ -667,8 +559,8 @@ func (m *TextureMutation) EdgeCleared(name string) bool {
 	switch name {
 	case texture.EdgeCreatedUser:
 		return m.clearedcreated_user
-	case texture.EdgeUser:
-		return m.cleareduser
+	case texture.EdgeUserProfile:
+		return m.cleareduser_profile
 	case texture.EdgeUsertexture:
 		return m.clearedusertexture
 	}
@@ -693,8 +585,8 @@ func (m *TextureMutation) ResetEdge(name string) error {
 	case texture.EdgeCreatedUser:
 		m.ResetCreatedUser()
 		return nil
-	case texture.EdgeUser:
-		m.ResetUser()
+	case texture.EdgeUserProfile:
+		m.ResetUserProfile()
 		return nil
 	case texture.EdgeUsertexture:
 		m.ResetUsertexture()
@@ -2200,6 +2092,8 @@ type UserTextureMutation struct {
 	op                  Op
 	typ                 string
 	id                  *int
+	_type               *string
+	variant             *string
 	clearedFields       map[string]struct{}
 	user_profile        *int
 	cleareduser_profile bool
@@ -2380,6 +2274,78 @@ func (m *UserTextureMutation) ResetTextureID() {
 	m.texture = nil
 }
 
+// SetType sets the "type" field.
+func (m *UserTextureMutation) SetType(s string) {
+	m._type = &s
+}
+
+// GetType returns the value of the "type" field in the mutation.
+func (m *UserTextureMutation) GetType() (r string, exists bool) {
+	v := m._type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldType returns the old "type" field's value of the UserTexture entity.
+// If the UserTexture object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserTextureMutation) OldType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldType: %w", err)
+	}
+	return oldValue.Type, nil
+}
+
+// ResetType resets all changes to the "type" field.
+func (m *UserTextureMutation) ResetType() {
+	m._type = nil
+}
+
+// SetVariant sets the "variant" field.
+func (m *UserTextureMutation) SetVariant(s string) {
+	m.variant = &s
+}
+
+// Variant returns the value of the "variant" field in the mutation.
+func (m *UserTextureMutation) Variant() (r string, exists bool) {
+	v := m.variant
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVariant returns the old "variant" field's value of the UserTexture entity.
+// If the UserTexture object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserTextureMutation) OldVariant(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVariant is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVariant requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVariant: %w", err)
+	}
+	return oldValue.Variant, nil
+}
+
+// ResetVariant resets all changes to the "variant" field.
+func (m *UserTextureMutation) ResetVariant() {
+	m.variant = nil
+}
+
 // ClearUserProfile clears the "user_profile" edge to the UserProfile entity.
 func (m *UserTextureMutation) ClearUserProfile() {
 	m.cleareduser_profile = true
@@ -2466,12 +2432,18 @@ func (m *UserTextureMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserTextureMutation) Fields() []string {
-	fields := make([]string, 0, 2)
+	fields := make([]string, 0, 4)
 	if m.user_profile != nil {
 		fields = append(fields, usertexture.FieldUserProfileID)
 	}
 	if m.texture != nil {
 		fields = append(fields, usertexture.FieldTextureID)
+	}
+	if m._type != nil {
+		fields = append(fields, usertexture.FieldType)
+	}
+	if m.variant != nil {
+		fields = append(fields, usertexture.FieldVariant)
 	}
 	return fields
 }
@@ -2485,6 +2457,10 @@ func (m *UserTextureMutation) Field(name string) (ent.Value, bool) {
 		return m.UserProfileID()
 	case usertexture.FieldTextureID:
 		return m.TextureID()
+	case usertexture.FieldType:
+		return m.GetType()
+	case usertexture.FieldVariant:
+		return m.Variant()
 	}
 	return nil, false
 }
@@ -2498,6 +2474,10 @@ func (m *UserTextureMutation) OldField(ctx context.Context, name string) (ent.Va
 		return m.OldUserProfileID(ctx)
 	case usertexture.FieldTextureID:
 		return m.OldTextureID(ctx)
+	case usertexture.FieldType:
+		return m.OldType(ctx)
+	case usertexture.FieldVariant:
+		return m.OldVariant(ctx)
 	}
 	return nil, fmt.Errorf("unknown UserTexture field %s", name)
 }
@@ -2520,6 +2500,20 @@ func (m *UserTextureMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetTextureID(v)
+		return nil
+	case usertexture.FieldType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetType(v)
+		return nil
+	case usertexture.FieldVariant:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVariant(v)
 		return nil
 	}
 	return fmt.Errorf("unknown UserTexture field %s", name)
@@ -2578,6 +2572,12 @@ func (m *UserTextureMutation) ResetField(name string) error {
 		return nil
 	case usertexture.FieldTextureID:
 		m.ResetTextureID()
+		return nil
+	case usertexture.FieldType:
+		m.ResetType()
+		return nil
+	case usertexture.FieldVariant:
+		m.ResetVariant()
 		return nil
 	}
 	return fmt.Errorf("unknown UserTexture field %s", name)

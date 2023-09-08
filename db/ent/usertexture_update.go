@@ -41,6 +41,18 @@ func (utu *UserTextureUpdate) SetTextureID(i int) *UserTextureUpdate {
 	return utu
 }
 
+// SetType sets the "type" field.
+func (utu *UserTextureUpdate) SetType(s string) *UserTextureUpdate {
+	utu.mutation.SetType(s)
+	return utu
+}
+
+// SetVariant sets the "variant" field.
+func (utu *UserTextureUpdate) SetVariant(s string) *UserTextureUpdate {
+	utu.mutation.SetVariant(s)
+	return utu
+}
+
 // SetUserProfile sets the "user_profile" edge to the UserProfile entity.
 func (utu *UserTextureUpdate) SetUserProfile(u *UserProfile) *UserTextureUpdate {
 	return utu.SetUserProfileID(u.ID)
@@ -117,6 +129,12 @@ func (utu *UserTextureUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := utu.mutation.GetType(); ok {
+		_spec.SetField(usertexture.FieldType, field.TypeString, value)
+	}
+	if value, ok := utu.mutation.Variant(); ok {
+		_spec.SetField(usertexture.FieldVariant, field.TypeString, value)
 	}
 	if utu.mutation.UserProfileCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -205,6 +223,18 @@ func (utuo *UserTextureUpdateOne) SetUserProfileID(i int) *UserTextureUpdateOne 
 // SetTextureID sets the "texture_id" field.
 func (utuo *UserTextureUpdateOne) SetTextureID(i int) *UserTextureUpdateOne {
 	utuo.mutation.SetTextureID(i)
+	return utuo
+}
+
+// SetType sets the "type" field.
+func (utuo *UserTextureUpdateOne) SetType(s string) *UserTextureUpdateOne {
+	utuo.mutation.SetType(s)
+	return utuo
+}
+
+// SetVariant sets the "variant" field.
+func (utuo *UserTextureUpdateOne) SetVariant(s string) *UserTextureUpdateOne {
+	utuo.mutation.SetVariant(s)
 	return utuo
 }
 
@@ -314,6 +344,12 @@ func (utuo *UserTextureUpdateOne) sqlSave(ctx context.Context) (_node *UserTextu
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := utuo.mutation.GetType(); ok {
+		_spec.SetField(usertexture.FieldType, field.TypeString, value)
+	}
+	if value, ok := utuo.mutation.Variant(); ok {
+		_spec.SetField(usertexture.FieldVariant, field.TypeString, value)
 	}
 	if utuo.mutation.UserProfileCleared() {
 		edge := &sqlgraph.EdgeSpec{

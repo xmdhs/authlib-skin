@@ -2,6 +2,7 @@ package schema
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/dialect"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
@@ -17,6 +18,14 @@ func (UserTexture) Fields() []ent.Field {
 	return []ent.Field{
 		field.Int("user_profile_id"),
 		field.Int("texture_id"),
+		// 皮肤 or 披风
+		field.String("type").SchemaType(map[string]string{
+			dialect.MySQL: "VARCHAR(10)",
+		}),
+		// slim or 空
+		field.String("variant").SchemaType(map[string]string{
+			dialect.MySQL: "VARCHAR(10)",
+		}),
 	}
 }
 

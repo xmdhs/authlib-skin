@@ -27,7 +27,7 @@ type TextureQuery struct {
 	inters          []Interceptor
 	predicates      []predicate.Texture
 	withCreatedUser *UserQuery
-	withUser        *UserProfileQuery
+	withUserProfile *UserProfileQuery
 	withUsertexture *UserTextureQuery
 	withFKs         bool
 	modifiers       []func(*sql.Selector)
@@ -89,8 +89,8 @@ func (tq *TextureQuery) QueryCreatedUser() *UserQuery {
 	return query
 }
 
-// QueryUser chains the current query on the "user" edge.
-func (tq *TextureQuery) QueryUser() *UserProfileQuery {
+// QueryUserProfile chains the current query on the "user_profile" edge.
+func (tq *TextureQuery) QueryUserProfile() *UserProfileQuery {
 	query := (&UserProfileClient{config: tq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := tq.prepareQuery(ctx); err != nil {
@@ -103,7 +103,7 @@ func (tq *TextureQuery) QueryUser() *UserProfileQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(texture.Table, texture.FieldID, selector),
 			sqlgraph.To(userprofile.Table, userprofile.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, texture.UserTable, texture.UserPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2M, false, texture.UserProfileTable, texture.UserProfilePrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
 		return fromU, nil
@@ -326,7 +326,7 @@ func (tq *TextureQuery) Clone() *TextureQuery {
 		inters:          append([]Interceptor{}, tq.inters...),
 		predicates:      append([]predicate.Texture{}, tq.predicates...),
 		withCreatedUser: tq.withCreatedUser.Clone(),
-		withUser:        tq.withUser.Clone(),
+		withUserProfile: tq.withUserProfile.Clone(),
 		withUsertexture: tq.withUsertexture.Clone(),
 		// clone intermediate query.
 		sql:  tq.sql.Clone(),
@@ -345,14 +345,14 @@ func (tq *TextureQuery) WithCreatedUser(opts ...func(*UserQuery)) *TextureQuery 
 	return tq
 }
 
-// WithUser tells the query-builder to eager-load the nodes that are connected to
-// the "user" edge. The optional arguments are used to configure the query builder of the edge.
-func (tq *TextureQuery) WithUser(opts ...func(*UserProfileQuery)) *TextureQuery {
+// WithUserProfile tells the query-builder to eager-load the nodes that are connected to
+// the "user_profile" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TextureQuery) WithUserProfile(opts ...func(*UserProfileQuery)) *TextureQuery {
 	query := (&UserProfileClient{config: tq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	tq.withUser = query
+	tq.withUserProfile = query
 	return tq
 }
 
@@ -448,7 +448,7 @@ func (tq *TextureQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Text
 		_spec       = tq.querySpec()
 		loadedTypes = [3]bool{
 			tq.withCreatedUser != nil,
-			tq.withUser != nil,
+			tq.withUserProfile != nil,
 			tq.withUsertexture != nil,
 		}
 	)
@@ -485,10 +485,10 @@ func (tq *TextureQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Text
 			return nil, err
 		}
 	}
-	if query := tq.withUser; query != nil {
-		if err := tq.loadUser(ctx, query, nodes,
-			func(n *Texture) { n.Edges.User = []*UserProfile{} },
-			func(n *Texture, e *UserProfile) { n.Edges.User = append(n.Edges.User, e) }); err != nil {
+	if query := tq.withUserProfile; query != nil {
+		if err := tq.loadUserProfile(ctx, query, nodes,
+			func(n *Texture) { n.Edges.UserProfile = []*UserProfile{} },
+			func(n *Texture, e *UserProfile) { n.Edges.UserProfile = append(n.Edges.UserProfile, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -534,7 +534,7 @@ func (tq *TextureQuery) loadCreatedUser(ctx context.Context, query *UserQuery, n
 	}
 	return nil
 }
-func (tq *TextureQuery) loadUser(ctx context.Context, query *UserProfileQuery, nodes []*Texture, init func(*Texture), assign func(*Texture, *UserProfile)) error {
+func (tq *TextureQuery) loadUserProfile(ctx context.Context, query *UserProfileQuery, nodes []*Texture, init func(*Texture), assign func(*Texture, *UserProfile)) error {
 	edgeIDs := make([]driver.Value, len(nodes))
 	byID := make(map[int]*Texture)
 	nids := make(map[int]map[*Texture]struct{})
@@ -546,11 +546,11 @@ func (tq *TextureQuery) loadUser(ctx context.Context, query *UserProfileQuery, n
 		}
 	}
 	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(texture.UserTable)
-		s.Join(joinT).On(s.C(userprofile.FieldID), joinT.C(texture.UserPrimaryKey[0]))
-		s.Where(sql.InValues(joinT.C(texture.UserPrimaryKey[1]), edgeIDs...))
+		joinT := sql.Table(texture.UserProfileTable)
+		s.Join(joinT).On(s.C(userprofile.FieldID), joinT.C(texture.UserProfilePrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(texture.UserProfilePrimaryKey[0]), edgeIDs...))
 		columns := s.SelectedColumns()
-		s.Select(joinT.C(texture.UserPrimaryKey[1]))
+		s.Select(joinT.C(texture.UserProfilePrimaryKey[0]))
 		s.AppendSelect(columns...)
 		s.SetDistinct(false)
 	})
@@ -587,7 +587,7 @@ func (tq *TextureQuery) loadUser(ctx context.Context, query *UserProfileQuery, n
 	for _, n := range neighbors {
 		nodes, ok := nids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected "user" node returned %v`, n.ID)
+			return fmt.Errorf(`unexpected "user_profile" node returned %v`, n.ID)
 		}
 		for kn := range nodes {
 			assign(kn, n)

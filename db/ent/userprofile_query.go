@@ -103,7 +103,7 @@ func (upq *UserProfileQuery) QueryTexture() *TextureQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(userprofile.Table, userprofile.FieldID, selector),
 			sqlgraph.To(texture.Table, texture.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, userprofile.TextureTable, userprofile.TexturePrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2M, true, userprofile.TextureTable, userprofile.TexturePrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(upq.driver.Dialect(), step)
 		return fromU, nil
@@ -547,10 +547,10 @@ func (upq *UserProfileQuery) loadTexture(ctx context.Context, query *TextureQuer
 	}
 	query.Where(func(s *sql.Selector) {
 		joinT := sql.Table(userprofile.TextureTable)
-		s.Join(joinT).On(s.C(texture.FieldID), joinT.C(userprofile.TexturePrimaryKey[1]))
-		s.Where(sql.InValues(joinT.C(userprofile.TexturePrimaryKey[0]), edgeIDs...))
+		s.Join(joinT).On(s.C(texture.FieldID), joinT.C(userprofile.TexturePrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(userprofile.TexturePrimaryKey[1]), edgeIDs...))
 		columns := s.SelectedColumns()
-		s.Select(joinT.C(userprofile.TexturePrimaryKey[0]))
+		s.Select(joinT.C(userprofile.TexturePrimaryKey[1]))
 		s.AppendSelect(columns...)
 		s.SetDistinct(false)
 	})

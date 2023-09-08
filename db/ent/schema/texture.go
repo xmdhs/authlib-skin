@@ -5,6 +5,7 @@ import (
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 )
 
 // Texture holds the schema definition for the Texture entity.
@@ -18,14 +19,6 @@ func (Texture) Fields() []ent.Field {
 		field.String("texture_hash").SchemaType(map[string]string{
 			dialect.MySQL: "VARCHAR(100)",
 		}),
-		// 皮肤 or 披风
-		field.String("type").SchemaType(map[string]string{
-			dialect.MySQL: "VARCHAR(10)",
-		}),
-		// slim or 空
-		field.String("variant").SchemaType(map[string]string{
-			dialect.MySQL: "VARCHAR(10)",
-		}),
 	}
 }
 
@@ -33,10 +26,12 @@ func (Texture) Fields() []ent.Field {
 func (Texture) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("created_user", User.Type).Unique().Required(),
-		edge.From("user", UserProfile.Type).Ref("texture").Through("usertexture", UserTexture.Type),
+		edge.To("user_profile", UserProfile.Type).Through("usertexture", UserTexture.Type),
 	}
 }
 
 func (Texture) Indexes() []ent.Index {
-	return nil
+	return []ent.Index{
+		index.Fields("texture_hash").Unique(),
+	}
 }

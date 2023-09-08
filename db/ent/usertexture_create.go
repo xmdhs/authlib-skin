@@ -33,6 +33,18 @@ func (utc *UserTextureCreate) SetTextureID(i int) *UserTextureCreate {
 	return utc
 }
 
+// SetType sets the "type" field.
+func (utc *UserTextureCreate) SetType(s string) *UserTextureCreate {
+	utc.mutation.SetType(s)
+	return utc
+}
+
+// SetVariant sets the "variant" field.
+func (utc *UserTextureCreate) SetVariant(s string) *UserTextureCreate {
+	utc.mutation.SetVariant(s)
+	return utc
+}
+
 // SetUserProfile sets the "user_profile" edge to the UserProfile entity.
 func (utc *UserTextureCreate) SetUserProfile(u *UserProfile) *UserTextureCreate {
 	return utc.SetUserProfileID(u.ID)
@@ -83,6 +95,12 @@ func (utc *UserTextureCreate) check() error {
 	if _, ok := utc.mutation.TextureID(); !ok {
 		return &ValidationError{Name: "texture_id", err: errors.New(`ent: missing required field "UserTexture.texture_id"`)}
 	}
+	if _, ok := utc.mutation.GetType(); !ok {
+		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "UserTexture.type"`)}
+	}
+	if _, ok := utc.mutation.Variant(); !ok {
+		return &ValidationError{Name: "variant", err: errors.New(`ent: missing required field "UserTexture.variant"`)}
+	}
 	if _, ok := utc.mutation.UserProfileID(); !ok {
 		return &ValidationError{Name: "user_profile", err: errors.New(`ent: missing required edge "UserTexture.user_profile"`)}
 	}
@@ -115,6 +133,14 @@ func (utc *UserTextureCreate) createSpec() (*UserTexture, *sqlgraph.CreateSpec) 
 		_node = &UserTexture{config: utc.config}
 		_spec = sqlgraph.NewCreateSpec(usertexture.Table, sqlgraph.NewFieldSpec(usertexture.FieldID, field.TypeInt))
 	)
+	if value, ok := utc.mutation.GetType(); ok {
+		_spec.SetField(usertexture.FieldType, field.TypeString, value)
+		_node.Type = value
+	}
+	if value, ok := utc.mutation.Variant(); ok {
+		_spec.SetField(usertexture.FieldVariant, field.TypeString, value)
+		_node.Variant = value
+	}
 	if nodes := utc.mutation.UserProfileIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,

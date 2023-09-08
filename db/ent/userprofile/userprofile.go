@@ -61,7 +61,7 @@ var ForeignKeys = []string{
 var (
 	// TexturePrimaryKey and TextureColumn2 are the table columns denoting the
 	// primary key for the texture relation (M2M).
-	TexturePrimaryKey = []string{"user_profile_id", "texture_id"}
+	TexturePrimaryKey = []string{"texture_id", "user_profile_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -142,7 +142,7 @@ func newTextureStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(TextureInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, false, TextureTable, TexturePrimaryKey...),
+		sqlgraph.Edge(sqlgraph.M2M, true, TextureTable, TexturePrimaryKey...),
 	)
 }
 func newUsertextureStep() *sqlgraph.Step {

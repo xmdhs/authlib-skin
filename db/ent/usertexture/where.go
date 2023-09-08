@@ -63,6 +63,16 @@ func TextureID(v int) predicate.UserTexture {
 	return predicate.UserTexture(sql.FieldEQ(FieldTextureID, v))
 }
 
+// Type applies equality check predicate on the "type" field. It's identical to TypeEQ.
+func Type(v string) predicate.UserTexture {
+	return predicate.UserTexture(sql.FieldEQ(FieldType, v))
+}
+
+// Variant applies equality check predicate on the "variant" field. It's identical to VariantEQ.
+func Variant(v string) predicate.UserTexture {
+	return predicate.UserTexture(sql.FieldEQ(FieldVariant, v))
+}
+
 // UserProfileIDEQ applies the EQ predicate on the "user_profile_id" field.
 func UserProfileIDEQ(v int) predicate.UserTexture {
 	return predicate.UserTexture(sql.FieldEQ(FieldUserProfileID, v))
@@ -101,6 +111,136 @@ func TextureIDIn(vs ...int) predicate.UserTexture {
 // TextureIDNotIn applies the NotIn predicate on the "texture_id" field.
 func TextureIDNotIn(vs ...int) predicate.UserTexture {
 	return predicate.UserTexture(sql.FieldNotIn(FieldTextureID, vs...))
+}
+
+// TypeEQ applies the EQ predicate on the "type" field.
+func TypeEQ(v string) predicate.UserTexture {
+	return predicate.UserTexture(sql.FieldEQ(FieldType, v))
+}
+
+// TypeNEQ applies the NEQ predicate on the "type" field.
+func TypeNEQ(v string) predicate.UserTexture {
+	return predicate.UserTexture(sql.FieldNEQ(FieldType, v))
+}
+
+// TypeIn applies the In predicate on the "type" field.
+func TypeIn(vs ...string) predicate.UserTexture {
+	return predicate.UserTexture(sql.FieldIn(FieldType, vs...))
+}
+
+// TypeNotIn applies the NotIn predicate on the "type" field.
+func TypeNotIn(vs ...string) predicate.UserTexture {
+	return predicate.UserTexture(sql.FieldNotIn(FieldType, vs...))
+}
+
+// TypeGT applies the GT predicate on the "type" field.
+func TypeGT(v string) predicate.UserTexture {
+	return predicate.UserTexture(sql.FieldGT(FieldType, v))
+}
+
+// TypeGTE applies the GTE predicate on the "type" field.
+func TypeGTE(v string) predicate.UserTexture {
+	return predicate.UserTexture(sql.FieldGTE(FieldType, v))
+}
+
+// TypeLT applies the LT predicate on the "type" field.
+func TypeLT(v string) predicate.UserTexture {
+	return predicate.UserTexture(sql.FieldLT(FieldType, v))
+}
+
+// TypeLTE applies the LTE predicate on the "type" field.
+func TypeLTE(v string) predicate.UserTexture {
+	return predicate.UserTexture(sql.FieldLTE(FieldType, v))
+}
+
+// TypeContains applies the Contains predicate on the "type" field.
+func TypeContains(v string) predicate.UserTexture {
+	return predicate.UserTexture(sql.FieldContains(FieldType, v))
+}
+
+// TypeHasPrefix applies the HasPrefix predicate on the "type" field.
+func TypeHasPrefix(v string) predicate.UserTexture {
+	return predicate.UserTexture(sql.FieldHasPrefix(FieldType, v))
+}
+
+// TypeHasSuffix applies the HasSuffix predicate on the "type" field.
+func TypeHasSuffix(v string) predicate.UserTexture {
+	return predicate.UserTexture(sql.FieldHasSuffix(FieldType, v))
+}
+
+// TypeEqualFold applies the EqualFold predicate on the "type" field.
+func TypeEqualFold(v string) predicate.UserTexture {
+	return predicate.UserTexture(sql.FieldEqualFold(FieldType, v))
+}
+
+// TypeContainsFold applies the ContainsFold predicate on the "type" field.
+func TypeContainsFold(v string) predicate.UserTexture {
+	return predicate.UserTexture(sql.FieldContainsFold(FieldType, v))
+}
+
+// VariantEQ applies the EQ predicate on the "variant" field.
+func VariantEQ(v string) predicate.UserTexture {
+	return predicate.UserTexture(sql.FieldEQ(FieldVariant, v))
+}
+
+// VariantNEQ applies the NEQ predicate on the "variant" field.
+func VariantNEQ(v string) predicate.UserTexture {
+	return predicate.UserTexture(sql.FieldNEQ(FieldVariant, v))
+}
+
+// VariantIn applies the In predicate on the "variant" field.
+func VariantIn(vs ...string) predicate.UserTexture {
+	return predicate.UserTexture(sql.FieldIn(FieldVariant, vs...))
+}
+
+// VariantNotIn applies the NotIn predicate on the "variant" field.
+func VariantNotIn(vs ...string) predicate.UserTexture {
+	return predicate.UserTexture(sql.FieldNotIn(FieldVariant, vs...))
+}
+
+// VariantGT applies the GT predicate on the "variant" field.
+func VariantGT(v string) predicate.UserTexture {
+	return predicate.UserTexture(sql.FieldGT(FieldVariant, v))
+}
+
+// VariantGTE applies the GTE predicate on the "variant" field.
+func VariantGTE(v string) predicate.UserTexture {
+	return predicate.UserTexture(sql.FieldGTE(FieldVariant, v))
+}
+
+// VariantLT applies the LT predicate on the "variant" field.
+func VariantLT(v string) predicate.UserTexture {
+	return predicate.UserTexture(sql.FieldLT(FieldVariant, v))
+}
+
+// VariantLTE applies the LTE predicate on the "variant" field.
+func VariantLTE(v string) predicate.UserTexture {
+	return predicate.UserTexture(sql.FieldLTE(FieldVariant, v))
+}
+
+// VariantContains applies the Contains predicate on the "variant" field.
+func VariantContains(v string) predicate.UserTexture {
+	return predicate.UserTexture(sql.FieldContains(FieldVariant, v))
+}
+
+// VariantHasPrefix applies the HasPrefix predicate on the "variant" field.
+func VariantHasPrefix(v string) predicate.UserTexture {
+	return predicate.UserTexture(sql.FieldHasPrefix(FieldVariant, v))
+}
+
+// VariantHasSuffix applies the HasSuffix predicate on the "variant" field.
+func VariantHasSuffix(v string) predicate.UserTexture {
+	return predicate.UserTexture(sql.FieldHasSuffix(FieldVariant, v))
+}
+
+// VariantEqualFold applies the EqualFold predicate on the "variant" field.
+func VariantEqualFold(v string) predicate.UserTexture {
+	return predicate.UserTexture(sql.FieldEqualFold(FieldVariant, v))
+}
+
+// VariantContainsFold applies the ContainsFold predicate on the "variant" field.
+func VariantContainsFold(v string) predicate.UserTexture {
+	return predicate.UserTexture(sql.FieldContainsFold(FieldVariant, v))
 }
 
 // HasUserProfile applies the HasEdge predicate on the "user_profile" edge.

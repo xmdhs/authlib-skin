@@ -14,14 +14,10 @@ const (
 	FieldID = "id"
 	// FieldTextureHash holds the string denoting the texture_hash field in the database.
 	FieldTextureHash = "texture_hash"
-	// FieldType holds the string denoting the type field in the database.
-	FieldType = "type"
-	// FieldVariant holds the string denoting the variant field in the database.
-	FieldVariant = "variant"
 	// EdgeCreatedUser holds the string denoting the created_user edge name in mutations.
 	EdgeCreatedUser = "created_user"
-	// EdgeUser holds the string denoting the user edge name in mutations.
-	EdgeUser = "user"
+	// EdgeUserProfile holds the string denoting the user_profile edge name in mutations.
+	EdgeUserProfile = "user_profile"
 	// EdgeUsertexture holds the string denoting the usertexture edge name in mutations.
 	EdgeUsertexture = "usertexture"
 	// Table holds the table name of the texture in the database.
@@ -33,11 +29,11 @@ const (
 	CreatedUserInverseTable = "users"
 	// CreatedUserColumn is the table column denoting the created_user relation/edge.
 	CreatedUserColumn = "texture_created_user"
-	// UserTable is the table that holds the user relation/edge. The primary key declared below.
-	UserTable = "user_textures"
-	// UserInverseTable is the table name for the UserProfile entity.
+	// UserProfileTable is the table that holds the user_profile relation/edge. The primary key declared below.
+	UserProfileTable = "user_textures"
+	// UserProfileInverseTable is the table name for the UserProfile entity.
 	// It exists in this package in order to avoid circular dependency with the "userprofile" package.
-	UserInverseTable = "user_profiles"
+	UserProfileInverseTable = "user_profiles"
 	// UsertextureTable is the table that holds the usertexture relation/edge.
 	UsertextureTable = "user_textures"
 	// UsertextureInverseTable is the table name for the UserTexture entity.
@@ -51,8 +47,6 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldTextureHash,
-	FieldType,
-	FieldVariant,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "textures"
@@ -62,9 +56,9 @@ var ForeignKeys = []string{
 }
 
 var (
-	// UserPrimaryKey and UserColumn2 are the table columns denoting the
-	// primary key for the user relation (M2M).
-	UserPrimaryKey = []string{"user_profile_id", "texture_id"}
+	// UserProfilePrimaryKey and UserProfileColumn2 are the table columns denoting the
+	// primary key for the user_profile relation (M2M).
+	UserProfilePrimaryKey = []string{"texture_id", "user_profile_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -95,16 +89,6 @@ func ByTextureHash(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldTextureHash, opts...).ToFunc()
 }
 
-// ByType orders the results by the type field.
-func ByType(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldType, opts...).ToFunc()
-}
-
-// ByVariant orders the results by the variant field.
-func ByVariant(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldVariant, opts...).ToFunc()
-}
-
 // ByCreatedUserField orders the results by created_user field.
 func ByCreatedUserField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -112,17 +96,17 @@ func ByCreatedUserField(field string, opts ...sql.OrderTermOption) OrderOption {
 	}
 }
 
-// ByUserCount orders the results by user count.
-func ByUserCount(opts ...sql.OrderTermOption) OrderOption {
+// ByUserProfileCount orders the results by user_profile count.
+func ByUserProfileCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newUserStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newUserProfileStep(), opts...)
 	}
 }
 
-// ByUser orders the results by user terms.
-func ByUser(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByUserProfile orders the results by user_profile terms.
+func ByUserProfile(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newUserStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newUserProfileStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
@@ -146,11 +130,11 @@ func newCreatedUserStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.M2O, false, CreatedUserTable, CreatedUserColumn),
 	)
 }
-func newUserStep() *sqlgraph.Step {
+func newUserProfileStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(UserInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, UserTable, UserPrimaryKey...),
+		sqlgraph.To(UserProfileInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, UserProfileTable, UserProfilePrimaryKey...),
 	)
 }
 func newUsertextureStep() *sqlgraph.Step {

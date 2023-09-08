@@ -221,7 +221,7 @@ func (upu *UserProfileUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if upu.mutation.TextureCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   userprofile.TextureTable,
 			Columns: userprofile.TexturePrimaryKey,
 			Bidi:    false,
@@ -234,7 +234,7 @@ func (upu *UserProfileUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if nodes := upu.mutation.RemovedTextureIDs(); len(nodes) > 0 && !upu.mutation.TextureCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   userprofile.TextureTable,
 			Columns: userprofile.TexturePrimaryKey,
 			Bidi:    false,
@@ -250,7 +250,7 @@ func (upu *UserProfileUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if nodes := upu.mutation.TextureIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   userprofile.TextureTable,
 			Columns: userprofile.TexturePrimaryKey,
 			Bidi:    false,
@@ -549,7 +549,7 @@ func (upuo *UserProfileUpdateOne) sqlSave(ctx context.Context) (_node *UserProfi
 	if upuo.mutation.TextureCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   userprofile.TextureTable,
 			Columns: userprofile.TexturePrimaryKey,
 			Bidi:    false,
@@ -562,7 +562,7 @@ func (upuo *UserProfileUpdateOne) sqlSave(ctx context.Context) (_node *UserProfi
 	if nodes := upuo.mutation.RemovedTextureIDs(); len(nodes) > 0 && !upuo.mutation.TextureCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   userprofile.TextureTable,
 			Columns: userprofile.TexturePrimaryKey,
 			Bidi:    false,
@@ -578,7 +578,7 @@ func (upuo *UserProfileUpdateOne) sqlSave(ctx context.Context) (_node *UserProfi
 	if nodes := upuo.mutation.TextureIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
-			Inverse: false,
+			Inverse: true,
 			Table:   userprofile.TextureTable,
 			Columns: userprofile.TexturePrimaryKey,
 			Bidi:    false,

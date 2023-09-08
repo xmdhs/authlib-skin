@@ -337,15 +337,15 @@ func (c *TextureClient) QueryCreatedUser(t *Texture) *UserQuery {
 	return query
 }
 
-// QueryUser queries the user edge of a Texture.
-func (c *TextureClient) QueryUser(t *Texture) *UserProfileQuery {
+// QueryUserProfile queries the user_profile edge of a Texture.
+func (c *TextureClient) QueryUserProfile(t *Texture) *UserProfileQuery {
 	query := (&UserProfileClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := t.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(texture.Table, texture.FieldID, id),
 			sqlgraph.To(userprofile.Table, userprofile.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, texture.UserTable, texture.UserPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2M, false, texture.UserProfileTable, texture.UserProfilePrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
 		return fromV, nil
@@ -677,7 +677,7 @@ func (c *UserProfileClient) QueryTexture(up *UserProfile) *TextureQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(userprofile.Table, userprofile.FieldID, id),
 			sqlgraph.To(texture.Table, texture.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, userprofile.TextureTable, userprofile.TexturePrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2M, true, userprofile.TextureTable, userprofile.TexturePrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(up.driver.Dialect(), step)
 		return fromV, nil

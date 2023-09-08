@@ -33,13 +33,13 @@ func (y *Yggdrasil) PutTexture(ctx context.Context, token string, texturebyte []
 		return fmt.Errorf("PutTexture: %w", ErrUUIDNotEq)
 	}
 
-	up, err := y.client.UserProfile.Query().Where(userprofile.HasUserWith(user.ID(t.UID))).WithUser().First(ctx)
+	up, err := y.client.UserProfile.Query().Where(userprofile.HasUserWith(user.ID(t.UID))).First(ctx)
 
 	err = utils.WithTx(ctx, y.client, func(tx *ent.Tx) error {
 		// 查找此用户该类型下是否已经存在皮肤
 		tl, err := tx.UserTexture.Query().Where(usertexture.And(
 			usertexture.UserProfileID(up.ID),
-			usertexture.HasTextureWith(texture.Type(textureType)),
+			usertexture.Type(textureType),
 		)).ForUpdate().All(ctx)
 		if err != nil {
 			return err
@@ -49,7 +49,7 @@ func (y *Yggdrasil) PutTexture(ctx context.Context, token string, texturebyte []
 		}
 		// 若存在，查找是否被引用
 		for _, v := range tl {
-			c, err := tx.UserTexture.Query().Where(usertexture.TextureID(v.TextureID)).ForUpdate().Count(ctx)
+			c, err := tx.UserTexture.Query().Where(usertexture.TextureID(v.TextureID)).Count(ctx)
 			if err != nil {
 				return err
 			}
@@ -77,17 +77,38 @@ func (y *Yggdrasil) PutTexture(ctx context.Context, token string, texturebyte []
 		// 中间表删除记录
 		_, err = tx.UserTexture.Delete().Where(usertexture.UserProfileIDIn(ids...)).Exec(ctx)
 		return err
+		// 小概率皮肤上传后，高并发时被此处清理。问题不大重新上传一遍就行。
+		// 条件为使用一个独一无二的皮肤的用户，更换皮肤时，另一个用户同时更换自己的皮肤到这个独一无二的皮肤上。
 	})
 
 	hashstr, err := createTextureFile(y.config.TexturePath, texturebyte)
 	if err != nil {
 		return fmt.Errorf("PutTexture: %w", err)
 	}
+	u, err := y.client.User.Query().Where(user.HasProfileWith(userprofile.ID(up.ID))).Only(ctx)
+	if err != nil {
+		return fmt.Errorf("PutTexture: %w", err)
+	}
 
 	err = utils.WithTx(ctx, y.client, func(tx *ent.Tx) error {
-		tx.Texture.
-
-
+		t, err := tx.Texture.Query().Where(texture.TextureHash(hashstr)).Only(ctx)
+		if err != nil {
+			var ne *ent.NotFoundError
+			if !errors.As(err, &ne) {
+				return err
+			}
+		}
+		if t == nil {
+			err = tx.Texture.Create().SetCreatedUser(u).SetTextureHash(hashstr).Exec(ctx)
+			if err != nil {
+				return err
+			}
+		}
+		err = tx.UserTexture.Create().SetTexture(t).SetType(textureType).SetUserProfile(up).SetVariant(model).Exec(ctx)
+		if err != nil {
+			return err
+		}
+		return nil
 	})
 
 	if err != nil {
