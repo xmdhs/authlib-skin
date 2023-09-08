@@ -29,7 +29,7 @@ func (UserProfile) Fields() []ent.Field {
 func (UserProfile) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("user", User.Type).Ref("profile").Required().Unique(),
-		edge.To("texture", Texture.Type),
+		edge.To("texture", Texture.Type).Through("usertexture", UserTexture.Type),
 	}
 }
 

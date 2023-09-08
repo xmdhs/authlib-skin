@@ -15,5 +15,8 @@ type User func(*sql.Selector)
 // UserProfile is the predicate function for userprofile builders.
 type UserProfile func(*sql.Selector)
 
+// UserTexture is the predicate function for usertexture builders.
+type UserTexture func(*sql.Selector)
+
 // UserToken is the predicate function for usertoken builders.
 type UserToken func(*sql.Selector)

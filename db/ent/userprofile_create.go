@@ -12,6 +12,7 @@ import (
 	"github.com/xmdhs/authlib-skin/db/ent/texture"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
+	"github.com/xmdhs/authlib-skin/db/ent/usertexture"
 )
 
 // UserProfileCreate is the builder for creating a UserProfile entity.
@@ -57,6 +58,21 @@ func (upc *UserProfileCreate) AddTexture(t ...*Texture) *UserProfileCreate {
 		ids[i] = t[i].ID
 	}
 	return upc.AddTextureIDs(ids...)
+}
+
+// AddUsertextureIDs adds the "usertexture" edge to the UserTexture entity by IDs.
+func (upc *UserProfileCreate) AddUsertextureIDs(ids ...int) *UserProfileCreate {
+	upc.mutation.AddUsertextureIDs(ids...)
+	return upc
+}
+
+// AddUsertexture adds the "usertexture" edges to the UserTexture entity.
+func (upc *UserProfileCreate) AddUsertexture(u ...*UserTexture) *UserProfileCreate {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return upc.AddUsertextureIDs(ids...)
 }
 
 // Mutation returns the UserProfileMutation object of the builder.
@@ -155,13 +171,29 @@ func (upc *UserProfileCreate) createSpec() (*UserProfile, *sqlgraph.CreateSpec) 
 	}
 	if nodes := upc.mutation.TextureIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2M,
 			Inverse: false,
 			Table:   userprofile.TextureTable,
-			Columns: []string{userprofile.TextureColumn},
+			Columns: userprofile.TexturePrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(texture.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := upc.mutation.UsertextureIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   userprofile.UsertextureTable,
+			Columns: []string{userprofile.UsertextureColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usertexture.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

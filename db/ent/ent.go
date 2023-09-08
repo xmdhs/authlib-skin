@@ -15,6 +15,7 @@ import (
 	"github.com/xmdhs/authlib-skin/db/ent/texture"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
+	"github.com/xmdhs/authlib-skin/db/ent/usertexture"
 	"github.com/xmdhs/authlib-skin/db/ent/usertoken"
 )
 
@@ -79,6 +80,7 @@ func checkColumn(table, column string) error {
 			texture.Table:     texture.ValidColumn,
 			user.Table:        user.ValidColumn,
 			userprofile.Table: userprofile.ValidColumn,
+			usertexture.Table: usertexture.ValidColumn,
 			usertoken.Table:   usertoken.ValidColumn,
 		})
 	})

@@ -15,7 +15,6 @@ var (
 		{Name: "type", Type: field.TypeString, SchemaType: map[string]string{"mysql": "VARCHAR(10)"}},
 		{Name: "variant", Type: field.TypeString, SchemaType: map[string]string{"mysql": "VARCHAR(10)"}},
 		{Name: "texture_created_user", Type: field.TypeInt},
-		{Name: "user_profile_texture", Type: field.TypeInt},
 	}
 	// TexturesTable holds the schema information for the "textures" table.
 	TexturesTable = &schema.Table{
@@ -28,19 +27,6 @@ var (
 				Columns:    []*schema.Column{TexturesColumns[4]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
-			},
-			{
-				Symbol:     "textures_user_profiles_texture",
-				Columns:    []*schema.Column{TexturesColumns[5]},
-				RefColumns: []*schema.Column{UserProfilesColumns[0]},
-				OnDelete:   schema.NoAction,
-			},
-		},
-		Indexes: []*schema.Index{
-			{
-				Name:    "texture_user_profile_texture",
-				Unique:  false,
-				Columns: []*schema.Column{TexturesColumns[5]},
 			},
 		},
 	}
@@ -100,6 +86,49 @@ var (
 			},
 		},
 	}
+	// UserTexturesColumns holds the columns for the "user_textures" table.
+	UserTexturesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "user_profile_id", Type: field.TypeInt},
+		{Name: "texture_id", Type: field.TypeInt},
+	}
+	// UserTexturesTable holds the schema information for the "user_textures" table.
+	UserTexturesTable = &schema.Table{
+		Name:       "user_textures",
+		Columns:    UserTexturesColumns,
+		PrimaryKey: []*schema.Column{UserTexturesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "user_textures_user_profiles_user_profile",
+				Columns:    []*schema.Column{UserTexturesColumns[1]},
+				RefColumns: []*schema.Column{UserProfilesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "user_textures_textures_texture",
+				Columns:    []*schema.Column{UserTexturesColumns[2]},
+				RefColumns: []*schema.Column{TexturesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "usertexture_user_profile_id",
+				Unique:  false,
+				Columns: []*schema.Column{UserTexturesColumns[1]},
+			},
+			{
+				Name:    "usertexture_texture_id",
+				Unique:  false,
+				Columns: []*schema.Column{UserTexturesColumns[2]},
+			},
+			{
+				Name:    "usertexture_user_profile_id_texture_id",
+				Unique:  true,
+				Columns: []*schema.Column{UserTexturesColumns[1], UserTexturesColumns[2]},
+			},
+		},
+	}
 	// UserTokensColumns holds the columns for the "user_tokens" table.
 	UserTokensColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -132,13 +161,15 @@ var (
 		TexturesTable,
 		UsersTable,
 		UserProfilesTable,
+		UserTexturesTable,
 		UserTokensTable,
 	}
 )
 
 func init() {
 	TexturesTable.ForeignKeys[0].RefTable = UsersTable
-	TexturesTable.ForeignKeys[1].RefTable = UserProfilesTable
 	UserProfilesTable.ForeignKeys[0].RefTable = UsersTable
+	UserTexturesTable.ForeignKeys[0].RefTable = UserProfilesTable
+	UserTexturesTable.ForeignKeys[1].RefTable = TexturesTable
 	UserTokensTable.ForeignKeys[0].RefTable = UsersTable
 }

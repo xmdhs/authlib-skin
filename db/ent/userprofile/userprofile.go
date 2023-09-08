@@ -20,6 +20,8 @@ const (
 	EdgeUser = "user"
 	// EdgeTexture holds the string denoting the texture edge name in mutations.
 	EdgeTexture = "texture"
+	// EdgeUsertexture holds the string denoting the usertexture edge name in mutations.
+	EdgeUsertexture = "usertexture"
 	// Table holds the table name of the userprofile in the database.
 	Table = "user_profiles"
 	// UserTable is the table that holds the user relation/edge.
@@ -29,13 +31,18 @@ const (
 	UserInverseTable = "users"
 	// UserColumn is the table column denoting the user relation/edge.
 	UserColumn = "user_profile"
-	// TextureTable is the table that holds the texture relation/edge.
-	TextureTable = "textures"
+	// TextureTable is the table that holds the texture relation/edge. The primary key declared below.
+	TextureTable = "user_textures"
 	// TextureInverseTable is the table name for the Texture entity.
 	// It exists in this package in order to avoid circular dependency with the "texture" package.
 	TextureInverseTable = "textures"
-	// TextureColumn is the table column denoting the texture relation/edge.
-	TextureColumn = "user_profile_texture"
+	// UsertextureTable is the table that holds the usertexture relation/edge.
+	UsertextureTable = "user_textures"
+	// UsertextureInverseTable is the table name for the UserTexture entity.
+	// It exists in this package in order to avoid circular dependency with the "usertexture" package.
+	UsertextureInverseTable = "user_textures"
+	// UsertextureColumn is the table column denoting the usertexture relation/edge.
+	UsertextureColumn = "user_profile_id"
 )
 
 // Columns holds all SQL columns for userprofile fields.
@@ -50,6 +57,12 @@ var Columns = []string{
 var ForeignKeys = []string{
 	"user_profile",
 }
+
+var (
+	// TexturePrimaryKey and TextureColumn2 are the table columns denoting the
+	// primary key for the texture relation (M2M).
+	TexturePrimaryKey = []string{"user_profile_id", "texture_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -104,6 +117,20 @@ func ByTexture(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newTextureStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByUsertextureCount orders the results by usertexture count.
+func ByUsertextureCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newUsertextureStep(), opts...)
+	}
+}
+
+// ByUsertexture orders the results by usertexture terms.
+func ByUsertexture(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUsertextureStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newUserStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -115,6 +142,13 @@ func newTextureStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(TextureInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, TextureTable, TextureColumn),
+		sqlgraph.Edge(sqlgraph.M2M, false, TextureTable, TexturePrimaryKey...),
+	)
+}
+func newUsertextureStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UsertextureInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, true, UsertextureTable, UsertextureColumn),
 	)
 }

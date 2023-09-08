@@ -13,6 +13,7 @@ import (
 	"github.com/xmdhs/authlib-skin/db/ent/texture"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
+	"github.com/xmdhs/authlib-skin/db/ent/usertexture"
 	"github.com/xmdhs/authlib-skin/model/yggdrasil"
 	utilsService "github.com/xmdhs/authlib-skin/service/utils"
 	"github.com/xmdhs/authlib-skin/utils"
@@ -36,7 +37,10 @@ func (y *Yggdrasil) PutTexture(ctx context.Context, token string, texturebyte []
 
 	err = utils.WithTx(ctx, y.client, func(tx *ent.Tx) error {
 		// 查找此用户该类型下是否已经存在皮肤
-		tl, err := tx.UserProfile.QueryTexture(up).Where(texture.TypeEQ(textureType)).ForUpdate().All(ctx)
+		tl, err := tx.UserTexture.Query().Where(usertexture.And(
+			usertexture.UserProfileID(up.ID),
+			usertexture.HasTextureWith(texture.Type(textureType)),
+		)).ForUpdate().All(ctx)
 		if err != nil {
 			return err
 		}
@@ -45,27 +49,34 @@ func (y *Yggdrasil) PutTexture(ctx context.Context, token string, texturebyte []
 		}
 		// 若存在，查找是否被引用
 		for _, v := range tl {
-			c, err := tx.UserProfile.Query().Where(userprofile.HasTextureWith(texture.IDEQ(v.ID))).Count(ctx)
+			c, err := tx.UserTexture.Query().Where(usertexture.TextureID(v.TextureID)).ForUpdate().Count(ctx)
 			if err != nil {
 				return err
 			}
 			if c == 1 {
 				// 若没有其他用户使用该皮肤，删除文件和记录
-				path := filepath.Join(y.TexturePath, v.TextureHash[:2], v.TextureHash[2:4], v.TextureHash)
+				t, err := tx.Texture.Query().Where(texture.ID(v.TextureID)).Only(ctx)
+				if err != nil {
+					return err
+				}
+				path := filepath.Join(y.TexturePath, t.TextureHash[:2], t.TextureHash[2:4], t.TextureHash)
 				err = os.Remove(path)
 				if err != nil {
 					return err
 				}
-				err = tx.Texture.DeleteOneID(v.ID).Exec(ctx)
+				// Texture 表中删除记录
+				err = tx.Texture.DeleteOneID(v.TextureID).Exec(ctx)
 				if err != nil {
 					return err
 				}
 			}
 		}
-		ids := lo.Map[*ent.Texture, int](tl, func(item *ent.Texture, index int) int {
-			return item.ID
+		ids := lo.Map[*ent.UserTexture, int](tl, func(item *ent.UserTexture, index int) int {
+			return item.UserProfileID
 		})
-		return tx.UserProfile.UpdateOne(up).RemoveTextureIDs(ids...).Exec(ctx)
+		// 中间表删除记录
+		_, err = tx.UserTexture.Delete().Where(usertexture.UserProfileIDIn(ids...)).Exec(ctx)
+		return err
 	})
 
 	hashstr, err := createTextureFile(y.config.TexturePath, texturebyte)
@@ -73,25 +84,12 @@ func (y *Yggdrasil) PutTexture(ctx context.Context, token string, texturebyte []
 		return fmt.Errorf("PutTexture: %w", err)
 	}
 
-	var textureEnt *ent.Texture
 	err = utils.WithTx(ctx, y.client, func(tx *ent.Tx) error {
-		textureEnt, err = tx.Texture.Query().Where(texture.TextureHashEQ(hashstr)).ForUpdate().First(ctx)
-		var nr *ent.NotFoundError
-		if err != nil && !errors.As(err, &nr) {
-			return err
-		}
-		if textureEnt == nil {
-			textureEnt, err = tx.Texture.Create().SetCreatedUser(up.Edges.User).
-				SetTextureHash(hashstr).
-				SetType(textureType).
-				SetVariant(model).
-				Save(ctx)
-			if err != nil {
-				return err
-			}
-		}
-		return tx.UserProfile.UpdateOne(up).AddTexture(textureEnt).Exec(ctx)
+		tx.Texture.
+
+
 	})
+
 	if err != nil {
 		return fmt.Errorf("PutTexture: %w", err)
 	}

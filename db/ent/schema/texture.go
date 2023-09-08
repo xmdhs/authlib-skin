@@ -5,7 +5,6 @@ import (
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
-	"entgo.io/ent/schema/index"
 )
 
 // Texture holds the schema definition for the Texture entity.
@@ -34,12 +33,10 @@ func (Texture) Fields() []ent.Field {
 func (Texture) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("created_user", User.Type).Unique().Required(),
-		edge.From("user", UserProfile.Type).Ref("texture").Required().Unique(),
+		edge.From("user", UserProfile.Type).Ref("texture").Through("usertexture", UserTexture.Type),
 	}
 }
 
 func (Texture) Indexes() []ent.Index {
-	return []ent.Index{
-		index.Edges("user"),
-	}
+	return nil
 }

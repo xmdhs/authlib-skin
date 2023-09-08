@@ -10,7 +10,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/xmdhs/authlib-skin/db/ent/texture"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
-	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
 )
 
 // Texture is the model entity for the Texture schema.
@@ -28,7 +27,6 @@ type Texture struct {
 	// The values are being populated by the TextureQuery when eager-loading is set.
 	Edges                TextureEdges `json:"edges"`
 	texture_created_user *int
-	user_profile_texture *int
 	selectValues         sql.SelectValues
 }
 
@@ -37,10 +35,12 @@ type TextureEdges struct {
 	// CreatedUser holds the value of the created_user edge.
 	CreatedUser *User `json:"created_user,omitempty"`
 	// User holds the value of the user edge.
-	User *UserProfile `json:"user,omitempty"`
+	User []*UserProfile `json:"user,omitempty"`
+	// Usertexture holds the value of the usertexture edge.
+	Usertexture []*UserTexture `json:"usertexture,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // CreatedUserOrErr returns the CreatedUser value or an error if the edge
@@ -57,16 +57,21 @@ func (e TextureEdges) CreatedUserOrErr() (*User, error) {
 }
 
 // UserOrErr returns the User value or an error if the edge
-// was not loaded in eager-loading, or loaded but was not found.
-func (e TextureEdges) UserOrErr() (*UserProfile, error) {
+// was not loaded in eager-loading.
+func (e TextureEdges) UserOrErr() ([]*UserProfile, error) {
 	if e.loadedTypes[1] {
-		if e.User == nil {
-			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: userprofile.Label}
-		}
 		return e.User, nil
 	}
 	return nil, &NotLoadedError{edge: "user"}
+}
+
+// UsertextureOrErr returns the Usertexture value or an error if the edge
+// was not loaded in eager-loading.
+func (e TextureEdges) UsertextureOrErr() ([]*UserTexture, error) {
+	if e.loadedTypes[2] {
+		return e.Usertexture, nil
+	}
+	return nil, &NotLoadedError{edge: "usertexture"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -79,8 +84,6 @@ func (*Texture) scanValues(columns []string) ([]any, error) {
 		case texture.FieldTextureHash, texture.FieldType, texture.FieldVariant:
 			values[i] = new(sql.NullString)
 		case texture.ForeignKeys[0]: // texture_created_user
-			values[i] = new(sql.NullInt64)
-		case texture.ForeignKeys[1]: // user_profile_texture
 			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -128,13 +131,6 @@ func (t *Texture) assignValues(columns []string, values []any) error {
 				t.texture_created_user = new(int)
 				*t.texture_created_user = int(value.Int64)
 			}
-		case texture.ForeignKeys[1]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field user_profile_texture", value)
-			} else if value.Valid {
-				t.user_profile_texture = new(int)
-				*t.user_profile_texture = int(value.Int64)
-			}
 		default:
 			t.selectValues.Set(columns[i], values[i])
 		}
@@ -156,6 +152,11 @@ func (t *Texture) QueryCreatedUser() *UserQuery {
 // QueryUser queries the "user" edge of the Texture entity.
 func (t *Texture) QueryUser() *UserProfileQuery {
 	return NewTextureClient(t.config).QueryUser(t)
+}
+
+// QueryUsertexture queries the "usertexture" edge of the Texture entity.
+func (t *Texture) QueryUsertexture() *UserTextureQuery {
+	return NewTextureClient(t.config).QueryUsertexture(t)
 }
 
 // Update returns a builder for updating this Texture.

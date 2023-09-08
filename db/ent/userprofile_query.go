@@ -16,19 +16,21 @@ import (
 	"github.com/xmdhs/authlib-skin/db/ent/texture"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
+	"github.com/xmdhs/authlib-skin/db/ent/usertexture"
 )
 
 // UserProfileQuery is the builder for querying UserProfile entities.
 type UserProfileQuery struct {
 	config
-	ctx         *QueryContext
-	order       []userprofile.OrderOption
-	inters      []Interceptor
-	predicates  []predicate.UserProfile
-	withUser    *UserQuery
-	withTexture *TextureQuery
-	withFKs     bool
-	modifiers   []func(*sql.Selector)
+	ctx             *QueryContext
+	order           []userprofile.OrderOption
+	inters          []Interceptor
+	predicates      []predicate.UserProfile
+	withUser        *UserQuery
+	withTexture     *TextureQuery
+	withUsertexture *UserTextureQuery
+	withFKs         bool
+	modifiers       []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -101,7 +103,29 @@ func (upq *UserProfileQuery) QueryTexture() *TextureQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(userprofile.Table, userprofile.FieldID, selector),
 			sqlgraph.To(texture.Table, texture.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, userprofile.TextureTable, userprofile.TextureColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, userprofile.TextureTable, userprofile.TexturePrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(upq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryUsertexture chains the current query on the "usertexture" edge.
+func (upq *UserProfileQuery) QueryUsertexture() *UserTextureQuery {
+	query := (&UserTextureClient{config: upq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := upq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := upq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(userprofile.Table, userprofile.FieldID, selector),
+			sqlgraph.To(usertexture.Table, usertexture.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, userprofile.UsertextureTable, userprofile.UsertextureColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(upq.driver.Dialect(), step)
 		return fromU, nil
@@ -296,13 +320,14 @@ func (upq *UserProfileQuery) Clone() *UserProfileQuery {
 		return nil
 	}
 	return &UserProfileQuery{
-		config:      upq.config,
-		ctx:         upq.ctx.Clone(),
-		order:       append([]userprofile.OrderOption{}, upq.order...),
-		inters:      append([]Interceptor{}, upq.inters...),
-		predicates:  append([]predicate.UserProfile{}, upq.predicates...),
-		withUser:    upq.withUser.Clone(),
-		withTexture: upq.withTexture.Clone(),
+		config:          upq.config,
+		ctx:             upq.ctx.Clone(),
+		order:           append([]userprofile.OrderOption{}, upq.order...),
+		inters:          append([]Interceptor{}, upq.inters...),
+		predicates:      append([]predicate.UserProfile{}, upq.predicates...),
+		withUser:        upq.withUser.Clone(),
+		withTexture:     upq.withTexture.Clone(),
+		withUsertexture: upq.withUsertexture.Clone(),
 		// clone intermediate query.
 		sql:  upq.sql.Clone(),
 		path: upq.path,
@@ -328,6 +353,17 @@ func (upq *UserProfileQuery) WithTexture(opts ...func(*TextureQuery)) *UserProfi
 		opt(query)
 	}
 	upq.withTexture = query
+	return upq
+}
+
+// WithUsertexture tells the query-builder to eager-load the nodes that are connected to
+// the "usertexture" edge. The optional arguments are used to configure the query builder of the edge.
+func (upq *UserProfileQuery) WithUsertexture(opts ...func(*UserTextureQuery)) *UserProfileQuery {
+	query := (&UserTextureClient{config: upq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	upq.withUsertexture = query
 	return upq
 }
 
@@ -410,9 +446,10 @@ func (upq *UserProfileQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 		nodes       = []*UserProfile{}
 		withFKs     = upq.withFKs
 		_spec       = upq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			upq.withUser != nil,
 			upq.withTexture != nil,
+			upq.withUsertexture != nil,
 		}
 	)
 	if upq.withUser != nil {
@@ -455,6 +492,13 @@ func (upq *UserProfileQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 			return nil, err
 		}
 	}
+	if query := upq.withUsertexture; query != nil {
+		if err := upq.loadUsertexture(ctx, query, nodes,
+			func(n *UserProfile) { n.Edges.Usertexture = []*UserTexture{} },
+			func(n *UserProfile, e *UserTexture) { n.Edges.Usertexture = append(n.Edges.Usertexture, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
 }
 
@@ -491,6 +535,67 @@ func (upq *UserProfileQuery) loadUser(ctx context.Context, query *UserQuery, nod
 	return nil
 }
 func (upq *UserProfileQuery) loadTexture(ctx context.Context, query *TextureQuery, nodes []*UserProfile, init func(*UserProfile), assign func(*UserProfile, *Texture)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*UserProfile)
+	nids := make(map[int]map[*UserProfile]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(userprofile.TextureTable)
+		s.Join(joinT).On(s.C(texture.FieldID), joinT.C(userprofile.TexturePrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(userprofile.TexturePrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(userprofile.TexturePrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*UserProfile]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Texture](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "texture" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
+}
+func (upq *UserProfileQuery) loadUsertexture(ctx context.Context, query *UserTextureQuery, nodes []*UserProfile, init func(*UserProfile), assign func(*UserProfile, *UserTexture)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*UserProfile)
 	for i := range nodes {
@@ -500,22 +605,21 @@ func (upq *UserProfileQuery) loadTexture(ctx context.Context, query *TextureQuer
 			init(nodes[i])
 		}
 	}
-	query.withFKs = true
-	query.Where(predicate.Texture(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(userprofile.TextureColumn), fks...))
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(usertexture.FieldUserProfileID)
+	}
+	query.Where(predicate.UserTexture(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(userprofile.UsertextureColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.user_profile_texture
-		if fk == nil {
-			return fmt.Errorf(`foreign-key "user_profile_texture" is nil for node %v`, n.ID)
-		}
-		node, ok := nodeids[*fk]
+		fk := n.UserProfileID
+		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "user_profile_texture" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "user_profile_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}

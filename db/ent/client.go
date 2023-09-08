@@ -17,6 +17,7 @@ import (
 	"github.com/xmdhs/authlib-skin/db/ent/texture"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
+	"github.com/xmdhs/authlib-skin/db/ent/usertexture"
 	"github.com/xmdhs/authlib-skin/db/ent/usertoken"
 )
 
@@ -31,6 +32,8 @@ type Client struct {
 	User *UserClient
 	// UserProfile is the client for interacting with the UserProfile builders.
 	UserProfile *UserProfileClient
+	// UserTexture is the client for interacting with the UserTexture builders.
+	UserTexture *UserTextureClient
 	// UserToken is the client for interacting with the UserToken builders.
 	UserToken *UserTokenClient
 }
@@ -49,6 +52,7 @@ func (c *Client) init() {
 	c.Texture = NewTextureClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.UserProfile = NewUserProfileClient(c.config)
+	c.UserTexture = NewUserTextureClient(c.config)
 	c.UserToken = NewUserTokenClient(c.config)
 }
 
@@ -135,6 +139,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Texture:     NewTextureClient(cfg),
 		User:        NewUserClient(cfg),
 		UserProfile: NewUserProfileClient(cfg),
+		UserTexture: NewUserTextureClient(cfg),
 		UserToken:   NewUserTokenClient(cfg),
 	}, nil
 }
@@ -158,6 +163,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Texture:     NewTextureClient(cfg),
 		User:        NewUserClient(cfg),
 		UserProfile: NewUserProfileClient(cfg),
+		UserTexture: NewUserTextureClient(cfg),
 		UserToken:   NewUserTokenClient(cfg),
 	}, nil
 }
@@ -190,6 +196,7 @@ func (c *Client) Use(hooks ...Hook) {
 	c.Texture.Use(hooks...)
 	c.User.Use(hooks...)
 	c.UserProfile.Use(hooks...)
+	c.UserTexture.Use(hooks...)
 	c.UserToken.Use(hooks...)
 }
 
@@ -199,6 +206,7 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 	c.Texture.Intercept(interceptors...)
 	c.User.Intercept(interceptors...)
 	c.UserProfile.Intercept(interceptors...)
+	c.UserTexture.Intercept(interceptors...)
 	c.UserToken.Intercept(interceptors...)
 }
 
@@ -211,6 +219,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.User.mutate(ctx, m)
 	case *UserProfileMutation:
 		return c.UserProfile.mutate(ctx, m)
+	case *UserTextureMutation:
+		return c.UserTexture.mutate(ctx, m)
 	case *UserTokenMutation:
 		return c.UserToken.mutate(ctx, m)
 	default:
@@ -335,7 +345,23 @@ func (c *TextureClient) QueryUser(t *Texture) *UserProfileQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(texture.Table, texture.FieldID, id),
 			sqlgraph.To(userprofile.Table, userprofile.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, texture.UserTable, texture.UserColumn),
+			sqlgraph.Edge(sqlgraph.M2M, true, texture.UserTable, texture.UserPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUsertexture queries the usertexture edge of a Texture.
+func (c *TextureClient) QueryUsertexture(t *Texture) *UserTextureQuery {
+	query := (&UserTextureClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(texture.Table, texture.FieldID, id),
+			sqlgraph.To(usertexture.Table, usertexture.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, texture.UsertextureTable, texture.UsertextureColumn),
 		)
 		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
 		return fromV, nil
@@ -651,7 +677,23 @@ func (c *UserProfileClient) QueryTexture(up *UserProfile) *TextureQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(userprofile.Table, userprofile.FieldID, id),
 			sqlgraph.To(texture.Table, texture.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, userprofile.TextureTable, userprofile.TextureColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, userprofile.TextureTable, userprofile.TexturePrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(up.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUsertexture queries the usertexture edge of a UserProfile.
+func (c *UserProfileClient) QueryUsertexture(up *UserProfile) *UserTextureQuery {
+	query := (&UserTextureClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := up.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(userprofile.Table, userprofile.FieldID, id),
+			sqlgraph.To(usertexture.Table, usertexture.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, userprofile.UsertextureTable, userprofile.UsertextureColumn),
 		)
 		fromV = sqlgraph.Neighbors(up.driver.Dialect(), step)
 		return fromV, nil
@@ -681,6 +723,156 @@ func (c *UserProfileClient) mutate(ctx context.Context, m *UserProfileMutation) 
 		return (&UserProfileDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown UserProfile mutation op: %q", m.Op())
+	}
+}
+
+// UserTextureClient is a client for the UserTexture schema.
+type UserTextureClient struct {
+	config
+}
+
+// NewUserTextureClient returns a client for the UserTexture from the given config.
+func NewUserTextureClient(c config) *UserTextureClient {
+	return &UserTextureClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `usertexture.Hooks(f(g(h())))`.
+func (c *UserTextureClient) Use(hooks ...Hook) {
+	c.hooks.UserTexture = append(c.hooks.UserTexture, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `usertexture.Intercept(f(g(h())))`.
+func (c *UserTextureClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UserTexture = append(c.inters.UserTexture, interceptors...)
+}
+
+// Create returns a builder for creating a UserTexture entity.
+func (c *UserTextureClient) Create() *UserTextureCreate {
+	mutation := newUserTextureMutation(c.config, OpCreate)
+	return &UserTextureCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UserTexture entities.
+func (c *UserTextureClient) CreateBulk(builders ...*UserTextureCreate) *UserTextureCreateBulk {
+	return &UserTextureCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UserTexture.
+func (c *UserTextureClient) Update() *UserTextureUpdate {
+	mutation := newUserTextureMutation(c.config, OpUpdate)
+	return &UserTextureUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UserTextureClient) UpdateOne(ut *UserTexture) *UserTextureUpdateOne {
+	mutation := newUserTextureMutation(c.config, OpUpdateOne, withUserTexture(ut))
+	return &UserTextureUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UserTextureClient) UpdateOneID(id int) *UserTextureUpdateOne {
+	mutation := newUserTextureMutation(c.config, OpUpdateOne, withUserTextureID(id))
+	return &UserTextureUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UserTexture.
+func (c *UserTextureClient) Delete() *UserTextureDelete {
+	mutation := newUserTextureMutation(c.config, OpDelete)
+	return &UserTextureDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UserTextureClient) DeleteOne(ut *UserTexture) *UserTextureDeleteOne {
+	return c.DeleteOneID(ut.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UserTextureClient) DeleteOneID(id int) *UserTextureDeleteOne {
+	builder := c.Delete().Where(usertexture.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UserTextureDeleteOne{builder}
+}
+
+// Query returns a query builder for UserTexture.
+func (c *UserTextureClient) Query() *UserTextureQuery {
+	return &UserTextureQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUserTexture},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a UserTexture entity by its id.
+func (c *UserTextureClient) Get(ctx context.Context, id int) (*UserTexture, error) {
+	return c.Query().Where(usertexture.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UserTextureClient) GetX(ctx context.Context, id int) *UserTexture {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUserProfile queries the user_profile edge of a UserTexture.
+func (c *UserTextureClient) QueryUserProfile(ut *UserTexture) *UserProfileQuery {
+	query := (&UserProfileClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ut.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(usertexture.Table, usertexture.FieldID, id),
+			sqlgraph.To(userprofile.Table, userprofile.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, usertexture.UserProfileTable, usertexture.UserProfileColumn),
+		)
+		fromV = sqlgraph.Neighbors(ut.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTexture queries the texture edge of a UserTexture.
+func (c *UserTextureClient) QueryTexture(ut *UserTexture) *TextureQuery {
+	query := (&TextureClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ut.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(usertexture.Table, usertexture.FieldID, id),
+			sqlgraph.To(texture.Table, texture.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, usertexture.TextureTable, usertexture.TextureColumn),
+		)
+		fromV = sqlgraph.Neighbors(ut.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *UserTextureClient) Hooks() []Hook {
+	return c.hooks.UserTexture
+}
+
+// Interceptors returns the client interceptors.
+func (c *UserTextureClient) Interceptors() []Interceptor {
+	return c.inters.UserTexture
+}
+
+func (c *UserTextureClient) mutate(ctx context.Context, m *UserTextureMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UserTextureCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UserTextureUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UserTextureUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UserTextureDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown UserTexture mutation op: %q", m.Op())
 	}
 }
 
@@ -821,9 +1013,9 @@ func (c *UserTokenClient) mutate(ctx context.Context, m *UserTokenMutation) (Val
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Texture, User, UserProfile, UserToken []ent.Hook
+		Texture, User, UserProfile, UserTexture, UserToken []ent.Hook
 	}
 	inters struct {
-		Texture, User, UserProfile, UserToken []ent.Interceptor
+		Texture, User, UserProfile, UserTexture, UserToken []ent.Interceptor
 	}
 )

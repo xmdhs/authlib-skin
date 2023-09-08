@@ -45,6 +45,18 @@ func (f UserProfileFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value,
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserProfileMutation", m)
 }
 
+// The UserTextureFunc type is an adapter to allow the use of ordinary
+// function as UserTexture mutator.
+type UserTextureFunc func(context.Context, *ent.UserTextureMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f UserTextureFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.UserTextureMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserTextureMutation", m)
+}
+
 // The UserTokenFunc type is an adapter to allow the use of ordinary
 // function as UserToken mutator.
 type UserTokenFunc func(context.Context, *ent.UserTokenMutation) (ent.Value, error)

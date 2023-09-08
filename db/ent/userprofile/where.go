@@ -221,7 +221,7 @@ func HasTexture() predicate.UserProfile {
 	return predicate.UserProfile(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, TextureTable, TextureColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, TextureTable, TexturePrimaryKey...),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -231,6 +231,29 @@ func HasTexture() predicate.UserProfile {
 func HasTextureWith(preds ...predicate.Texture) predicate.UserProfile {
 	return predicate.UserProfile(func(s *sql.Selector) {
 		step := newTextureStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasUsertexture applies the HasEdge predicate on the "usertexture" edge.
+func HasUsertexture() predicate.UserProfile {
+	return predicate.UserProfile(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, UsertextureTable, UsertextureColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUsertextureWith applies the HasEdge predicate on the "usertexture" edge with a given conditions (other predicates).
+func HasUsertextureWith(preds ...predicate.UserTexture) predicate.UserProfile {
+	return predicate.UserProfile(func(s *sql.Selector) {
+		step := newUsertextureStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

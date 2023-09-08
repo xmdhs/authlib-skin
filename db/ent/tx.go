@@ -18,6 +18,8 @@ type Tx struct {
 	User *UserClient
 	// UserProfile is the client for interacting with the UserProfile builders.
 	UserProfile *UserProfileClient
+	// UserTexture is the client for interacting with the UserTexture builders.
+	UserTexture *UserTextureClient
 	// UserToken is the client for interacting with the UserToken builders.
 	UserToken *UserTokenClient
 
@@ -154,6 +156,7 @@ func (tx *Tx) init() {
 	tx.Texture = NewTextureClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.UserProfile = NewUserProfileClient(tx.config)
+	tx.UserTexture = NewUserTextureClient(tx.config)
 	tx.UserToken = NewUserTokenClient(tx.config)
 }
 

@@ -12,6 +12,7 @@ import (
 	"github.com/xmdhs/authlib-skin/db/ent/texture"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
+	"github.com/xmdhs/authlib-skin/db/ent/usertexture"
 )
 
 // TextureCreate is the builder for creating a Texture entity.
@@ -50,15 +51,34 @@ func (tc *TextureCreate) SetCreatedUser(u *User) *TextureCreate {
 	return tc.SetCreatedUserID(u.ID)
 }
 
-// SetUserID sets the "user" edge to the UserProfile entity by ID.
-func (tc *TextureCreate) SetUserID(id int) *TextureCreate {
-	tc.mutation.SetUserID(id)
+// AddUserIDs adds the "user" edge to the UserProfile entity by IDs.
+func (tc *TextureCreate) AddUserIDs(ids ...int) *TextureCreate {
+	tc.mutation.AddUserIDs(ids...)
 	return tc
 }
 
-// SetUser sets the "user" edge to the UserProfile entity.
-func (tc *TextureCreate) SetUser(u *UserProfile) *TextureCreate {
-	return tc.SetUserID(u.ID)
+// AddUser adds the "user" edges to the UserProfile entity.
+func (tc *TextureCreate) AddUser(u ...*UserProfile) *TextureCreate {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return tc.AddUserIDs(ids...)
+}
+
+// AddUsertextureIDs adds the "usertexture" edge to the UserTexture entity by IDs.
+func (tc *TextureCreate) AddUsertextureIDs(ids ...int) *TextureCreate {
+	tc.mutation.AddUsertextureIDs(ids...)
+	return tc
+}
+
+// AddUsertexture adds the "usertexture" edges to the UserTexture entity.
+func (tc *TextureCreate) AddUsertexture(u ...*UserTexture) *TextureCreate {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return tc.AddUsertextureIDs(ids...)
 }
 
 // Mutation returns the TextureMutation object of the builder.
@@ -106,9 +126,6 @@ func (tc *TextureCreate) check() error {
 	}
 	if _, ok := tc.mutation.CreatedUserID(); !ok {
 		return &ValidationError{Name: "created_user", err: errors.New(`ent: missing required edge "Texture.created_user"`)}
-	}
-	if _, ok := tc.mutation.UserID(); !ok {
-		return &ValidationError{Name: "user", err: errors.New(`ent: missing required edge "Texture.user"`)}
 	}
 	return nil
 }
@@ -167,10 +184,10 @@ func (tc *TextureCreate) createSpec() (*Texture, *sqlgraph.CreateSpec) {
 	}
 	if nodes := tc.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.M2M,
 			Inverse: true,
 			Table:   texture.UserTable,
-			Columns: []string{texture.UserColumn},
+			Columns: texture.UserPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(userprofile.FieldID, field.TypeInt),
@@ -179,7 +196,22 @@ func (tc *TextureCreate) createSpec() (*Texture, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.user_profile_texture = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.UsertextureIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   texture.UsertextureTable,
+			Columns: []string{texture.UsertextureColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usertexture.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

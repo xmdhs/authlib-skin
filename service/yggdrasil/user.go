@@ -67,10 +67,6 @@ func (y *Yggdrasil) Authenticate(cxt context.Context, auth yggdrasil.Authenticat
 			if err != nil {
 				return err
 			}
-			err = tx.User.UpdateOne(u).SetToken(ut).Exec(cxt)
-			if err != nil {
-				return err
-			}
 			utoken = ut
 		}
 		return nil

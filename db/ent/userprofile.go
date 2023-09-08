@@ -34,9 +34,11 @@ type UserProfileEdges struct {
 	User *User `json:"user,omitempty"`
 	// Texture holds the value of the texture edge.
 	Texture []*Texture `json:"texture,omitempty"`
+	// Usertexture holds the value of the usertexture edge.
+	Usertexture []*UserTexture `json:"usertexture,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // UserOrErr returns the User value or an error if the edge
@@ -59,6 +61,15 @@ func (e UserProfileEdges) TextureOrErr() ([]*Texture, error) {
 		return e.Texture, nil
 	}
 	return nil, &NotLoadedError{edge: "texture"}
+}
+
+// UsertextureOrErr returns the Usertexture value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserProfileEdges) UsertextureOrErr() ([]*UserTexture, error) {
+	if e.loadedTypes[2] {
+		return e.Usertexture, nil
+	}
+	return nil, &NotLoadedError{edge: "usertexture"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -133,6 +144,11 @@ func (up *UserProfile) QueryUser() *UserQuery {
 // QueryTexture queries the "texture" edge of the UserProfile entity.
 func (up *UserProfile) QueryTexture() *TextureQuery {
 	return NewUserProfileClient(up.config).QueryTexture(up)
+}
+
+// QueryUsertexture queries the "usertexture" edge of the UserProfile entity.
+func (up *UserProfile) QueryUsertexture() *UserTextureQuery {
+	return NewUserProfileClient(up.config).QueryUsertexture(up)
 }
 
 // Update returns a builder for updating this UserProfile.

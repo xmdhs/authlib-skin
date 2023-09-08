@@ -14,6 +14,7 @@ import (
 	"github.com/xmdhs/authlib-skin/db/ent/texture"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
+	"github.com/xmdhs/authlib-skin/db/ent/usertexture"
 )
 
 // TextureUpdate is the builder for updating Texture entities.
@@ -58,15 +59,34 @@ func (tu *TextureUpdate) SetCreatedUser(u *User) *TextureUpdate {
 	return tu.SetCreatedUserID(u.ID)
 }
 
-// SetUserID sets the "user" edge to the UserProfile entity by ID.
-func (tu *TextureUpdate) SetUserID(id int) *TextureUpdate {
-	tu.mutation.SetUserID(id)
+// AddUserIDs adds the "user" edge to the UserProfile entity by IDs.
+func (tu *TextureUpdate) AddUserIDs(ids ...int) *TextureUpdate {
+	tu.mutation.AddUserIDs(ids...)
 	return tu
 }
 
-// SetUser sets the "user" edge to the UserProfile entity.
-func (tu *TextureUpdate) SetUser(u *UserProfile) *TextureUpdate {
-	return tu.SetUserID(u.ID)
+// AddUser adds the "user" edges to the UserProfile entity.
+func (tu *TextureUpdate) AddUser(u ...*UserProfile) *TextureUpdate {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return tu.AddUserIDs(ids...)
+}
+
+// AddUsertextureIDs adds the "usertexture" edge to the UserTexture entity by IDs.
+func (tu *TextureUpdate) AddUsertextureIDs(ids ...int) *TextureUpdate {
+	tu.mutation.AddUsertextureIDs(ids...)
+	return tu
+}
+
+// AddUsertexture adds the "usertexture" edges to the UserTexture entity.
+func (tu *TextureUpdate) AddUsertexture(u ...*UserTexture) *TextureUpdate {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return tu.AddUsertextureIDs(ids...)
 }
 
 // Mutation returns the TextureMutation object of the builder.
@@ -80,10 +100,46 @@ func (tu *TextureUpdate) ClearCreatedUser() *TextureUpdate {
 	return tu
 }
 
-// ClearUser clears the "user" edge to the UserProfile entity.
+// ClearUser clears all "user" edges to the UserProfile entity.
 func (tu *TextureUpdate) ClearUser() *TextureUpdate {
 	tu.mutation.ClearUser()
 	return tu
+}
+
+// RemoveUserIDs removes the "user" edge to UserProfile entities by IDs.
+func (tu *TextureUpdate) RemoveUserIDs(ids ...int) *TextureUpdate {
+	tu.mutation.RemoveUserIDs(ids...)
+	return tu
+}
+
+// RemoveUser removes "user" edges to UserProfile entities.
+func (tu *TextureUpdate) RemoveUser(u ...*UserProfile) *TextureUpdate {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return tu.RemoveUserIDs(ids...)
+}
+
+// ClearUsertexture clears all "usertexture" edges to the UserTexture entity.
+func (tu *TextureUpdate) ClearUsertexture() *TextureUpdate {
+	tu.mutation.ClearUsertexture()
+	return tu
+}
+
+// RemoveUsertextureIDs removes the "usertexture" edge to UserTexture entities by IDs.
+func (tu *TextureUpdate) RemoveUsertextureIDs(ids ...int) *TextureUpdate {
+	tu.mutation.RemoveUsertextureIDs(ids...)
+	return tu
+}
+
+// RemoveUsertexture removes "usertexture" edges to UserTexture entities.
+func (tu *TextureUpdate) RemoveUsertexture(u ...*UserTexture) *TextureUpdate {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return tu.RemoveUsertextureIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -117,9 +173,6 @@ func (tu *TextureUpdate) ExecX(ctx context.Context) {
 func (tu *TextureUpdate) check() error {
 	if _, ok := tu.mutation.CreatedUserID(); tu.mutation.CreatedUserCleared() && !ok {
 		return errors.New(`ent: clearing a required unique edge "Texture.created_user"`)
-	}
-	if _, ok := tu.mutation.UserID(); tu.mutation.UserCleared() && !ok {
-		return errors.New(`ent: clearing a required unique edge "Texture.user"`)
 	}
 	return nil
 }
@@ -176,10 +229,10 @@ func (tu *TextureUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if tu.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.M2M,
 			Inverse: true,
 			Table:   texture.UserTable,
-			Columns: []string{texture.UserColumn},
+			Columns: texture.UserPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(userprofile.FieldID, field.TypeInt),
@@ -187,15 +240,76 @@ func (tu *TextureUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tu.mutation.UserIDs(); len(nodes) > 0 {
+	if nodes := tu.mutation.RemovedUserIDs(); len(nodes) > 0 && !tu.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.M2M,
 			Inverse: true,
 			Table:   texture.UserTable,
-			Columns: []string{texture.UserColumn},
+			Columns: texture.UserPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(userprofile.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.UserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   texture.UserTable,
+			Columns: texture.UserPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userprofile.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tu.mutation.UsertextureCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   texture.UsertextureTable,
+			Columns: []string{texture.UsertextureColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usertexture.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.RemovedUsertextureIDs(); len(nodes) > 0 && !tu.mutation.UsertextureCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   texture.UsertextureTable,
+			Columns: []string{texture.UsertextureColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usertexture.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.UsertextureIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   texture.UsertextureTable,
+			Columns: []string{texture.UsertextureColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usertexture.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -252,15 +366,34 @@ func (tuo *TextureUpdateOne) SetCreatedUser(u *User) *TextureUpdateOne {
 	return tuo.SetCreatedUserID(u.ID)
 }
 
-// SetUserID sets the "user" edge to the UserProfile entity by ID.
-func (tuo *TextureUpdateOne) SetUserID(id int) *TextureUpdateOne {
-	tuo.mutation.SetUserID(id)
+// AddUserIDs adds the "user" edge to the UserProfile entity by IDs.
+func (tuo *TextureUpdateOne) AddUserIDs(ids ...int) *TextureUpdateOne {
+	tuo.mutation.AddUserIDs(ids...)
 	return tuo
 }
 
-// SetUser sets the "user" edge to the UserProfile entity.
-func (tuo *TextureUpdateOne) SetUser(u *UserProfile) *TextureUpdateOne {
-	return tuo.SetUserID(u.ID)
+// AddUser adds the "user" edges to the UserProfile entity.
+func (tuo *TextureUpdateOne) AddUser(u ...*UserProfile) *TextureUpdateOne {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return tuo.AddUserIDs(ids...)
+}
+
+// AddUsertextureIDs adds the "usertexture" edge to the UserTexture entity by IDs.
+func (tuo *TextureUpdateOne) AddUsertextureIDs(ids ...int) *TextureUpdateOne {
+	tuo.mutation.AddUsertextureIDs(ids...)
+	return tuo
+}
+
+// AddUsertexture adds the "usertexture" edges to the UserTexture entity.
+func (tuo *TextureUpdateOne) AddUsertexture(u ...*UserTexture) *TextureUpdateOne {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return tuo.AddUsertextureIDs(ids...)
 }
 
 // Mutation returns the TextureMutation object of the builder.
@@ -274,10 +407,46 @@ func (tuo *TextureUpdateOne) ClearCreatedUser() *TextureUpdateOne {
 	return tuo
 }
 
-// ClearUser clears the "user" edge to the UserProfile entity.
+// ClearUser clears all "user" edges to the UserProfile entity.
 func (tuo *TextureUpdateOne) ClearUser() *TextureUpdateOne {
 	tuo.mutation.ClearUser()
 	return tuo
+}
+
+// RemoveUserIDs removes the "user" edge to UserProfile entities by IDs.
+func (tuo *TextureUpdateOne) RemoveUserIDs(ids ...int) *TextureUpdateOne {
+	tuo.mutation.RemoveUserIDs(ids...)
+	return tuo
+}
+
+// RemoveUser removes "user" edges to UserProfile entities.
+func (tuo *TextureUpdateOne) RemoveUser(u ...*UserProfile) *TextureUpdateOne {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return tuo.RemoveUserIDs(ids...)
+}
+
+// ClearUsertexture clears all "usertexture" edges to the UserTexture entity.
+func (tuo *TextureUpdateOne) ClearUsertexture() *TextureUpdateOne {
+	tuo.mutation.ClearUsertexture()
+	return tuo
+}
+
+// RemoveUsertextureIDs removes the "usertexture" edge to UserTexture entities by IDs.
+func (tuo *TextureUpdateOne) RemoveUsertextureIDs(ids ...int) *TextureUpdateOne {
+	tuo.mutation.RemoveUsertextureIDs(ids...)
+	return tuo
+}
+
+// RemoveUsertexture removes "usertexture" edges to UserTexture entities.
+func (tuo *TextureUpdateOne) RemoveUsertexture(u ...*UserTexture) *TextureUpdateOne {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return tuo.RemoveUsertextureIDs(ids...)
 }
 
 // Where appends a list predicates to the TextureUpdate builder.
@@ -324,9 +493,6 @@ func (tuo *TextureUpdateOne) ExecX(ctx context.Context) {
 func (tuo *TextureUpdateOne) check() error {
 	if _, ok := tuo.mutation.CreatedUserID(); tuo.mutation.CreatedUserCleared() && !ok {
 		return errors.New(`ent: clearing a required unique edge "Texture.created_user"`)
-	}
-	if _, ok := tuo.mutation.UserID(); tuo.mutation.UserCleared() && !ok {
-		return errors.New(`ent: clearing a required unique edge "Texture.user"`)
 	}
 	return nil
 }
@@ -400,10 +566,10 @@ func (tuo *TextureUpdateOne) sqlSave(ctx context.Context) (_node *Texture, err e
 	}
 	if tuo.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.M2M,
 			Inverse: true,
 			Table:   texture.UserTable,
-			Columns: []string{texture.UserColumn},
+			Columns: texture.UserPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(userprofile.FieldID, field.TypeInt),
@@ -411,15 +577,76 @@ func (tuo *TextureUpdateOne) sqlSave(ctx context.Context) (_node *Texture, err e
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tuo.mutation.UserIDs(); len(nodes) > 0 {
+	if nodes := tuo.mutation.RemovedUserIDs(); len(nodes) > 0 && !tuo.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
+			Rel:     sqlgraph.M2M,
 			Inverse: true,
 			Table:   texture.UserTable,
-			Columns: []string{texture.UserColumn},
+			Columns: texture.UserPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(userprofile.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.UserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   texture.UserTable,
+			Columns: texture.UserPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userprofile.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tuo.mutation.UsertextureCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   texture.UsertextureTable,
+			Columns: []string{texture.UsertextureColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usertexture.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.RemovedUsertextureIDs(); len(nodes) > 0 && !tuo.mutation.UsertextureCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   texture.UsertextureTable,
+			Columns: []string{texture.UsertextureColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usertexture.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.UsertextureIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   texture.UsertextureTable,
+			Columns: []string{texture.UsertextureColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(usertexture.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
