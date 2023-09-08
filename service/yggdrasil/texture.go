@@ -11,6 +11,7 @@ import (
 	"github.com/samber/lo"
 	"github.com/xmdhs/authlib-skin/db/ent"
 	"github.com/xmdhs/authlib-skin/db/ent/texture"
+	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
 	"github.com/xmdhs/authlib-skin/model/yggdrasil"
 	utilsService "github.com/xmdhs/authlib-skin/service/utils"
@@ -31,7 +32,7 @@ func (y *Yggdrasil) PutTexture(ctx context.Context, token string, texturebyte []
 		return fmt.Errorf("PutTexture: %w", ErrUUIDNotEq)
 	}
 
-	up, err := y.client.UserProfile.Query().Where(userprofile.UUIDEQ(uuid)).WithUser().First(ctx)
+	up, err := y.client.UserProfile.Query().Where(userprofile.HasUserWith(user.ID(t.UID))).WithUser().First(ctx)
 
 	err = utils.WithTx(ctx, y.client, func(tx *ent.Tx) error {
 		// 查找此用户该类型下是否已经存在皮肤
