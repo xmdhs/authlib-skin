@@ -6,8 +6,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
-// Skin is the predicate function for skin builders.
-type Skin func(*sql.Selector)
+// Texture is the predicate function for texture builders.
+type Texture func(*sql.Selector)
 
 // User is the predicate function for user builders.
 type User func(*sql.Selector)

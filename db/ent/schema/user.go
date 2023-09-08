@@ -38,10 +38,9 @@ func (User) Fields() []ent.Field {
 // Edges of the User.
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("created_skin", Skin.Type).Ref("created_user"),
+		edge.From("created_texture", Texture.Type).Ref("created_user"),
 		edge.To("profile", UserProfile.Type).Unique().Annotations(entsql.OnDelete(entsql.Cascade)),
 		edge.To("token", UserToken.Type).Unique().Annotations(entsql.OnDelete(entsql.Cascade)),
-		edge.To("skin", Skin.Type).Unique(),
 	}
 }
 

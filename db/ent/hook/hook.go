@@ -9,16 +9,16 @@ import (
 	"github.com/xmdhs/authlib-skin/db/ent"
 )
 
-// The SkinFunc type is an adapter to allow the use of ordinary
-// function as Skin mutator.
-type SkinFunc func(context.Context, *ent.SkinMutation) (ent.Value, error)
+// The TextureFunc type is an adapter to allow the use of ordinary
+// function as Texture mutator.
+type TextureFunc func(context.Context, *ent.TextureMutation) (ent.Value, error)
 
 // Mutate calls f(ctx, m).
-func (f SkinFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.SkinMutation); ok {
+func (f TextureFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TextureMutation); ok {
 		return f(ctx, mv)
 	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SkinMutation", m)
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TextureMutation", m)
 }
 
 // The UserFunc type is an adapter to allow the use of ordinary

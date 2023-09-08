@@ -216,6 +216,29 @@ func HasUserWith(preds ...predicate.User) predicate.UserProfile {
 	})
 }
 
+// HasTexture applies the HasEdge predicate on the "texture" edge.
+func HasTexture() predicate.UserProfile {
+	return predicate.UserProfile(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, TextureTable, TextureColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTextureWith applies the HasEdge predicate on the "texture" edge with a given conditions (other predicates).
+func HasTextureWith(preds ...predicate.Texture) predicate.UserProfile {
+	return predicate.UserProfile(func(s *sql.Selector) {
+		step := newTextureStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.UserProfile) predicate.UserProfile {
 	return predicate.UserProfile(func(s *sql.Selector) {

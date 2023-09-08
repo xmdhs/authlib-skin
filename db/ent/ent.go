@@ -12,7 +12,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/xmdhs/authlib-skin/db/ent/skin"
+	"github.com/xmdhs/authlib-skin/db/ent/texture"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
 	"github.com/xmdhs/authlib-skin/db/ent/usertoken"
@@ -76,7 +76,7 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			skin.Table:        skin.ValidColumn,
+			texture.Table:     texture.ValidColumn,
 			user.Table:        user.ValidColumn,
 			userprofile.Table: userprofile.ValidColumn,
 			usertoken.Table:   usertoken.ValidColumn,

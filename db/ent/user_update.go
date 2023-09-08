@@ -11,7 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/xmdhs/authlib-skin/db/ent/predicate"
-	"github.com/xmdhs/authlib-skin/db/ent/skin"
+	"github.com/xmdhs/authlib-skin/db/ent/texture"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
 	"github.com/xmdhs/authlib-skin/db/ent/usertoken"
@@ -80,19 +80,19 @@ func (uu *UserUpdate) AddRegTime(i int64) *UserUpdate {
 	return uu
 }
 
-// AddCreatedSkinIDs adds the "created_skin" edge to the Skin entity by IDs.
-func (uu *UserUpdate) AddCreatedSkinIDs(ids ...int) *UserUpdate {
-	uu.mutation.AddCreatedSkinIDs(ids...)
+// AddCreatedTextureIDs adds the "created_texture" edge to the Texture entity by IDs.
+func (uu *UserUpdate) AddCreatedTextureIDs(ids ...int) *UserUpdate {
+	uu.mutation.AddCreatedTextureIDs(ids...)
 	return uu
 }
 
-// AddCreatedSkin adds the "created_skin" edges to the Skin entity.
-func (uu *UserUpdate) AddCreatedSkin(s ...*Skin) *UserUpdate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+// AddCreatedTexture adds the "created_texture" edges to the Texture entity.
+func (uu *UserUpdate) AddCreatedTexture(t ...*Texture) *UserUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
 	}
-	return uu.AddCreatedSkinIDs(ids...)
+	return uu.AddCreatedTextureIDs(ids...)
 }
 
 // SetProfileID sets the "profile" edge to the UserProfile entity by ID.
@@ -133,49 +133,30 @@ func (uu *UserUpdate) SetToken(u *UserToken) *UserUpdate {
 	return uu.SetTokenID(u.ID)
 }
 
-// SetSkinID sets the "skin" edge to the Skin entity by ID.
-func (uu *UserUpdate) SetSkinID(id int) *UserUpdate {
-	uu.mutation.SetSkinID(id)
-	return uu
-}
-
-// SetNillableSkinID sets the "skin" edge to the Skin entity by ID if the given value is not nil.
-func (uu *UserUpdate) SetNillableSkinID(id *int) *UserUpdate {
-	if id != nil {
-		uu = uu.SetSkinID(*id)
-	}
-	return uu
-}
-
-// SetSkin sets the "skin" edge to the Skin entity.
-func (uu *UserUpdate) SetSkin(s *Skin) *UserUpdate {
-	return uu.SetSkinID(s.ID)
-}
-
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
 }
 
-// ClearCreatedSkin clears all "created_skin" edges to the Skin entity.
-func (uu *UserUpdate) ClearCreatedSkin() *UserUpdate {
-	uu.mutation.ClearCreatedSkin()
+// ClearCreatedTexture clears all "created_texture" edges to the Texture entity.
+func (uu *UserUpdate) ClearCreatedTexture() *UserUpdate {
+	uu.mutation.ClearCreatedTexture()
 	return uu
 }
 
-// RemoveCreatedSkinIDs removes the "created_skin" edge to Skin entities by IDs.
-func (uu *UserUpdate) RemoveCreatedSkinIDs(ids ...int) *UserUpdate {
-	uu.mutation.RemoveCreatedSkinIDs(ids...)
+// RemoveCreatedTextureIDs removes the "created_texture" edge to Texture entities by IDs.
+func (uu *UserUpdate) RemoveCreatedTextureIDs(ids ...int) *UserUpdate {
+	uu.mutation.RemoveCreatedTextureIDs(ids...)
 	return uu
 }
 
-// RemoveCreatedSkin removes "created_skin" edges to Skin entities.
-func (uu *UserUpdate) RemoveCreatedSkin(s ...*Skin) *UserUpdate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+// RemoveCreatedTexture removes "created_texture" edges to Texture entities.
+func (uu *UserUpdate) RemoveCreatedTexture(t ...*Texture) *UserUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
 	}
-	return uu.RemoveCreatedSkinIDs(ids...)
+	return uu.RemoveCreatedTextureIDs(ids...)
 }
 
 // ClearProfile clears the "profile" edge to the UserProfile entity.
@@ -187,12 +168,6 @@ func (uu *UserUpdate) ClearProfile() *UserUpdate {
 // ClearToken clears the "token" edge to the UserToken entity.
 func (uu *UserUpdate) ClearToken() *UserUpdate {
 	uu.mutation.ClearToken()
-	return uu
-}
-
-// ClearSkin clears the "skin" edge to the Skin entity.
-func (uu *UserUpdate) ClearSkin() *UserUpdate {
-	uu.mutation.ClearSkin()
 	return uu
 }
 
@@ -256,28 +231,28 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := uu.mutation.AddedRegTime(); ok {
 		_spec.AddField(user.FieldRegTime, field.TypeInt64, value)
 	}
-	if uu.mutation.CreatedSkinCleared() {
+	if uu.mutation.CreatedTextureCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: true,
-			Table:   user.CreatedSkinTable,
-			Columns: []string{user.CreatedSkinColumn},
+			Table:   user.CreatedTextureTable,
+			Columns: []string{user.CreatedTextureColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(skin.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(texture.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uu.mutation.RemovedCreatedSkinIDs(); len(nodes) > 0 && !uu.mutation.CreatedSkinCleared() {
+	if nodes := uu.mutation.RemovedCreatedTextureIDs(); len(nodes) > 0 && !uu.mutation.CreatedTextureCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: true,
-			Table:   user.CreatedSkinTable,
-			Columns: []string{user.CreatedSkinColumn},
+			Table:   user.CreatedTextureTable,
+			Columns: []string{user.CreatedTextureColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(skin.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(texture.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -285,15 +260,15 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uu.mutation.CreatedSkinIDs(); len(nodes) > 0 {
+	if nodes := uu.mutation.CreatedTextureIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: true,
-			Table:   user.CreatedSkinTable,
-			Columns: []string{user.CreatedSkinColumn},
+			Table:   user.CreatedTextureTable,
+			Columns: []string{user.CreatedTextureColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(skin.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(texture.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -352,35 +327,6 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usertoken.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if uu.mutation.SkinCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   user.SkinTable,
-			Columns: []string{user.SkinColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(skin.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.SkinIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   user.SkinTable,
-			Columns: []string{user.SkinColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(skin.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -458,19 +404,19 @@ func (uuo *UserUpdateOne) AddRegTime(i int64) *UserUpdateOne {
 	return uuo
 }
 
-// AddCreatedSkinIDs adds the "created_skin" edge to the Skin entity by IDs.
-func (uuo *UserUpdateOne) AddCreatedSkinIDs(ids ...int) *UserUpdateOne {
-	uuo.mutation.AddCreatedSkinIDs(ids...)
+// AddCreatedTextureIDs adds the "created_texture" edge to the Texture entity by IDs.
+func (uuo *UserUpdateOne) AddCreatedTextureIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.AddCreatedTextureIDs(ids...)
 	return uuo
 }
 
-// AddCreatedSkin adds the "created_skin" edges to the Skin entity.
-func (uuo *UserUpdateOne) AddCreatedSkin(s ...*Skin) *UserUpdateOne {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+// AddCreatedTexture adds the "created_texture" edges to the Texture entity.
+func (uuo *UserUpdateOne) AddCreatedTexture(t ...*Texture) *UserUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
 	}
-	return uuo.AddCreatedSkinIDs(ids...)
+	return uuo.AddCreatedTextureIDs(ids...)
 }
 
 // SetProfileID sets the "profile" edge to the UserProfile entity by ID.
@@ -511,49 +457,30 @@ func (uuo *UserUpdateOne) SetToken(u *UserToken) *UserUpdateOne {
 	return uuo.SetTokenID(u.ID)
 }
 
-// SetSkinID sets the "skin" edge to the Skin entity by ID.
-func (uuo *UserUpdateOne) SetSkinID(id int) *UserUpdateOne {
-	uuo.mutation.SetSkinID(id)
-	return uuo
-}
-
-// SetNillableSkinID sets the "skin" edge to the Skin entity by ID if the given value is not nil.
-func (uuo *UserUpdateOne) SetNillableSkinID(id *int) *UserUpdateOne {
-	if id != nil {
-		uuo = uuo.SetSkinID(*id)
-	}
-	return uuo
-}
-
-// SetSkin sets the "skin" edge to the Skin entity.
-func (uuo *UserUpdateOne) SetSkin(s *Skin) *UserUpdateOne {
-	return uuo.SetSkinID(s.ID)
-}
-
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
 }
 
-// ClearCreatedSkin clears all "created_skin" edges to the Skin entity.
-func (uuo *UserUpdateOne) ClearCreatedSkin() *UserUpdateOne {
-	uuo.mutation.ClearCreatedSkin()
+// ClearCreatedTexture clears all "created_texture" edges to the Texture entity.
+func (uuo *UserUpdateOne) ClearCreatedTexture() *UserUpdateOne {
+	uuo.mutation.ClearCreatedTexture()
 	return uuo
 }
 
-// RemoveCreatedSkinIDs removes the "created_skin" edge to Skin entities by IDs.
-func (uuo *UserUpdateOne) RemoveCreatedSkinIDs(ids ...int) *UserUpdateOne {
-	uuo.mutation.RemoveCreatedSkinIDs(ids...)
+// RemoveCreatedTextureIDs removes the "created_texture" edge to Texture entities by IDs.
+func (uuo *UserUpdateOne) RemoveCreatedTextureIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.RemoveCreatedTextureIDs(ids...)
 	return uuo
 }
 
-// RemoveCreatedSkin removes "created_skin" edges to Skin entities.
-func (uuo *UserUpdateOne) RemoveCreatedSkin(s ...*Skin) *UserUpdateOne {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+// RemoveCreatedTexture removes "created_texture" edges to Texture entities.
+func (uuo *UserUpdateOne) RemoveCreatedTexture(t ...*Texture) *UserUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
 	}
-	return uuo.RemoveCreatedSkinIDs(ids...)
+	return uuo.RemoveCreatedTextureIDs(ids...)
 }
 
 // ClearProfile clears the "profile" edge to the UserProfile entity.
@@ -565,12 +492,6 @@ func (uuo *UserUpdateOne) ClearProfile() *UserUpdateOne {
 // ClearToken clears the "token" edge to the UserToken entity.
 func (uuo *UserUpdateOne) ClearToken() *UserUpdateOne {
 	uuo.mutation.ClearToken()
-	return uuo
-}
-
-// ClearSkin clears the "skin" edge to the Skin entity.
-func (uuo *UserUpdateOne) ClearSkin() *UserUpdateOne {
-	uuo.mutation.ClearSkin()
 	return uuo
 }
 
@@ -664,28 +585,28 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	if value, ok := uuo.mutation.AddedRegTime(); ok {
 		_spec.AddField(user.FieldRegTime, field.TypeInt64, value)
 	}
-	if uuo.mutation.CreatedSkinCleared() {
+	if uuo.mutation.CreatedTextureCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: true,
-			Table:   user.CreatedSkinTable,
-			Columns: []string{user.CreatedSkinColumn},
+			Table:   user.CreatedTextureTable,
+			Columns: []string{user.CreatedTextureColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(skin.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(texture.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uuo.mutation.RemovedCreatedSkinIDs(); len(nodes) > 0 && !uuo.mutation.CreatedSkinCleared() {
+	if nodes := uuo.mutation.RemovedCreatedTextureIDs(); len(nodes) > 0 && !uuo.mutation.CreatedTextureCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: true,
-			Table:   user.CreatedSkinTable,
-			Columns: []string{user.CreatedSkinColumn},
+			Table:   user.CreatedTextureTable,
+			Columns: []string{user.CreatedTextureColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(skin.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(texture.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -693,15 +614,15 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uuo.mutation.CreatedSkinIDs(); len(nodes) > 0 {
+	if nodes := uuo.mutation.CreatedTextureIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: true,
-			Table:   user.CreatedSkinTable,
-			Columns: []string{user.CreatedSkinColumn},
+			Table:   user.CreatedTextureTable,
+			Columns: []string{user.CreatedTextureColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(skin.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(texture.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -760,35 +681,6 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(usertoken.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if uuo.mutation.SkinCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   user.SkinTable,
-			Columns: []string{user.SkinColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(skin.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.SkinIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   user.SkinTable,
-			Columns: []string{user.SkinColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(skin.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

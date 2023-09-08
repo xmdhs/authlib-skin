@@ -9,6 +9,7 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/xmdhs/authlib-skin/db/ent/texture"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
 )
@@ -41,6 +42,21 @@ func (upc *UserProfileCreate) SetUserID(id int) *UserProfileCreate {
 // SetUser sets the "user" edge to the User entity.
 func (upc *UserProfileCreate) SetUser(u *User) *UserProfileCreate {
 	return upc.SetUserID(u.ID)
+}
+
+// AddTextureIDs adds the "texture" edge to the Texture entity by IDs.
+func (upc *UserProfileCreate) AddTextureIDs(ids ...int) *UserProfileCreate {
+	upc.mutation.AddTextureIDs(ids...)
+	return upc
+}
+
+// AddTexture adds the "texture" edges to the Texture entity.
+func (upc *UserProfileCreate) AddTexture(t ...*Texture) *UserProfileCreate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return upc.AddTextureIDs(ids...)
 }
 
 // Mutation returns the UserProfileMutation object of the builder.
@@ -135,6 +151,22 @@ func (upc *UserProfileCreate) createSpec() (*UserProfile, *sqlgraph.CreateSpec) 
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.user_profile = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := upc.mutation.TextureIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   userprofile.TextureTable,
+			Columns: []string{userprofile.TextureColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(texture.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

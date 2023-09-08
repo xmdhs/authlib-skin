@@ -18,6 +18,8 @@ const (
 	FieldUUID = "uuid"
 	// EdgeUser holds the string denoting the user edge name in mutations.
 	EdgeUser = "user"
+	// EdgeTexture holds the string denoting the texture edge name in mutations.
+	EdgeTexture = "texture"
 	// Table holds the table name of the userprofile in the database.
 	Table = "user_profiles"
 	// UserTable is the table that holds the user relation/edge.
@@ -27,6 +29,13 @@ const (
 	UserInverseTable = "users"
 	// UserColumn is the table column denoting the user relation/edge.
 	UserColumn = "user_profile"
+	// TextureTable is the table that holds the texture relation/edge.
+	TextureTable = "textures"
+	// TextureInverseTable is the table name for the Texture entity.
+	// It exists in this package in order to avoid circular dependency with the "texture" package.
+	TextureInverseTable = "textures"
+	// TextureColumn is the table column denoting the texture relation/edge.
+	TextureColumn = "user_profile_texture"
 )
 
 // Columns holds all SQL columns for userprofile fields.
@@ -81,10 +90,31 @@ func ByUserField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newUserStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByTextureCount orders the results by texture count.
+func ByTextureCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newTextureStep(), opts...)
+	}
+}
+
+// ByTexture orders the results by texture terms.
+func ByTexture(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTextureStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newUserStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UserInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2O, true, UserTable, UserColumn),
+	)
+}
+func newTextureStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TextureInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, TextureTable, TextureColumn),
 	)
 }

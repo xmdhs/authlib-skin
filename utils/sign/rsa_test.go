@@ -65,3 +65,16 @@ func TestLittleskinSign(t *testing.T) {
 	}
 
 }
+
+func TestAuthlibNew(t *testing.T) {
+	rsa2048, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Fatal(err)
+	}
+	as := NewAuthlibSignWithKey(rsa2048)
+
+	_, err = NewAuthlibSign([]byte(lo.Must1(as.GetPriKey())))
+	if err != nil {
+		t.Fatal(err)
+	}
+}

@@ -15,7 +15,8 @@ type Config struct {
 		Type string
 		Ram  int
 	}
-	RaelIP    bool
-	MaxIpUser int
-	RsaPriKey string
+	RaelIP      bool
+	MaxIpUser   int
+	RsaPriKey   string
+	TexturePath string
 }

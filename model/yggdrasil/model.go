@@ -42,6 +42,7 @@ type TokenUser struct {
 }
 
 type ValidateToken struct {
+	// jwt
 	AccessToken string `json:"accessToken" validate:"required,jwt"`
 	ClientToken string `json:"clientToken"`
 }

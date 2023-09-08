@@ -12,8 +12,8 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
-	// Skin is the client for interacting with the Skin builders.
-	Skin *SkinClient
+	// Texture is the client for interacting with the Texture builders.
+	Texture *TextureClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// UserProfile is the client for interacting with the UserProfile builders.
@@ -151,7 +151,7 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
-	tx.Skin = NewSkinClient(tx.config)
+	tx.Texture = NewTextureClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.UserProfile = NewUserProfileClient(tx.config)
 	tx.UserToken = NewUserTokenClient(tx.config)
@@ -164,7 +164,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: Skin.QueryXXX(), the query will be executed
+// applies a query, for example: Texture.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

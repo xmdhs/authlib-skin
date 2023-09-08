@@ -9,7 +9,7 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/xmdhs/authlib-skin/db/ent/skin"
+	"github.com/xmdhs/authlib-skin/db/ent/texture"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
 	"github.com/xmdhs/authlib-skin/db/ent/usertoken"
@@ -58,19 +58,19 @@ func (uc *UserCreate) SetRegTime(i int64) *UserCreate {
 	return uc
 }
 
-// AddCreatedSkinIDs adds the "created_skin" edge to the Skin entity by IDs.
-func (uc *UserCreate) AddCreatedSkinIDs(ids ...int) *UserCreate {
-	uc.mutation.AddCreatedSkinIDs(ids...)
+// AddCreatedTextureIDs adds the "created_texture" edge to the Texture entity by IDs.
+func (uc *UserCreate) AddCreatedTextureIDs(ids ...int) *UserCreate {
+	uc.mutation.AddCreatedTextureIDs(ids...)
 	return uc
 }
 
-// AddCreatedSkin adds the "created_skin" edges to the Skin entity.
-func (uc *UserCreate) AddCreatedSkin(s ...*Skin) *UserCreate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+// AddCreatedTexture adds the "created_texture" edges to the Texture entity.
+func (uc *UserCreate) AddCreatedTexture(t ...*Texture) *UserCreate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
 	}
-	return uc.AddCreatedSkinIDs(ids...)
+	return uc.AddCreatedTextureIDs(ids...)
 }
 
 // SetProfileID sets the "profile" edge to the UserProfile entity by ID.
@@ -109,25 +109,6 @@ func (uc *UserCreate) SetNillableTokenID(id *int) *UserCreate {
 // SetToken sets the "token" edge to the UserToken entity.
 func (uc *UserCreate) SetToken(u *UserToken) *UserCreate {
 	return uc.SetTokenID(u.ID)
-}
-
-// SetSkinID sets the "skin" edge to the Skin entity by ID.
-func (uc *UserCreate) SetSkinID(id int) *UserCreate {
-	uc.mutation.SetSkinID(id)
-	return uc
-}
-
-// SetNillableSkinID sets the "skin" edge to the Skin entity by ID if the given value is not nil.
-func (uc *UserCreate) SetNillableSkinID(id *int) *UserCreate {
-	if id != nil {
-		uc = uc.SetSkinID(*id)
-	}
-	return uc
-}
-
-// SetSkin sets the "skin" edge to the Skin entity.
-func (uc *UserCreate) SetSkin(s *Skin) *UserCreate {
-	return uc.SetSkinID(s.ID)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -232,15 +213,15 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec.SetField(user.FieldRegTime, field.TypeInt64, value)
 		_node.RegTime = value
 	}
-	if nodes := uc.mutation.CreatedSkinIDs(); len(nodes) > 0 {
+	if nodes := uc.mutation.CreatedTextureIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: true,
-			Table:   user.CreatedSkinTable,
-			Columns: []string{user.CreatedSkinColumn},
+			Table:   user.CreatedTextureTable,
+			Columns: []string{user.CreatedTextureColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(skin.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(texture.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -279,23 +260,6 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.user_token = &nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := uc.mutation.SkinIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   user.SkinTable,
-			Columns: []string{user.SkinColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(skin.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_node.user_skin = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

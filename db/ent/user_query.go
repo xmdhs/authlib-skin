@@ -13,7 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/xmdhs/authlib-skin/db/ent/predicate"
-	"github.com/xmdhs/authlib-skin/db/ent/skin"
+	"github.com/xmdhs/authlib-skin/db/ent/texture"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
 	"github.com/xmdhs/authlib-skin/db/ent/usertoken"
@@ -22,16 +22,15 @@ import (
 // UserQuery is the builder for querying User entities.
 type UserQuery struct {
 	config
-	ctx             *QueryContext
-	order           []user.OrderOption
-	inters          []Interceptor
-	predicates      []predicate.User
-	withCreatedSkin *SkinQuery
-	withProfile     *UserProfileQuery
-	withToken       *UserTokenQuery
-	withSkin        *SkinQuery
-	withFKs         bool
-	modifiers       []func(*sql.Selector)
+	ctx                *QueryContext
+	order              []user.OrderOption
+	inters             []Interceptor
+	predicates         []predicate.User
+	withCreatedTexture *TextureQuery
+	withProfile        *UserProfileQuery
+	withToken          *UserTokenQuery
+	withFKs            bool
+	modifiers          []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -68,9 +67,9 @@ func (uq *UserQuery) Order(o ...user.OrderOption) *UserQuery {
 	return uq
 }
 
-// QueryCreatedSkin chains the current query on the "created_skin" edge.
-func (uq *UserQuery) QueryCreatedSkin() *SkinQuery {
-	query := (&SkinClient{config: uq.config}).Query()
+// QueryCreatedTexture chains the current query on the "created_texture" edge.
+func (uq *UserQuery) QueryCreatedTexture() *TextureQuery {
+	query := (&TextureClient{config: uq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := uq.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -81,8 +80,8 @@ func (uq *UserQuery) QueryCreatedSkin() *SkinQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, selector),
-			sqlgraph.To(skin.Table, skin.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, true, user.CreatedSkinTable, user.CreatedSkinColumn),
+			sqlgraph.To(texture.Table, texture.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, user.CreatedTextureTable, user.CreatedTextureColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -127,28 +126,6 @@ func (uq *UserQuery) QueryToken() *UserTokenQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(usertoken.Table, usertoken.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, false, user.TokenTable, user.TokenColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QuerySkin chains the current query on the "skin" edge.
-func (uq *UserQuery) QuerySkin() *SkinQuery {
-	query := (&SkinClient{config: uq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := uq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := uq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(user.Table, user.FieldID, selector),
-			sqlgraph.To(skin.Table, skin.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, user.SkinTable, user.SkinColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -343,29 +320,28 @@ func (uq *UserQuery) Clone() *UserQuery {
 		return nil
 	}
 	return &UserQuery{
-		config:          uq.config,
-		ctx:             uq.ctx.Clone(),
-		order:           append([]user.OrderOption{}, uq.order...),
-		inters:          append([]Interceptor{}, uq.inters...),
-		predicates:      append([]predicate.User{}, uq.predicates...),
-		withCreatedSkin: uq.withCreatedSkin.Clone(),
-		withProfile:     uq.withProfile.Clone(),
-		withToken:       uq.withToken.Clone(),
-		withSkin:        uq.withSkin.Clone(),
+		config:             uq.config,
+		ctx:                uq.ctx.Clone(),
+		order:              append([]user.OrderOption{}, uq.order...),
+		inters:             append([]Interceptor{}, uq.inters...),
+		predicates:         append([]predicate.User{}, uq.predicates...),
+		withCreatedTexture: uq.withCreatedTexture.Clone(),
+		withProfile:        uq.withProfile.Clone(),
+		withToken:          uq.withToken.Clone(),
 		// clone intermediate query.
 		sql:  uq.sql.Clone(),
 		path: uq.path,
 	}
 }
 
-// WithCreatedSkin tells the query-builder to eager-load the nodes that are connected to
-// the "created_skin" edge. The optional arguments are used to configure the query builder of the edge.
-func (uq *UserQuery) WithCreatedSkin(opts ...func(*SkinQuery)) *UserQuery {
-	query := (&SkinClient{config: uq.config}).Query()
+// WithCreatedTexture tells the query-builder to eager-load the nodes that are connected to
+// the "created_texture" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithCreatedTexture(opts ...func(*TextureQuery)) *UserQuery {
+	query := (&TextureClient{config: uq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	uq.withCreatedSkin = query
+	uq.withCreatedTexture = query
 	return uq
 }
 
@@ -388,17 +364,6 @@ func (uq *UserQuery) WithToken(opts ...func(*UserTokenQuery)) *UserQuery {
 		opt(query)
 	}
 	uq.withToken = query
-	return uq
-}
-
-// WithSkin tells the query-builder to eager-load the nodes that are connected to
-// the "skin" edge. The optional arguments are used to configure the query builder of the edge.
-func (uq *UserQuery) WithSkin(opts ...func(*SkinQuery)) *UserQuery {
-	query := (&SkinClient{config: uq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	uq.withSkin = query
 	return uq
 }
 
@@ -481,14 +446,13 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		nodes       = []*User{}
 		withFKs     = uq.withFKs
 		_spec       = uq.querySpec()
-		loadedTypes = [4]bool{
-			uq.withCreatedSkin != nil,
+		loadedTypes = [3]bool{
+			uq.withCreatedTexture != nil,
 			uq.withProfile != nil,
 			uq.withToken != nil,
-			uq.withSkin != nil,
 		}
 	)
-	if uq.withToken != nil || uq.withSkin != nil {
+	if uq.withToken != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -515,10 +479,10 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := uq.withCreatedSkin; query != nil {
-		if err := uq.loadCreatedSkin(ctx, query, nodes,
-			func(n *User) { n.Edges.CreatedSkin = []*Skin{} },
-			func(n *User, e *Skin) { n.Edges.CreatedSkin = append(n.Edges.CreatedSkin, e) }); err != nil {
+	if query := uq.withCreatedTexture; query != nil {
+		if err := uq.loadCreatedTexture(ctx, query, nodes,
+			func(n *User) { n.Edges.CreatedTexture = []*Texture{} },
+			func(n *User, e *Texture) { n.Edges.CreatedTexture = append(n.Edges.CreatedTexture, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -534,16 +498,10 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			return nil, err
 		}
 	}
-	if query := uq.withSkin; query != nil {
-		if err := uq.loadSkin(ctx, query, nodes, nil,
-			func(n *User, e *Skin) { n.Edges.Skin = e }); err != nil {
-			return nil, err
-		}
-	}
 	return nodes, nil
 }
 
-func (uq *UserQuery) loadCreatedSkin(ctx context.Context, query *SkinQuery, nodes []*User, init func(*User), assign func(*User, *Skin)) error {
+func (uq *UserQuery) loadCreatedTexture(ctx context.Context, query *TextureQuery, nodes []*User, init func(*User), assign func(*User, *Texture)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*User)
 	for i := range nodes {
@@ -554,21 +512,21 @@ func (uq *UserQuery) loadCreatedSkin(ctx context.Context, query *SkinQuery, node
 		}
 	}
 	query.withFKs = true
-	query.Where(predicate.Skin(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(user.CreatedSkinColumn), fks...))
+	query.Where(predicate.Texture(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.CreatedTextureColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.skin_created_user
+		fk := n.texture_created_user
 		if fk == nil {
-			return fmt.Errorf(`foreign-key "skin_created_user" is nil for node %v`, n.ID)
+			return fmt.Errorf(`foreign-key "texture_created_user" is nil for node %v`, n.ID)
 		}
 		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "skin_created_user" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "texture_created_user" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}
@@ -627,38 +585,6 @@ func (uq *UserQuery) loadToken(ctx context.Context, query *UserTokenQuery, nodes
 		nodes, ok := nodeids[n.ID]
 		if !ok {
 			return fmt.Errorf(`unexpected foreign-key "user_token" returned %v`, n.ID)
-		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
-	}
-	return nil
-}
-func (uq *UserQuery) loadSkin(ctx context.Context, query *SkinQuery, nodes []*User, init func(*User), assign func(*User, *Skin)) error {
-	ids := make([]int, 0, len(nodes))
-	nodeids := make(map[int][]*User)
-	for i := range nodes {
-		if nodes[i].user_skin == nil {
-			continue
-		}
-		fk := *nodes[i].user_skin
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
-	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(skin.IDIn(ids...))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "user_skin" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
