@@ -53,6 +53,10 @@ func Auth(ctx context.Context, t yggdrasil.ValidateToken, client *ent.Client, pu
 
 	ut, err := client.UserToken.Query().Where(usertoken.HasUserWith(user.ID(claims.UID))).First(ctx)
 	if err != nil {
+		var ne *ent.NotFoundError
+		if !errors.As(err, &ne) {
+			return nil, fmt.Errorf("Auth: %w", errors.Join(err, ErrTokenInvalid))
+		}
 		return nil, fmt.Errorf("Auth: %w", err)
 	}
 	if strconv.FormatUint(ut.TokenID, 10) != claims.Tid {

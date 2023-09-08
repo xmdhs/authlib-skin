@@ -99,7 +99,7 @@ func (y *Yggdrasil) PutTexture(ctx context.Context, token string, texturebyte []
 			}
 		}
 		if t == nil {
-			err = tx.Texture.Create().SetCreatedUser(u).SetTextureHash(hashstr).Exec(ctx)
+			t, err = tx.Texture.Create().SetCreatedUser(u).SetTextureHash(hashstr).Save(ctx)
 			if err != nil {
 				return err
 			}
