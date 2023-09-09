@@ -62,11 +62,11 @@ func (y *Yggdrasil) delTexture(ctx context.Context, userProfileID int, textureTy
 			}
 		}
 		ids := lo.Map[*ent.UserTexture, int](tl, func(item *ent.UserTexture, index int) int {
-			return item.UserProfileID
+			return item.ID
 		})
 		// 中间表删除记录
 		// UserProfile 上没有于此相关的字段，所以无需操作
-		_, err = tx.UserTexture.Delete().Where(usertexture.UserProfileIDIn(ids...)).Exec(ctx)
+		_, err = tx.UserTexture.Delete().Where(usertexture.IDIn(ids...)).Exec(ctx)
 		return err
 		// 小概率皮肤上传后，高并发时被此处清理。问题不大重新上传一遍就行。
 		// 条件为使用一个独一无二的皮肤的用户，更换皮肤时，另一个用户同时更换自己的皮肤到这个独一无二的皮肤上。
@@ -115,7 +115,7 @@ func (y *Yggdrasil) PutTexture(ctx context.Context, token string, texturebyte []
 		return fmt.Errorf("PutTexture: %w", err)
 	}
 
-	hashstr, err := createTextureFile(y.config.TexturePath, texturebyte)
+	hashstr := getHash(texturebyte)
 	if err != nil {
 		return fmt.Errorf("PutTexture: %w", err)
 	}
@@ -144,30 +144,36 @@ func (y *Yggdrasil) PutTexture(ctx context.Context, token string, texturebyte []
 		}
 		return nil
 	})
-
+	if err != nil {
+		return fmt.Errorf("PutTexture: %w", err)
+	}
+	err = createTextureFile(y.config.TexturePath, texturebyte, hashstr)
 	if err != nil {
 		return fmt.Errorf("PutTexture: %w", err)
 	}
 	return nil
 }
 
-func createTextureFile(path string, b []byte) (string, error) {
+func getHash(b []byte) string {
 	hashed := blake3.Sum256(b)
-	hashstr := hex.EncodeToString(hashed[:])
+	return hex.EncodeToString(hashed[:])
+}
+
+func createTextureFile(path string, b []byte, hashstr string) error {
 	p := filepath.Join(path, hashstr[:2], hashstr[2:4], hashstr)
 	err := os.MkdirAll(filepath.Dir(p), 0755)
 	if err != nil {
-		return "", fmt.Errorf("createTextureFile: %w", err)
+		return fmt.Errorf("createTextureFile: %w", err)
 	}
 	f, err := os.Stat(p)
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		return "", fmt.Errorf("createTextureFile: %w", err)
+		return fmt.Errorf("createTextureFile: %w", err)
 	}
 	if f == nil {
 		err := os.WriteFile(p, b, 0644)
 		if err != nil {
-			return "", fmt.Errorf("createTextureFile: %w", err)
+			return fmt.Errorf("createTextureFile: %w", err)
 		}
 	}
-	return hashstr, nil
+	return nil
 }
