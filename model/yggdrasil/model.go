@@ -22,23 +22,16 @@ type Error struct {
 	ErrorMessage string `json:"errorMessage,omitempty"`
 }
 
+type TokenUserID struct {
+	ID string `json:"id"`
+}
+
 type Token struct {
-	AccessToken       string         `json:"accessToken"`
-	AvailableProfiles []TokenProfile `json:"availableProfiles,omitempty"`
-	ClientToken       string         `json:"clientToken"`
-	SelectedProfile   TokenProfile   `json:"selectedProfile"`
-	User              TokenUser      `json:"user,omitempty"`
-}
-
-type TokenProfile struct {
-	// 就是 uuid
-	ID   string `json:"id"`
-	Name string `json:"name"`
-}
-
-type TokenUser struct {
-	ID         string `json:"id"`
-	Properties []any  `json:"properties"`
+	AccessToken       string      `json:"accessToken"`
+	AvailableProfiles []UserInfo  `json:"availableProfiles,omitempty"`
+	ClientToken       string      `json:"clientToken"`
+	SelectedProfile   UserInfo    `json:"selectedProfile"`
+	User              TokenUserID `json:"user,omitempty"`
 }
 
 type ValidateToken struct {
@@ -49,8 +42,8 @@ type ValidateToken struct {
 
 type RefreshToken struct {
 	ValidateToken
-	RequestUser     bool         `json:"requestUser"`
-	SelectedProfile TokenProfile `json:"selectedProfile"`
+	RequestUser     bool     `json:"requestUser"`
+	SelectedProfile UserInfo `json:"selectedProfile"`
 }
 
 type UserInfo struct {

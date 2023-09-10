@@ -2,8 +2,6 @@ package service
 
 import (
 	"context"
-	"crypto/md5"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"strings"
@@ -26,7 +24,7 @@ var (
 func (w *WebService) Reg(ctx context.Context, u model.User, ip string) error {
 	var userUuid string
 	if w.config.OfflineUUID {
-		userUuid = uuidGen(u.Name)
+		userUuid = utils.UUIDGen(u.Name)
 	} else {
 		userUuid = strings.ReplaceAll(uuid.New().String(), "-", "")
 	}
@@ -81,14 +79,4 @@ func (w *WebService) Reg(ctx context.Context, u model.User, ip string) error {
 		return fmt.Errorf("Reg: %w", err)
 	}
 	return nil
-}
-
-func uuidGen(t string) string {
-	data := []byte("OfflinePlayer:" + t)
-	h := md5.New()
-	h.Write(data)
-	uuid := h.Sum(nil)
-	uuid[6] = (uuid[6] & 0x0f) | uint8((3&0xf)<<4)
-	uuid[8] = (uuid[8] & 0x3f) | 0x80
-	return hex.EncodeToString(uuid)
 }

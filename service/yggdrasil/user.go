@@ -85,18 +85,17 @@ func (y *Yggdrasil) Authenticate(cxt context.Context, auth yggdrasil.Authenticat
 		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", err)
 	}
 
-	p := yggdrasil.TokenProfile{
+	p := yggdrasil.UserInfo{
 		ID:   u.Edges.Profile.UUID,
 		Name: u.Edges.Profile.Name,
 	}
 	return yggdrasil.Token{
 		AccessToken:       jwts,
-		AvailableProfiles: []yggdrasil.TokenProfile{p},
+		AvailableProfiles: []yggdrasil.UserInfo{p},
 		ClientToken:       clientToken,
 		SelectedProfile:   p,
-		User: yggdrasil.TokenUser{
-			ID:         u.Edges.Profile.UUID,
-			Properties: []any{},
+		User: yggdrasil.TokenUserID{
+			ID: utils.UUIDGen(strconv.Itoa(u.ID)),
 		},
 	}, nil
 }
@@ -159,13 +158,12 @@ func (y *Yggdrasil) Refresh(ctx context.Context, token yggdrasil.RefreshToken) (
 	return yggdrasil.Token{
 		AccessToken: jwts,
 		ClientToken: t.CID,
-		SelectedProfile: yggdrasil.TokenProfile{
+		SelectedProfile: yggdrasil.UserInfo{
 			ID:   up.UUID,
 			Name: up.Name,
 		},
-		User: yggdrasil.TokenUser{
-			ID:         t.Subject,
-			Properties: []any{},
+		User: yggdrasil.TokenUserID{
+			ID: utils.UUIDGen(strconv.Itoa(t.UID)),
 		},
 	}, nil
 }
@@ -237,4 +235,17 @@ func (y *Yggdrasil) GetProfile(ctx context.Context, uuid string, unsigned bool, 
 	}
 
 	return uinfo, nil
+}
+
+func (y *Yggdrasil) BatchProfile(ctx context.Context, names []string) ([]yggdrasil.UserInfo, error) {
+	pl, err := y.client.UserProfile.Query().Where(userprofile.NameIn(names...)).All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("GetProfile: %w", err)
+	}
+	return lo.Map[*ent.UserProfile, yggdrasil.UserInfo](pl, func(item *ent.UserProfile, index int) yggdrasil.UserInfo {
+		return yggdrasil.UserInfo{
+			ID:   item.UUID,
+			Name: item.Name,
+		}
+	}), nil
 }

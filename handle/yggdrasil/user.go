@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/samber/lo"
 	"github.com/xmdhs/authlib-skin/model/yggdrasil"
 	sutils "github.com/xmdhs/authlib-skin/service/utils"
 	yggdrasilS "github.com/xmdhs/authlib-skin/service/yggdrasil"
@@ -152,5 +153,22 @@ func (y *Yggdrasil) GetProfile() httprouter.Handle {
 		}
 		b, _ := json.Marshal(u)
 		w.Write(b)
+	}
+}
+
+func (y *Yggdrasil) BatchProfile() httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+		ctx := r.Context()
+		a, has := getAnyModel[[]string](ctx, w, r.Body, y.validate, y.logger)
+		if !has {
+			return
+		}
+		ul, err := y.yggdrasilService.BatchProfile(ctx, a)
+		if err != nil {
+			y.logger.WarnContext(ctx, err.Error())
+			handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: err.Error()}, 500)
+			return
+		}
+		w.Write(lo.Must1(json.Marshal(ul)))
 	}
 }
