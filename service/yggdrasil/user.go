@@ -4,13 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"path"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/samber/lo"
 	"github.com/xmdhs/authlib-skin/db/ent"
+	"github.com/xmdhs/authlib-skin/db/ent/texture"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
 	"github.com/xmdhs/authlib-skin/db/ent/usertoken"
@@ -169,7 +171,7 @@ func (y *Yggdrasil) Refresh(ctx context.Context, token yggdrasil.RefreshToken) (
 }
 
 func (y *Yggdrasil) GetProfile(ctx context.Context, uuid string, unsigned bool, host string) (yggdrasil.UserInfo, error) {
-	up, err := y.client.UserProfile.Query().Where(userprofile.UUID(uuid)).WithUsertexture().WithTexture().Only(ctx)
+	up, err := y.client.UserProfile.Query().Where(userprofile.UUID(uuid)).WithUsertexture().Only(ctx)
 	if err != nil {
 		var nf *ent.NotFoundError
 		if errors.As(err, &nf) {
@@ -177,10 +179,16 @@ func (y *Yggdrasil) GetProfile(ctx context.Context, uuid string, unsigned bool, 
 		}
 		return yggdrasil.UserInfo{}, fmt.Errorf("GetProfile: %w", err)
 	}
-	var baseURl string
-	if y.config.TextureBaseUrl == "" {
-		baseURl = path.Join(host, "textures")
-	}
+	baseURl := func() string {
+		if y.config.TextureBaseUrl == "" {
+			u := &url.URL{}
+			u.Host = host
+			u.Scheme = "http"
+			u.Path = "texture"
+			return u.String()
+		}
+		return y.config.TextureBaseUrl
+	}()
 
 	ut := yggdrasil.UserTextures{
 		ProfileID:   up.UUID,
@@ -190,9 +198,13 @@ func (y *Yggdrasil) GetProfile(ctx context.Context, uuid string, unsigned bool, 
 	}
 
 	for _, v := range up.Edges.Usertexture {
-		hashstr := v.Edges.Texture.TextureHash
+		dt, err := y.client.Texture.Query().Where(texture.ID(v.TextureID)).Only(ctx)
+		if err != nil {
+			return yggdrasil.UserInfo{}, fmt.Errorf("GetProfile: %w", ErrNotUser)
+		}
+		hashstr := dt.TextureHash
 		t := yggdrasil.Textures{
-			Url:      path.Join(baseURl, hashstr[:2], hashstr[2:4], hashstr),
+			Url:      lo.Must1(url.JoinPath(baseURl, hashstr[:2], hashstr[2:4], hashstr)),
 			Metadata: map[string]string{},
 		}
 		if v.Variant == "slim" {
