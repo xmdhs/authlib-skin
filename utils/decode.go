@@ -15,10 +15,11 @@ func DeCodeBody[T any](r io.Reader, v *validator.Validate) (T, error) {
 	if err != nil {
 		return a, fmt.Errorf("DeCodeBody: %w", err)
 	}
-
-	err = v.Struct(a)
-	if err != nil {
-		return a, fmt.Errorf("DeCodeBody: %w", err)
+	if v != nil {
+		err = v.Struct(a)
+		if err != nil {
+			return a, fmt.Errorf("DeCodeBody: %w", err)
+		}
 	}
 	return a, nil
 }

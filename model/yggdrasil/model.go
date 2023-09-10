@@ -49,7 +49,7 @@ type RefreshToken struct {
 type UserInfo struct {
 	ID         string           `json:"id"`
 	Name       string           `json:"name"`
-	Properties []UserProperties `json:"properties"`
+	Properties []UserProperties `json:"properties,omitempty"`
 }
 
 type UserProperties struct {

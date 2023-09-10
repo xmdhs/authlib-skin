@@ -159,8 +159,13 @@ func (y *Yggdrasil) GetProfile() httprouter.Handle {
 func (y *Yggdrasil) BatchProfile() httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		ctx := r.Context()
-		a, has := getAnyModel[[]string](ctx, w, r.Body, y.validate, y.logger)
+		a, has := getAnyModel[[]string](ctx, w, r.Body, nil, y.logger)
 		if !has {
+			return
+		}
+		if len(a) > 5 {
+			y.logger.DebugContext(ctx, "最多同时查询五个")
+			handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: "最多同时查询五个"}, 400)
 			return
 		}
 		ul, err := y.yggdrasilService.BatchProfile(ctx, a)
