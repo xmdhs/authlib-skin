@@ -63,3 +63,21 @@ type Session struct {
 	SelectedProfile string `json:"selectedProfile" validate:"required,uuid"`
 	ServerID        string `json:"serverId"`
 }
+
+type Yggdrasil struct {
+	Meta               YggdrasilMeta `json:"meta"`
+	SignaturePublickey string        `json:"signaturePublickey"`
+	SkinDomains        []string      `json:"skinDomains"`
+}
+
+type YggdrasilMeta struct {
+	ImplementationName    string             `json:"implementationName"`
+	ImplementationVersion string             `json:"implementationVersion"`
+	Links                 YggdrasilMetaLinks `json:"links"`
+	ServerName            string             `json:"serverName"`
+}
+
+type YggdrasilMetaLinks struct {
+	Homepage string `json:"homepage"`
+	Register string `json:"register"`
+}

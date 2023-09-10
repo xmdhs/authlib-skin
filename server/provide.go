@@ -16,6 +16,7 @@ import (
 	"github.com/xmdhs/authlib-skin/db/cache"
 	"github.com/xmdhs/authlib-skin/db/ent"
 	"github.com/xmdhs/authlib-skin/db/ent/migrate"
+	"github.com/xmdhs/authlib-skin/handle/yggdrasil"
 	"github.com/xmdhs/authlib-skin/utils/sign"
 )
 
@@ -87,4 +88,12 @@ func ProvidePriKey(c config.Config) (*rsa.PrivateKey, error) {
 	return a.GetKey(), nil
 }
 
-var Set = wire.NewSet(ProvideSlog, ProvideDB, ProvideEnt, ProvideValidate, ProvideCache, ProvidePriKey)
+func ProvidePubKey(pri *rsa.PrivateKey) (yggdrasil.PubRsaKey, error) {
+	s, err := sign.NewAuthlibSignWithKey(pri).GetPubKey()
+	if err != nil {
+		return "", fmt.Errorf("ProvidePubKey: %w", err)
+	}
+	return yggdrasil.PubRsaKey(s), nil
+}
+
+var Set = wire.NewSet(ProvideSlog, ProvideDB, ProvideEnt, ProvideValidate, ProvideCache, ProvidePriKey, ProvidePubKey)
