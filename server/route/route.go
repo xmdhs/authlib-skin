@@ -32,7 +32,7 @@ func newYggdrasil(r *httprouter.Router, handelY yggdrasil.Yggdrasil) error {
 	r.PUT("/api/yggdrasil/api/user/profile/:uuid/:textureType", handelY.PutTexture())
 	r.DELETE("/api/yggdrasil/api/user/profile/:uuid/:textureType", warpHJSON(handelY.DelTexture()))
 
-	r.GET("/sessionserver/session/minecraft/profile/:uuid", handelY.GetProfile())
+	r.GET("/api/yggdrasil/sessionserver/session/minecraft/profile/:uuid", handelY.GetProfile())
 
 	r.GET("/api/yggdrasil", func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		w.Write([]byte(`{

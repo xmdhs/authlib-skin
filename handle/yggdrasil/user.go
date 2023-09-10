@@ -132,6 +132,7 @@ func (y *Yggdrasil) GetProfile() httprouter.Handle {
 		case "true":
 		case "false":
 			unsignedBool = false
+		case "":
 		default:
 			y.logger.DebugContext(ctx, "unsigned 参数类型错误")
 			handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: "unsigned 参数类型错误"}, 400)
