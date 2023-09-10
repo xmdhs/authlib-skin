@@ -18,11 +18,11 @@ func (UserTexture) Fields() []ent.Field {
 	return []ent.Field{
 		field.Int("user_profile_id"),
 		field.Int("texture_id"),
-		// 皮肤 or 披风
+		// skin or cape
 		field.String("type").SchemaType(map[string]string{
 			dialect.MySQL: "VARCHAR(10)",
 		}),
-		// slim or 空
+		// slim or ""
 		field.String("variant").SchemaType(map[string]string{
 			dialect.MySQL: "VARCHAR(10)",
 		}),

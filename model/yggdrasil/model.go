@@ -52,3 +52,15 @@ type RefreshToken struct {
 	RequestUser     bool         `json:"requestUser"`
 	SelectedProfile TokenProfile `json:"selectedProfile"`
 }
+
+type UserInfo struct {
+	ID         string           `json:"id"`
+	Name       string           `json:"name"`
+	Properties []UserProperties `json:"properties"`
+}
+
+type UserProperties struct {
+	Name      string `json:"name"`
+	Value     string `json:"value"`
+	Signature string `json:"signature,omitempty"`
+}

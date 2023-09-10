@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -16,11 +17,13 @@ import (
 	"github.com/xmdhs/authlib-skin/model/yggdrasil"
 	sutils "github.com/xmdhs/authlib-skin/service/utils"
 	"github.com/xmdhs/authlib-skin/utils"
+	"github.com/xmdhs/authlib-skin/utils/sign"
 )
 
 var (
 	ErrRate     = errors.New("频率限制")
 	ErrPassWord = errors.New("错误的密码或邮箱")
+	ErrNotUser  = errors.New("没有这个用户")
 )
 
 func (y *Yggdrasil) validatePass(cxt context.Context, email, pass string) (*ent.User, error) {
@@ -163,4 +166,63 @@ func (y *Yggdrasil) Refresh(ctx context.Context, token yggdrasil.RefreshToken) (
 			Properties: []any{},
 		},
 	}, nil
+}
+
+func (y *Yggdrasil) GetProfile(ctx context.Context, uuid string, unsigned bool, host string) (yggdrasil.UserInfo, error) {
+	up, err := y.client.UserProfile.Query().Where(userprofile.UUID(uuid)).WithUsertexture().WithTexture().Only(ctx)
+	if err != nil {
+		var nf *ent.NotFoundError
+		if errors.As(err, &nf) {
+			return yggdrasil.UserInfo{}, fmt.Errorf("GetProfile: %w", ErrNotUser)
+		}
+		return yggdrasil.UserInfo{}, fmt.Errorf("GetProfile: %w", err)
+	}
+	var baseURl string
+	if y.config.TextureBaseUrl == "" {
+		baseURl = path.Join(host, "textures")
+	}
+
+	ut := yggdrasil.UserTextures{
+		ProfileID:   up.UUID,
+		ProfileName: up.Name,
+		Textures:    map[string]yggdrasil.Textures{},
+		Timestamp:   strconv.FormatInt(time.Now().UnixMilli(), 10),
+	}
+
+	for _, v := range up.Edges.Usertexture {
+		hashstr := v.Edges.Texture.TextureHash
+		t := yggdrasil.Textures{
+			Url:      path.Join(baseURl, hashstr[:2], hashstr[2:4], hashstr),
+			Metadata: map[string]string{},
+		}
+		if v.Variant == "slim" {
+			t.Metadata["model"] = "slim"
+		}
+		ut.Textures[strings.ToTitle(v.Type)] = t
+	}
+
+	texturesBase64 := ut.Base64()
+
+	var signStr string
+	if !unsigned {
+		s := sign.NewAuthlibSignWithKey(y.prikey)
+		signStr, err = s.Sign([]byte(texturesBase64))
+		if err != nil {
+			return yggdrasil.UserInfo{}, fmt.Errorf("GetProfile: %w", err)
+		}
+	}
+
+	uinfo := yggdrasil.UserInfo{
+		ID:   up.UUID,
+		Name: up.Name,
+		Properties: []yggdrasil.UserProperties{
+			{
+				Name:      "textures",
+				Value:     texturesBase64,
+				Signature: signStr,
+			},
+		},
+	}
+
+	return uinfo, nil
 }

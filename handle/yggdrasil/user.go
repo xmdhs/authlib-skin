@@ -119,3 +119,37 @@ func (y *Yggdrasil) Refresh() httprouter.Handle {
 		w.Write(b)
 	}
 }
+
+func (y *Yggdrasil) GetProfile() httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+		ctx := r.Context()
+		uuid := p.ByName("uuid")
+		unsigned := r.FormValue("unsigned")
+
+		unsignedBool := true
+
+		switch unsigned {
+		case "true":
+		case "false":
+			unsignedBool = false
+		default:
+			y.logger.DebugContext(ctx, "unsigned 参数类型错误")
+			handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: "unsigned 参数类型错误"}, 400)
+			return
+
+		}
+		u, err := y.yggdrasilService.GetProfile(ctx, uuid, unsignedBool, r.Host)
+		if err != nil {
+			if errors.Is(err, yggdrasilS.ErrNotUser) {
+				y.logger.DebugContext(ctx, err.Error())
+				w.WriteHeader(204)
+				return
+			}
+			y.logger.WarnContext(ctx, err.Error())
+			handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: err.Error()}, 500)
+			return
+		}
+		b, _ := json.Marshal(u)
+		w.Write(b)
+	}
+}
