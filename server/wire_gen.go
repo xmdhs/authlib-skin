@@ -44,7 +44,7 @@ func InitializeRoute(ctx context.Context, c config.Config) (*http.Server, func()
 		return nil, nil, err
 	}
 	yggdrasilYggdrasil := yggdrasil.NewYggdrasil(client, cache, c, privateKey)
-	yggdrasil3 := yggdrasil2.NewYggdrasil(logger, validate, yggdrasilYggdrasil)
+	yggdrasil3 := yggdrasil2.NewYggdrasil(logger, validate, yggdrasilYggdrasil, c)
 	webService := service.NewWebService(c, client)
 	handel := handle.NewHandel(webService, validate, c, logger)
 	router, err := route.NewRoute(yggdrasil3, handel)

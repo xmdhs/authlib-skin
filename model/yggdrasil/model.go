@@ -57,3 +57,9 @@ type UserProperties struct {
 	Value     string `json:"value"`
 	Signature string `json:"signature,omitempty"`
 }
+
+type Session struct {
+	AccessToken     string `json:"accessToken" validate:"required,jwt"`
+	SelectedProfile string `json:"selectedProfile" validate:"required,uuid"`
+	ServerID        string `json:"serverId"`
+}

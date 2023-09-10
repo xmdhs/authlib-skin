@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/xmdhs/authlib-skin/config"
 	"github.com/xmdhs/authlib-skin/model/yggdrasil"
 	yggdrasilS "github.com/xmdhs/authlib-skin/service/yggdrasil"
 	"github.com/xmdhs/authlib-skin/utils"
@@ -16,13 +17,15 @@ type Yggdrasil struct {
 	logger           *slog.Logger
 	validate         *validator.Validate
 	yggdrasilService *yggdrasilS.Yggdrasil
+	config           config.Config
 }
 
-func NewYggdrasil(logger *slog.Logger, validate *validator.Validate, yggdrasilService *yggdrasilS.Yggdrasil) *Yggdrasil {
+func NewYggdrasil(logger *slog.Logger, validate *validator.Validate, yggdrasilService *yggdrasilS.Yggdrasil, config config.Config) *Yggdrasil {
 	return &Yggdrasil{
 		logger:           logger,
 		validate:         validate,
 		yggdrasilService: yggdrasilService,
+		config:           config,
 	}
 }
 
