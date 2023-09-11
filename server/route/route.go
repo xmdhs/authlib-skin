@@ -37,6 +37,8 @@ func newYggdrasil(r *httprouter.Router, handelY yggdrasil.Yggdrasil) error {
 	r.POST("/api/yggdrasil/sessionserver/session/minecraft/join", warpHJSON(handelY.SessionJoin()))
 	r.GET("/api/yggdrasil/sessionserver/session/minecraft/hasJoined", warpHJSON(handelY.SessionJoin()))
 
+	r.POST("/api/yggdrasil/minecraftservices/player/certificates", warpHJSON(handelY.PlayerCertificates()))
+
 	r.GET("/api/yggdrasil", warpHJSON(handelY.YggdrasilRoot()))
 	return nil
 }

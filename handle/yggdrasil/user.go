@@ -177,3 +177,25 @@ func (y *Yggdrasil) BatchProfile() httprouter.Handle {
 		w.Write(lo.Must1(json.Marshal(ul)))
 	}
 }
+
+func (y *Yggdrasil) PlayerCertificates() httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+		ctx := r.Context()
+		token := y.getTokenbyAuthorization(ctx, w, r)
+		if token == "" {
+			return
+		}
+		c, err := y.yggdrasilService.PlayerCertificates(ctx, token)
+		if err != nil {
+			if errors.Is(err, sutils.ErrTokenInvalid) {
+				y.logger.DebugContext(ctx, err.Error())
+				handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: "Invalid token.", Error: "ForbiddenOperationException"}, 403)
+				return
+			}
+			y.logger.WarnContext(ctx, err.Error())
+			handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: err.Error()}, 500)
+			return
+		}
+		w.Write(lo.Must(json.Marshal(c)))
+	}
+}
