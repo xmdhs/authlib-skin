@@ -75,9 +75,23 @@ type YggdrasilMeta struct {
 	ImplementationVersion string             `json:"implementationVersion"`
 	Links                 YggdrasilMetaLinks `json:"links"`
 	ServerName            string             `json:"serverName"`
+	EnableProfileKey      bool               `json:"feature.enable_profile_key"`
 }
 
 type YggdrasilMetaLinks struct {
 	Homepage string `json:"homepage"`
 	Register string `json:"register"`
+}
+
+type Certificates struct {
+	ExpiresAt            string              `json:"expiresAt"`
+	KeyPair              CertificatesKeyPair `json:"keyPair"`
+	PublicKeySignature   string              `json:"publicKeySignature"`
+	PublicKeySignatureV2 string              `json:"publicKeySignatureV2"`
+	RefreshedAfter       string              `json:"refreshedAfter"`
+}
+
+type CertificatesKeyPair struct {
+	PrivateKey string `json:"privateKey"`
+	PublicKey  string `json:"publicKey"`
 }

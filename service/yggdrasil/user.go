@@ -1,9 +1,15 @@
 package yggdrasil
 
 import (
+	"bytes"
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/binary"
 	"errors"
 	"fmt"
+	"math/big"
 	"net/url"
 	"strconv"
 	"strings"
@@ -248,4 +254,63 @@ func (y *Yggdrasil) BatchProfile(ctx context.Context, names []string) ([]yggdras
 			Name: item.Name,
 		}
 	}), nil
+}
+
+func (y *Yggdrasil) PlayerCertificates(ctx context.Context, token string) (yggdrasil.Certificates, error) {
+	t, err := sutils.Auth(ctx, yggdrasil.ValidateToken{AccessToken: token}, y.client, &y.prikey.PublicKey, false)
+	if err != nil {
+		return yggdrasil.Certificates{}, fmt.Errorf("PlayerCertificates: %w", err)
+	}
+	rsa2048, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		return yggdrasil.Certificates{}, fmt.Errorf("PlayerCertificates: %w", err)
+	}
+
+	s := sign.NewAuthlibSignWithKey(rsa2048)
+	priKey := lo.Must(s.GetPriKey())
+	pubKey := lo.Must(s.GetPubKey())
+
+	expiresAt := time.Now().Add(24 * time.Hour)
+	expiresAtUnix := expiresAt.UnixMilli()
+
+	pubV2 := publicKeySignatureV2(&rsa2048.PublicKey, t.Subject, expiresAtUnix)
+	pub := publicKeySignature(pubKey, expiresAtUnix)
+
+	servicePri := sign.NewAuthlibSignWithKey(y.prikey)
+
+	pubV2Base64 := lo.Must(servicePri.Sign(pubV2))
+	pubBase64 := lo.Must(servicePri.Sign(pub))
+
+	return yggdrasil.Certificates{
+		ExpiresAt: expiresAt.Format(time.RFC3339Nano),
+		KeyPair: yggdrasil.CertificatesKeyPair{
+			PrivateKey: priKey,
+			PublicKey:  pubKey,
+		},
+		PublicKeySignature:   pubBase64,
+		PublicKeySignatureV2: pubV2Base64,
+		RefreshedAfter:       time.Now().Format(time.RFC3339Nano),
+	}, nil
+
+}
+
+func publicKeySignatureV2(key *rsa.PublicKey, uuid string, expiresAt int64) []byte {
+	bf := &bytes.Buffer{}
+	u := big.Int{}
+	u.SetString(uuid, 16)
+	bf.Write(u.Bytes())
+
+	eb := make([]byte, 8)
+	binary.BigEndian.PutUint64(eb, uint64(expiresAt))
+	bf.Write(eb)
+	bf.Write(x509.MarshalPKCS1PublicKey(key))
+
+	return bf.Bytes()
+}
+
+func publicKeySignature(key string, expiresAt int64) []byte {
+	bf := &bytes.Buffer{}
+	bf.WriteString(strconv.FormatInt(expiresAt, 10))
+	bf.WriteString(key)
+	return bf.Bytes()
 }
