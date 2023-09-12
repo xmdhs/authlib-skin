@@ -108,8 +108,7 @@ func (y *Yggdrasil) PutTexture() httprouter.Handle {
 				return
 			}
 
-			y.logger.WarnContext(ctx, err.Error())
-			handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: err.Error()}, 500)
+			y.handleYgError(ctx, w, err)
 			return
 		}
 		w.WriteHeader(204)
@@ -145,8 +144,7 @@ func (y *Yggdrasil) DelTexture() httprouter.Handle {
 				w.WriteHeader(401)
 				return
 			}
-			y.logger.WarnContext(ctx, err.Error())
-			handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: err.Error()}, 500)
+			y.handleYgError(ctx, w, err)
 			return
 		}
 		w.WriteHeader(204)

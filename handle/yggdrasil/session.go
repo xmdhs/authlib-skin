@@ -19,8 +19,7 @@ func (y *Yggdrasil) SessionJoin() httprouter.Handle {
 		}
 		ip, err := utils.GetIP(r, y.config.RaelIP)
 		if err != nil {
-			y.logger.WarnContext(ctx, err.Error())
-			handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: err.Error()}, 500)
+			y.handleYgError(ctx, w, err)
 			return
 		}
 		err = y.yggdrasilService.SessionJoin(ctx, a, ip)
@@ -30,8 +29,7 @@ func (y *Yggdrasil) SessionJoin() httprouter.Handle {
 				handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: "Invalid token.", Error: "ForbiddenOperationException"}, 403)
 				return
 			}
-			y.logger.WarnContext(ctx, err.Error())
-			handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: err.Error()}, 500)
+			y.handleYgError(ctx, w, err)
 			return
 		}
 		w.WriteHeader(204)

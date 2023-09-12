@@ -26,8 +26,7 @@ func (y *Yggdrasil) Authenticate() httprouter.Handle {
 				handleYgError(cxt, w, yggdrasil.Error{ErrorMessage: "Invalid credentials. Invalid username or password.", Error: "ForbiddenOperationException"}, 403)
 				return
 			}
-			y.logger.WarnContext(cxt, err.Error())
-			handleYgError(cxt, w, yggdrasil.Error{ErrorMessage: err.Error()}, 500)
+			y.handleYgError(cxt, w, err)
 			return
 		}
 		b, _ := json.Marshal(t)
@@ -49,8 +48,7 @@ func (y *Yggdrasil) Validate() httprouter.Handle {
 				handleYgError(cxt, w, yggdrasil.Error{ErrorMessage: "Invalid token.", Error: "ForbiddenOperationException"}, 403)
 				return
 			}
-			y.logger.WarnContext(cxt, err.Error())
-			handleYgError(cxt, w, yggdrasil.Error{ErrorMessage: err.Error()}, 500)
+			y.handleYgError(cxt, w, err)
 			return
 		}
 		w.WriteHeader(204)
@@ -71,8 +69,7 @@ func (y *Yggdrasil) Signout() httprouter.Handle {
 				handleYgError(cxt, w, yggdrasil.Error{ErrorMessage: "Invalid credentials. Invalid username or password.", Error: "ForbiddenOperationException"}, 403)
 				return
 			}
-			y.logger.WarnContext(cxt, err.Error())
-			handleYgError(cxt, w, yggdrasil.Error{ErrorMessage: err.Error()}, 500)
+			y.handleYgError(cxt, w, err)
 			return
 		}
 		w.WriteHeader(204)
@@ -112,8 +109,7 @@ func (y *Yggdrasil) Refresh() httprouter.Handle {
 				handleYgError(cxt, w, yggdrasil.Error{ErrorMessage: "Invalid token.", Error: "ForbiddenOperationException"}, 403)
 				return
 			}
-			y.logger.WarnContext(cxt, err.Error())
-			handleYgError(cxt, w, yggdrasil.Error{ErrorMessage: err.Error()}, 500)
+			y.handleYgError(cxt, w, err)
 			return
 		}
 		b, _ := json.Marshal(t)
@@ -147,8 +143,7 @@ func (y *Yggdrasil) GetProfile() httprouter.Handle {
 				w.WriteHeader(204)
 				return
 			}
-			y.logger.WarnContext(ctx, err.Error())
-			handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: err.Error()}, 500)
+			y.handleYgError(ctx, w, err)
 			return
 		}
 		b, _ := json.Marshal(u)
@@ -170,8 +165,7 @@ func (y *Yggdrasil) BatchProfile() httprouter.Handle {
 		}
 		ul, err := y.yggdrasilService.BatchProfile(ctx, a)
 		if err != nil {
-			y.logger.WarnContext(ctx, err.Error())
-			handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: err.Error()}, 500)
+			y.handleYgError(ctx, w, err)
 			return
 		}
 		w.Write(lo.Must1(json.Marshal(ul)))
@@ -192,8 +186,7 @@ func (y *Yggdrasil) PlayerCertificates() httprouter.Handle {
 				handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: "Invalid token.", Error: "ForbiddenOperationException"}, 403)
 				return
 			}
-			y.logger.WarnContext(ctx, err.Error())
-			handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: err.Error()}, 500)
+			y.handleYgError(ctx, w, err)
 			return
 		}
 		w.Write(lo.Must(json.Marshal(c)))
