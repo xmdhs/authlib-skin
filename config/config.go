@@ -20,4 +20,7 @@ type Config struct {
 	RsaPriKey      string
 	TexturePath    string
 	TextureBaseUrl string
+	HomepageUrl    string
+	RegisterUrl    string
+	ServerName     string
 }

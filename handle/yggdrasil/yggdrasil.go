@@ -66,10 +66,10 @@ func (y *Yggdrasil) YggdrasilRoot() httprouter.Handle {
 				ImplementationName:    "authlib-skin",
 				ImplementationVersion: "0.0.1",
 				Links: yggdrasilM.YggdrasilMetaLinks{
-					Homepage: "",
-					Register: "",
+					Homepage: y.config.HomepageUrl,
+					Register: y.config.RegisterUrl,
 				},
-				ServerName:       "test",
+				ServerName:       y.config.ServerName,
 				EnableProfileKey: true,
 			},
 			SignaturePublickey: string(y.pubkey),
