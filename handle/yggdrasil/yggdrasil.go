@@ -8,7 +8,6 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/julienschmidt/httprouter"
@@ -83,7 +82,6 @@ func (y *Yggdrasil) YggdrasilRoot() httprouter.Handle {
 func (y *Yggdrasil) TextureAssets() httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		w.Header().Set("Content-Type", "image/png")
-		r.RequestURI = strings.TrimPrefix(r.RequestURI, "/texture/")
-		http.FileServer(http.Dir(y.config.TexturePath)).ServeHTTP(w, r)
+		http.StripPrefix("/texture/", http.FileServer(http.Dir(y.config.TexturePath))).ServeHTTP(w, r)
 	}
 }
