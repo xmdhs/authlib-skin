@@ -21,6 +21,9 @@ func (c CacheHelp[T]) Get(k []byte) (T, error) {
 	if err != nil {
 		return t, err
 	}
+	if b == nil {
+		return t, nil
+	}
 	err = json.Unmarshal(b, &t)
 	if err != nil {
 		return t, err
