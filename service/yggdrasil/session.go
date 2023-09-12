@@ -13,7 +13,7 @@ import (
 )
 
 type sessionWithIP struct {
-	user model.TokenClaims
+	User model.TokenClaims
 	IP   string
 }
 
@@ -28,7 +28,7 @@ func (y *Yggdrasil) SessionJoin(ctx context.Context, s yggdrasil.Session, ip str
 		return fmt.Errorf("SessionJoin: %w", sutils.ErrTokenInvalid)
 	}
 	err = cache.CacheHelp[sessionWithIP]{Cache: y.cache}.Put([]byte("session"+s.ServerID), sessionWithIP{
-		user: *t,
+		User: *t,
 		IP:   ip,
 	}, time.Now().Add(30*time.Second))
 	if err != nil {
@@ -51,7 +51,7 @@ func (y *Yggdrasil) HasJoined(ctx context.Context, username, serverId string, ip
 		return yggdrasil.UserInfo{}, fmt.Errorf("HasJoined: %w", err)
 	}
 
-	if up.UUID != sIP.user.Subject {
+	if up.UUID != sIP.User.Subject {
 		return yggdrasil.UserInfo{}, fmt.Errorf("uuid 不相同")
 	}
 

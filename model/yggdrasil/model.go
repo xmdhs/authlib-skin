@@ -60,7 +60,7 @@ type UserProperties struct {
 
 type Session struct {
 	AccessToken     string `json:"accessToken" validate:"required,jwt"`
-	SelectedProfile string `json:"selectedProfile" validate:"required,uuid"`
+	SelectedProfile string `json:"selectedProfile" validate:"required"`
 	ServerID        string `json:"serverId"`
 }
 

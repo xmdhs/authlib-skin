@@ -1,10 +1,12 @@
 package yggdrasil
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/samber/lo"
 	"github.com/xmdhs/authlib-skin/model/yggdrasil"
 	sutils "github.com/xmdhs/authlib-skin/service/utils"
 	"github.com/xmdhs/authlib-skin/utils"
@@ -47,6 +49,11 @@ func (y *Yggdrasil) HasJoined() httprouter.Handle {
 			w.WriteHeader(204)
 			return
 		}
-		y.yggdrasilService.HasJoined(ctx, name, serverId, ip, r.Host)
+		u, err := y.yggdrasilService.HasJoined(ctx, name, serverId, ip, r.Host)
+		if err != nil {
+			y.logger.WarnContext(ctx, err.Error())
+			w.WriteHeader(204)
+		}
+		w.Write(lo.Must(json.Marshal(u)))
 	}
 }
