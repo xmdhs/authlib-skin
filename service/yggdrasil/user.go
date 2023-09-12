@@ -279,7 +279,7 @@ func (y *Yggdrasil) PlayerCertificates(ctx context.Context, token string) (yggdr
 
 	s := sign.NewAuthlibSignWithKey(rsa2048)
 	priKey := lo.Must(s.GetPriKey())
-	pubKey := lo.Must(s.GetPubKey())
+	pubKey := lo.Must(s.GetPKIXPubKey())
 
 	expiresAt := time.Now().Add(24 * time.Hour)
 	expiresAtUnix := expiresAt.UnixMilli()

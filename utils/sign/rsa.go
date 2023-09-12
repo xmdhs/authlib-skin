@@ -1,7 +1,6 @@
 package sign
 
 import (
-	"bytes"
 	"crypto"
 	"crypto/rsa"
 	"crypto/sha1"
@@ -23,9 +22,13 @@ func NewAuthlibSign(prikey []byte) (*AuthlibSign, error) {
 	if b == nil {
 		return nil, fmt.Errorf("NewAuthlibSign: %w", ErrPem)
 	}
-	priv, err := x509.ParsePKCS1PrivateKey(b.Bytes)
+	p, err := x509.ParsePKCS8PrivateKey(b.Bytes)
 	if err != nil {
 		return nil, fmt.Errorf("NewAuthlibSign: %w", err)
+	}
+	priv, ok := p.(*rsa.PrivateKey)
+	if !ok {
+		return nil, fmt.Errorf("NewAuthlibSign: %w", ErrPem)
 	}
 	return &AuthlibSign{
 		key: priv,
@@ -42,32 +45,39 @@ func (a *AuthlibSign) GetKey() *rsa.PrivateKey {
 	return a.key
 }
 
-func (a *AuthlibSign) GetPubKey() (string, error) {
-	derBytes := x509.MarshalPKCS1PublicKey(&a.key.PublicKey)
+func (a *AuthlibSign) getPKIXPubKey(typeStr string) (string, error) {
+	derBytes, err := x509.MarshalPKIXPublicKey(&a.key.PublicKey)
+	if err != nil {
+		return "", fmt.Errorf("getPKIXPubKey: %w", err)
+	}
 	pemKey := &pem.Block{
-		Type:  "PUBLIC KEY",
+		Type:  typeStr,
 		Bytes: derBytes,
 	}
-	bw := &bytes.Buffer{}
-	err := pem.Encode(bw, pemKey)
-	if err != nil {
-		return "", fmt.Errorf("GetPubKey: %w", err)
-	}
-	return bw.String(), nil
+	return string(pem.EncodeToMemory(pemKey)), nil
 }
 
+// PKIX PUBLIC KEY
+func (a *AuthlibSign) GetPKIXPubKeyWithOutRsa() (string, error) {
+	return a.getPKIXPubKey("PUBLIC KEY")
+}
+
+// PKIX RSA PUBLIC KEY
+func (a *AuthlibSign) GetPKIXPubKey() (string, error) {
+	return a.getPKIXPubKey("RSA PUBLIC KEY")
+}
+
+// PKCS #8
 func (a *AuthlibSign) GetPriKey() (string, error) {
-	derBytes := x509.MarshalPKCS1PrivateKey(a.key)
+	derBytes, err := x509.MarshalPKCS8PrivateKey(a.key)
+	if err != nil {
+		return "", fmt.Errorf("GetPriKey: %w", err)
+	}
 	pemKey := &pem.Block{
-		Type:  "PRIVATE KEY",
+		Type:  "RSA PRIVATE KEY",
 		Bytes: derBytes,
 	}
-	bw := &bytes.Buffer{}
-	err := pem.Encode(bw, pemKey)
-	if err != nil {
-		return "", fmt.Errorf("GetPubKey: %w", err)
-	}
-	return bw.String(), nil
+	return string(pem.EncodeToMemory(pemKey)), nil
 }
 
 func (a *AuthlibSign) Sign(data []byte) (string, error) {

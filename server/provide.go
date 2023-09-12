@@ -89,7 +89,7 @@ func ProvidePriKey(c config.Config) (*rsa.PrivateKey, error) {
 }
 
 func ProvidePubKey(pri *rsa.PrivateKey) (yggdrasil.PubRsaKey, error) {
-	s, err := sign.NewAuthlibSignWithKey(pri).GetPubKey()
+	s, err := sign.NewAuthlibSignWithKey(pri).GetPKIXPubKeyWithOutRsa()
 	if err != nil {
 		return "", fmt.Errorf("ProvidePubKey: %w", err)
 	}

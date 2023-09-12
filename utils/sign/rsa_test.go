@@ -24,7 +24,7 @@ func TestAuthlibSign(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	pub, err := as.GetPubKey()
+	pub, err := as.GetPKIXPubKey()
 	if err != nil {
 		t.Fatal(err)
 	}
