@@ -79,7 +79,7 @@ func (y *Yggdrasil) delTexture(ctx context.Context, userProfileID int, textureTy
 }
 
 func (y *Yggdrasil) DelTexture(ctx context.Context, uuid string, token string, textureType string) error {
-	t, err := utilsService.Auth(ctx, yggdrasil.ValidateToken{AccessToken: token}, y.client, &y.prikey.PublicKey, true)
+	t, err := utilsService.Auth(ctx, yggdrasil.ValidateToken{AccessToken: token}, y.client, y.cache, &y.prikey.PublicKey, true)
 	if err != nil {
 		return fmt.Errorf("DelTexture: %w", err)
 	}
@@ -98,7 +98,7 @@ func (y *Yggdrasil) DelTexture(ctx context.Context, uuid string, token string, t
 }
 
 func (y *Yggdrasil) PutTexture(ctx context.Context, token string, texturebyte []byte, model string, uuid string, textureType string) error {
-	t, err := utilsService.Auth(ctx, yggdrasil.ValidateToken{AccessToken: token}, y.client, &y.prikey.PublicKey, true)
+	t, err := utilsService.Auth(ctx, yggdrasil.ValidateToken{AccessToken: token}, y.client, y.cache, &y.prikey.PublicKey, true)
 	if err != nil {
 		return fmt.Errorf("PutTexture: %w", err)
 	}

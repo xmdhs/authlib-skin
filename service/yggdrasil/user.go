@@ -85,7 +85,10 @@ func (y *Yggdrasil) Authenticate(cxt context.Context, auth yggdrasil.Authenticat
 	if err != nil {
 		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", err)
 	}
-
+	err = y.cache.Del([]byte("auth" + strconv.Itoa(u.ID)))
+	if err != nil {
+		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", err)
+	}
 	jwts, err := newJwtToken(y.prikey, strconv.FormatUint(utoken.TokenID, 10), clientToken, u.Edges.Profile.UUID, u.ID)
 	if err != nil {
 		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", err)
@@ -107,7 +110,7 @@ func (y *Yggdrasil) Authenticate(cxt context.Context, auth yggdrasil.Authenticat
 }
 
 func (y *Yggdrasil) ValidateToken(ctx context.Context, t yggdrasil.ValidateToken) error {
-	_, err := sutils.Auth(ctx, t, y.client, &y.prikey.PublicKey, true)
+	_, err := sutils.Auth(ctx, t, y.client, y.cache, &y.prikey.PublicKey, true)
 	if err != nil {
 		return fmt.Errorf("ValidateToken: %w", err)
 	}
@@ -131,11 +134,15 @@ func (y *Yggdrasil) SignOut(ctx context.Context, t yggdrasil.Pass) error {
 	if err != nil {
 		return fmt.Errorf("SignOut: %w", err)
 	}
+	err = y.cache.Del([]byte("auth" + strconv.Itoa(u.ID)))
+	if err != nil {
+		return fmt.Errorf("SignOut: %w", err)
+	}
 	return nil
 }
 
 func (y *Yggdrasil) Invalidate(ctx context.Context, accessToken string) error {
-	t, err := sutils.Auth(ctx, yggdrasil.ValidateToken{AccessToken: accessToken}, y.client, &y.prikey.PublicKey, true)
+	t, err := sutils.Auth(ctx, yggdrasil.ValidateToken{AccessToken: accessToken}, y.client, y.cache, &y.prikey.PublicKey, true)
 	if err != nil {
 		return fmt.Errorf("Invalidate: %w", err)
 	}
@@ -143,11 +150,15 @@ func (y *Yggdrasil) Invalidate(ctx context.Context, accessToken string) error {
 	if err != nil {
 		return fmt.Errorf("Invalidate: %w", err)
 	}
+	err = y.cache.Del([]byte("auth" + strconv.Itoa(t.UID)))
+	if err != nil {
+		return fmt.Errorf("Invalidate: %w", err)
+	}
 	return nil
 }
 
 func (y *Yggdrasil) Refresh(ctx context.Context, token yggdrasil.RefreshToken) (yggdrasil.Token, error) {
-	t, err := sutils.Auth(ctx, yggdrasil.ValidateToken{AccessToken: token.AccessToken, ClientToken: token.ClientToken}, y.client, &y.prikey.PublicKey, false)
+	t, err := sutils.Auth(ctx, yggdrasil.ValidateToken{AccessToken: token.AccessToken, ClientToken: token.ClientToken}, y.client, y.cache, &y.prikey.PublicKey, false)
 	if err != nil {
 		return yggdrasil.Token{}, fmt.Errorf("Refresh: %w", err)
 	}
@@ -257,7 +268,7 @@ func (y *Yggdrasil) BatchProfile(ctx context.Context, names []string) ([]yggdras
 }
 
 func (y *Yggdrasil) PlayerCertificates(ctx context.Context, token string) (yggdrasil.Certificates, error) {
-	t, err := sutils.Auth(ctx, yggdrasil.ValidateToken{AccessToken: token}, y.client, &y.prikey.PublicKey, false)
+	t, err := sutils.Auth(ctx, yggdrasil.ValidateToken{AccessToken: token}, y.client, y.cache, &y.prikey.PublicKey, false)
 	if err != nil {
 		return yggdrasil.Certificates{}, fmt.Errorf("PlayerCertificates: %w", err)
 	}

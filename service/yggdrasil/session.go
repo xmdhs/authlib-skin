@@ -2,11 +2,10 @@ package yggdrasil
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
-	"github.com/samber/lo"
+	"github.com/xmdhs/authlib-skin/db/cache"
 	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
 	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/model/yggdrasil"
@@ -21,17 +20,17 @@ type sessionWithIP struct {
 func (y *Yggdrasil) SessionJoin(ctx context.Context, s yggdrasil.Session, ip string) error {
 	t, err := sutils.Auth(ctx, yggdrasil.ValidateToken{
 		AccessToken: s.AccessToken,
-	}, y.client, &y.prikey.PublicKey, true)
+	}, y.client, y.cache, &y.prikey.PublicKey, true)
 	if err != nil {
 		return fmt.Errorf("SessionJoin: %w", err)
 	}
 	if s.SelectedProfile != t.Subject {
 		return fmt.Errorf("SessionJoin: %w", sutils.ErrTokenInvalid)
 	}
-	err = y.cache.Put([]byte("session"+s.ServerID), lo.Must1(json.Marshal(sessionWithIP{
+	err = cache.CacheHelp[sessionWithIP]{Cache: y.cache}.Put([]byte("session"+s.ServerID), sessionWithIP{
 		user: *t,
 		IP:   ip,
-	})), time.Now().Add(30*time.Second))
+	}, time.Now().Add(30*time.Second))
 	if err != nil {
 		return fmt.Errorf("SessionJoin: %w", err)
 	}
@@ -39,10 +38,10 @@ func (y *Yggdrasil) SessionJoin(ctx context.Context, s yggdrasil.Session, ip str
 }
 
 func (y *Yggdrasil) HasJoined(ctx context.Context, username, serverId string, ip string, host string) (yggdrasil.UserInfo, error) {
-	b := lo.Must1(y.cache.Get([]byte("session" + serverId)))
-	sIP := sessionWithIP{}
-	lo.Must0(json.Unmarshal(b, &sIP))
-
+	sIP, err := cache.CacheHelp[sessionWithIP]{Cache: y.cache}.Get([]byte("session" + serverId))
+	if err != nil {
+		return yggdrasil.UserInfo{}, fmt.Errorf("HasJoined: %w", err)
+	}
 	if ip != "" && ip != sIP.IP {
 		return yggdrasil.UserInfo{}, fmt.Errorf("ip 不相同")
 	}
