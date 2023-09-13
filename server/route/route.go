@@ -40,6 +40,7 @@ func newYggdrasil(r *httprouter.Router, handelY yggdrasil.Yggdrasil) error {
 	r.POST("/api/yggdrasil/minecraftservices/player/certificates", warpHJSON(handelY.PlayerCertificates()))
 
 	r.GET("/api/yggdrasil", warpHJSON(handelY.YggdrasilRoot()))
+	r.GET("/api/yggdrasil/", warpHJSON(handelY.YggdrasilRoot()))
 
 	r.GET("/texture/*filepath", handelY.TextureAssets())
 	return nil

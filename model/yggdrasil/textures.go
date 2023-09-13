@@ -11,7 +11,7 @@ type UserTextures struct {
 	ProfileName string              `json:"profileName"`
 	Textures    map[string]Textures `json:"textures"`
 	// 时间戳 毫秒
-	Timestamp string `json:"timestamp"`
+	Timestamp int64 `json:"timestamp"`
 }
 
 type Textures struct {

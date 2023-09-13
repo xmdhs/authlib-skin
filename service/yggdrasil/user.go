@@ -104,7 +104,8 @@ func (y *Yggdrasil) Authenticate(cxt context.Context, auth yggdrasil.Authenticat
 		ClientToken:       clientToken,
 		SelectedProfile:   p,
 		User: yggdrasil.TokenUserID{
-			ID: utils.UUIDGen(strconv.Itoa(u.ID)),
+			ID:         utils.UUIDGen(strconv.Itoa(u.ID)),
+			Properties: []any{},
 		},
 	}, nil
 }
@@ -171,16 +172,16 @@ func (y *Yggdrasil) Refresh(ctx context.Context, token yggdrasil.RefreshToken) (
 	if err != nil {
 		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", err)
 	}
+	u := yggdrasil.UserInfo{ID: up.UUID, Name: up.Name}
 
 	return yggdrasil.Token{
-		AccessToken: jwts,
-		ClientToken: t.CID,
-		SelectedProfile: yggdrasil.UserInfo{
-			ID:   up.UUID,
-			Name: up.Name,
-		},
+		AccessToken:       jwts,
+		AvailableProfiles: []yggdrasil.UserInfo{u},
+		ClientToken:       t.CID,
+		SelectedProfile:   u,
 		User: yggdrasil.TokenUserID{
-			ID: utils.UUIDGen(strconv.Itoa(t.UID)),
+			ID:         utils.UUIDGen(strconv.Itoa(t.UID)),
+			Properties: []any{},
 		},
 	}, nil
 }
@@ -209,7 +210,7 @@ func (y *Yggdrasil) GetProfile(ctx context.Context, uuid string, unsigned bool, 
 		ProfileID:   up.UUID,
 		ProfileName: up.Name,
 		Textures:    map[string]yggdrasil.Textures{},
-		Timestamp:   strconv.FormatInt(time.Now().UnixMilli(), 10),
+		Timestamp:   time.Now().UnixMilli(),
 	}
 
 	for _, v := range up.Edges.Usertexture {
@@ -230,25 +231,31 @@ func (y *Yggdrasil) GetProfile(ctx context.Context, uuid string, unsigned bool, 
 
 	texturesBase64 := ut.Base64()
 
-	var signStr string
+	pl := []yggdrasil.UserProperties{}
+	pl = append(pl, yggdrasil.UserProperties{
+		Name:  "textures",
+		Value: texturesBase64,
+	})
+	pl = append(pl, yggdrasil.UserProperties{
+		Name:  "uploadableTextures",
+		Value: "skin,cape",
+	})
+
 	if !unsigned {
 		s := sign.NewAuthlibSignWithKey(y.prikey)
-		signStr, err = s.Sign([]byte(texturesBase64))
-		if err != nil {
-			return yggdrasil.UserInfo{}, fmt.Errorf("GetProfile: %w", err)
+		for i, v := range pl {
+			sign, err := s.Sign([]byte(v.Signature))
+			if err != nil {
+				return yggdrasil.UserInfo{}, fmt.Errorf("GetProfile: %w", ErrNotUser)
+			}
+			pl[i].Signature = sign
 		}
 	}
 
 	uinfo := yggdrasil.UserInfo{
-		ID:   up.UUID,
-		Name: up.Name,
-		Properties: []yggdrasil.UserProperties{
-			{
-				Name:      "textures",
-				Value:     texturesBase64,
-				Signature: signStr,
-			},
-		},
+		ID:         up.UUID,
+		Name:       up.Name,
+		Properties: pl,
 	}
 
 	return uinfo, nil

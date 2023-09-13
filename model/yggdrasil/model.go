@@ -7,10 +7,6 @@ type Pass struct {
 }
 
 type Authenticate struct {
-	Agent struct {
-		Name    string `json:"name" validate:"required,eq=Minecraft"`
-		Version int    `json:"version" validate:"required,eq=1"`
-	} `json:"agent"`
 	ClientToken string `json:"clientToken"`
 	RequestUser bool   `json:"requestUser"`
 	Pass
@@ -23,7 +19,8 @@ type Error struct {
 }
 
 type TokenUserID struct {
-	ID string `json:"id"`
+	ID         string `json:"id"`
+	Properties []any  `json:"properties,omitempty"`
 }
 
 type Token struct {
