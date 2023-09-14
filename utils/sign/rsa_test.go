@@ -15,7 +15,7 @@ import (
 )
 
 func TestAuthlibSign(t *testing.T) {
-	rsa2048, err := rsa.GenerateKey(rand.Reader, 2048)
+	rsa2048, err := rsa.GenerateKey(rand.Reader, 4096)
 	if err != nil {
 		t.Fatal(err)
 	}
