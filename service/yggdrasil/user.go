@@ -244,7 +244,7 @@ func (y *Yggdrasil) GetProfile(ctx context.Context, uuid string, unsigned bool, 
 	if !unsigned {
 		s := sign.NewAuthlibSignWithKey(y.prikey)
 		for i, v := range pl {
-			sign, err := s.Sign([]byte(v.Signature))
+			sign, err := s.Sign([]byte(v.Value))
 			if err != nil {
 				return yggdrasil.UserInfo{}, fmt.Errorf("GetProfile: %w", ErrNotUser)
 			}
