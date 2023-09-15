@@ -274,6 +274,10 @@ func (y *Yggdrasil) BatchProfile(ctx context.Context, names []string) ([]yggdras
 	}), nil
 }
 
+// publicKey 为 PKIX，但要求 pem type 为 RSA PUBLIC KEY
+// privateKey 为 PKCS #8， pem type 为 RSA PUBLIC KEY
+// 签名使用 rsaWIthsha1
+
 func (y *Yggdrasil) PlayerCertificates(ctx context.Context, token string) (yggdrasil.Certificates, error) {
 	t, err := sutils.Auth(ctx, yggdrasil.ValidateToken{AccessToken: token}, y.client, y.cache, &y.prikey.PublicKey, false)
 	if err != nil {
@@ -291,13 +295,22 @@ func (y *Yggdrasil) PlayerCertificates(ctx context.Context, token string) (yggdr
 	expiresAt := time.Now().Add(24 * time.Hour)
 	expiresAtUnix := expiresAt.UnixMilli()
 
-	pubV2 := publicKeySignatureV2(&rsa2048.PublicKey, t.Subject, expiresAtUnix)
+	pubV2, err := publicKeySignatureV2(&rsa2048.PublicKey, t.Subject, expiresAtUnix)
+	if err != nil {
+		return yggdrasil.Certificates{}, fmt.Errorf("PlayerCertificates: %w", err)
+	}
 	pub := publicKeySignature(pubKey, expiresAtUnix)
 
 	servicePri := sign.NewAuthlibSignWithKey(y.prikey)
 
-	pubV2Base64 := lo.Must(servicePri.Sign(pubV2))
-	pubBase64 := lo.Must(servicePri.Sign(pub))
+	pubV2Base64, err := servicePri.Sign(pubV2)
+	if err != nil {
+		return yggdrasil.Certificates{}, fmt.Errorf("PlayerCertificates: %w", err)
+	}
+	pubBase64, err := servicePri.Sign(pub)
+	if err != nil {
+		return yggdrasil.Certificates{}, fmt.Errorf("PlayerCertificates: %w", err)
+	}
 
 	return yggdrasil.Certificates{
 		ExpiresAt: expiresAt.Format(time.RFC3339Nano),
@@ -312,7 +325,7 @@ func (y *Yggdrasil) PlayerCertificates(ctx context.Context, token string) (yggdr
 
 }
 
-func publicKeySignatureV2(key *rsa.PublicKey, uuid string, expiresAt int64) []byte {
+func publicKeySignatureV2(key *rsa.PublicKey, uuid string, expiresAt int64) ([]byte, error) {
 	bf := &bytes.Buffer{}
 	u := big.Int{}
 	u.SetString(uuid, 16)
@@ -321,9 +334,12 @@ func publicKeySignatureV2(key *rsa.PublicKey, uuid string, expiresAt int64) []by
 	eb := make([]byte, 8)
 	binary.BigEndian.PutUint64(eb, uint64(expiresAt))
 	bf.Write(eb)
-	bf.Write(x509.MarshalPKCS1PublicKey(key))
-
-	return bf.Bytes()
+	pubKey, err := x509.MarshalPKIXPublicKey(key)
+	if err != nil {
+		return nil, fmt.Errorf("publicKeySignatureV2: %w", err)
+	}
+	bf.Write(pubKey)
+	return bf.Bytes(), nil
 }
 
 func publicKeySignature(key string, expiresAt int64) []byte {
