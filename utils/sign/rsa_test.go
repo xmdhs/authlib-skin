@@ -9,6 +9,7 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/samber/lo"
@@ -77,4 +78,22 @@ func TestAuthlibNew(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+func TestMojangSign(t *testing.T) {
+	b, err := os.ReadFile("../../service/yggdrasil/yggdrasil_session_pubkey.der")
+	if err != nil {
+		t.Fatal(err)
+	}
+	pub := lo.Must(x509.ParsePKIXPublicKey(b)).(*rsa.PublicKey)
+
+	const value = "ewogICJ0aW1lc3RhbXAiIDogMTY5NDc5NDE2NzU3NSwKICAicHJvZmlsZUlkIiA6ICI5ZjUxNTczYTVlYzU0NTgyOGMyYjA5ZjdmMDg0OTdiMSIsCiAgInByb2ZpbGVOYW1lIiA6ICJ4bWRocyIsCiAgInNpZ25hdHVyZVJlcXVpcmVkIiA6IHRydWUsCiAgInRleHR1cmVzIiA6IHsKICAgICJTS0lOIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS9iNDc4YmQxY2FlODJhNGQwN2M4NWU4Y2FjYTc3NTA3MWQ5ZjYxZWYyYTkzNDQzOWU2NTFhZTcwYzAzZDBmMTVkIgogICAgfSwKICAgICJDQVBFIiA6IHsKICAgICAgInVybCIgOiAiaHR0cDovL3RleHR1cmVzLm1pbmVjcmFmdC5uZXQvdGV4dHVyZS8yMzQwYzBlMDNkZDI0YTExYjE1YThiMzNjMmE3ZTllMzJhYmIyMDUxYjI0ODFkMGJhN2RlZmQ2MzVjYTdhOTMzIgogICAgfQogIH0KfQ=="
+	const signature = "h1dqL2jie5uRBt1xVOHACsn3YrdOWidSYvXq+eQXJIv9cyQAlns9ASE20sRHaQCL6Gil0nfnyGDaHWbXJ3Vi9+bCyvPNRgFFKLgNDfcWEgEhPducWH30Pl3zDyAXWUZQbT2ecmHDTfkzb1UR3SGEnVxmJpV3++RDjgotRy6bWLE1Hx8U8OZdpTwhZb9Y3m/otPBpYgHl0SQAEGQvr1dn4/SAMM13GNXqynlWzZ2X94I9DvO8oLEn6VtIIgw+0kHKmQfdepgeLMDDOOUaXskGo1liV7efEMTGlTLZrgEzgo/rNsWn1O98Wc+3mjshLPP2PIJqSfGpXvPeE6Z2wCKJdfguQEYNRomP/8gCxEzfXG1eg/XE7FQBEVi6Eoath3aYopTqcDwKL4v0f520JNcPtTfXfIZiYGpJ9JiZFqjL8q51Y4SUIcDN7vX2/OzdPiJ5xI1MEK1AsLDUaSWAzR6ZwjmOoFv0m68U44c5GDnnvt4kN+oWM0jUAzGAU1QXutrGiVee/1jryEgXJVM43x+D9ZYJvWBXDFqoCLY9hLvRKtt3ohv/aQTDFwTLZzhM82kQ74RdqwtRCtrNsCIqjLlwxrQTY8xYWjLWMvYI82x40+Zk4aEmfc6PEp8gwlLV/gTtYlzsR7uJC+lpmN9Is/LiC9bMj4iHjP3Dk4ykwA/s/5k="
+
+	hashed := sha1.Sum([]byte(value))
+	err = rsa.VerifyPKCS1v15(pub, crypto.SHA1, hashed[:], lo.Must(base64.StdEncoding.DecodeString(signature)))
+	if err != nil {
+		t.Fatal(err)
+	}
+
 }
