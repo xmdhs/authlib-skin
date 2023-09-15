@@ -246,7 +246,7 @@ func (y *Yggdrasil) GetProfile(ctx context.Context, uuid string, unsigned bool, 
 		for i, v := range pl {
 			sign, err := s.Sign([]byte(v.Value))
 			if err != nil {
-				return yggdrasil.UserInfo{}, fmt.Errorf("GetProfile: %w", ErrNotUser)
+				return yggdrasil.UserInfo{}, fmt.Errorf("GetProfile: %w", err)
 			}
 			pl[i].Signature = sign
 		}
