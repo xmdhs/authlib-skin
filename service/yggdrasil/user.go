@@ -43,7 +43,7 @@ func (y *Yggdrasil) validatePass(cxt context.Context, email, pass string) (*ent.
 	if err != nil {
 		var nf *ent.NotFoundError
 		if errors.As(err, &nf) {
-			return nil, fmt.Errorf("validatePass: %w", ErrPassWord)
+			return nil, fmt.Errorf("validatePass: %w", errors.Join(ErrPassWord, err))
 		}
 		return nil, fmt.Errorf("validatePass: %w", err)
 	}
@@ -165,12 +165,12 @@ func (y *Yggdrasil) Refresh(ctx context.Context, token yggdrasil.RefreshToken) (
 	}
 	jwts, err := newJwtToken(y.prikey, t.Tid, t.CID, t.Subject, t.UID)
 	if err != nil {
-		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", err)
+		return yggdrasil.Token{}, fmt.Errorf("Refresh: %w", err)
 	}
 
 	up, err := y.client.UserProfile.Query().Where(userprofile.HasUserWith(user.ID(t.UID))).First(ctx)
 	if err != nil {
-		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", err)
+		return yggdrasil.Token{}, fmt.Errorf("Refresh: %w", err)
 	}
 	u := yggdrasil.UserInfo{ID: up.UUID, Name: up.Name}
 
@@ -216,7 +216,7 @@ func (y *Yggdrasil) GetProfile(ctx context.Context, uuid string, unsigned bool, 
 	for _, v := range up.Edges.Usertexture {
 		dt, err := y.client.Texture.Query().Where(texture.ID(v.TextureID)).Only(ctx)
 		if err != nil {
-			return yggdrasil.UserInfo{}, fmt.Errorf("GetProfile: %w", ErrNotUser)
+			return yggdrasil.UserInfo{}, fmt.Errorf("GetProfile: %w", err)
 		}
 		hashstr := dt.TextureHash
 		t := yggdrasil.Textures{
@@ -264,7 +264,7 @@ func (y *Yggdrasil) GetProfile(ctx context.Context, uuid string, unsigned bool, 
 func (y *Yggdrasil) BatchProfile(ctx context.Context, names []string) ([]yggdrasil.UserInfo, error) {
 	pl, err := y.client.UserProfile.Query().Where(userprofile.NameIn(names...)).All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("GetProfile: %w", err)
+		return nil, fmt.Errorf("BatchProfile: %w", err)
 	}
 	return lo.Map[*ent.UserProfile, yggdrasil.UserInfo](pl, func(item *ent.UserProfile, index int) yggdrasil.UserInfo {
 		return yggdrasil.UserInfo{
