@@ -11,63 +11,54 @@ import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
-import { loadable } from "jotai/utils"
-import { atom, useAtom } from "jotai"
 import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
+import { useSetAtom } from 'jotai';
+import { token, username } from '@/store/store'
 
-const loginData = atom({ email: "", password: "" })
-const loginErr = atom("")
 
-const fetchReg = loadable(atom(async (get) => {
-    const ld = get(loginData)
+function ToLogin() {
+    return (
+        <>
+            <Backdrop
+                sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+                open={true}
+            >
+                <CircularProgress color="inherit" />
+            </Backdrop>
+        </>
+    )
+}
+
+interface tokenData {
+    accessToken: string
+    selectedProfile: {
+        name: string
+    }
+}
+
+async function tologin(username: string, password: string) {
     const v = await fetch(import.meta.env.VITE_APIADDR + "/api/yggdrasil/authserver/authenticate", {
         method: "POST",
         body: JSON.stringify({
-            "username": ld.email,
-            "password": ld.password,
+            "username": username,
+            "password": password,
         })
     })
-    const rData = await v.json()
-    return rData
-}))
-
-
-const ToLogin = React.memo(() => {
-    const [, setErr] = useAtom(loginErr);
-    const [value] = useAtom(fetchReg)
-    if (value.state === 'hasError') {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setErr(String(value.error as any))
-        console.warn(value.error)
-        return <></>
+    const data = await v.json()
+    if (!v.ok){
+        throw data?.errorMessage
     }
-    if (value.state === 'loading') {
-        return (
-            <>
-                <Backdrop
-                    sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
-                    open={true}
-                >
-                    <CircularProgress color="inherit" />
-                </Backdrop>
-            </>
-        )
-    }
-    return (
-        <>
-            <p>{JSON.stringify(value.data)}</p>
-        </>
-    )
-})
-
+    return data as tokenData
+}
 
 
 export default function SignIn() {
     const [emailErr, setEmailErr] = useState("");
-    const [err, setErr] = useAtom(loginErr);
+    const [err, setErr] = useState("");
     const [login, setLogin] = useState(false);
-    const [, setloginData] = useAtom(loginData);
+    const setToken = useSetAtom(token)
+    const setUsername = useSetAtom(username)
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -80,17 +71,19 @@ export default function SignIn() {
             setEmailErr("需要为邮箱")
             return
         }
-        setloginData({
-            email: postData.email,
-            password: postData.password ?? ""
-        })
+        if (login) return
         setLogin(true)
+        tologin(postData.email, postData.password ?? "").
+            then(v => {
+                if (!v) return
+                setToken(v.accessToken)
+                setUsername(v.selectedProfile.name)
+            }).
+            catch(v => [setErr(String(v)), console.warn(v)]).
+            finally(() => setLogin(false))
+
     };
 
-    const closeAlert = () => {
-        setLogin(false)
-        setErr("")
-    }
 
     return (
         <Container component="main" maxWidth="xs">
@@ -151,8 +144,8 @@ export default function SignIn() {
                     </Grid>
                 </Box>
             </Box>
-            <Snackbar anchorOrigin={{ vertical: 'top', horizontal: 'center' }} open={err !== ""} onClose={closeAlert}  >
-                <Alert onClose={closeAlert} severity="error">{err}</Alert>
+            <Snackbar anchorOrigin={{ vertical: 'top', horizontal: 'center' }} open={err !== ""} onClose={() => setErr("")}  >
+                <Alert onClose={() => setErr("")} severity="error">{err}</Alert>
             </Snackbar>
             {login && <ToLogin></ToLogin>}
         </Container>
