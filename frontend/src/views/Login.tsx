@@ -17,7 +17,7 @@ import { useSetAtom } from 'jotai';
 import { token, username } from '@/store/store'
 
 
-function ToLogin() {
+function Loading() {
     return (
         <>
             <Backdrop
@@ -46,7 +46,7 @@ async function tologin(username: string, password: string) {
         })
     })
     const data = await v.json()
-    if (!v.ok){
+    if (!v.ok) {
         throw data?.errorMessage
     }
     return data as tokenData
@@ -56,7 +56,7 @@ async function tologin(username: string, password: string) {
 export default function SignIn() {
     const [emailErr, setEmailErr] = useState("");
     const [err, setErr] = useState("");
-    const [login, setLogin] = useState(false);
+    const [loading, setLoading] = useState(false);
     const setToken = useSetAtom(token)
     const setUsername = useSetAtom(username)
 
@@ -71,8 +71,8 @@ export default function SignIn() {
             setEmailErr("需要为邮箱")
             return
         }
-        if (login) return
-        setLogin(true)
+        if (loading) return
+        setLoading(true)
         tologin(postData.email, postData.password ?? "").
             then(v => {
                 if (!v) return
@@ -80,7 +80,7 @@ export default function SignIn() {
                 setUsername(v.selectedProfile.name)
             }).
             catch(v => [setErr(String(v)), console.warn(v)]).
-            finally(() => setLogin(false))
+            finally(() => setLoading(false))
 
     };
 
@@ -147,7 +147,7 @@ export default function SignIn() {
             <Snackbar anchorOrigin={{ vertical: 'top', horizontal: 'center' }} open={err !== ""} onClose={() => setErr("")}  >
                 <Alert onClose={() => setErr("")} severity="error">{err}</Alert>
             </Snackbar>
-            {login && <ToLogin></ToLogin>}
+            {loading && <Loading />}
         </Container>
     );
 }
