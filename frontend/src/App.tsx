@@ -1,9 +1,10 @@
+import { PageRoute } from '@/Route'
 
 function App() {
 
   return (
     <>
-      <p>todo</p>
+      <PageRoute />
     </>
   )
 }

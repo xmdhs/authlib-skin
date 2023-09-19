@@ -33,6 +33,7 @@ func NewServer(c config.Config, sl *slog.Logger, route *httprouter.Router) (*htt
 			if c.Debug && sl.Enabled(ctx, slog.LevelDebug) {
 				sl.DebugContext(ctx, r.Method)
 			}
+			w.Header().Set("Access-Control-Allow-Origin", "*")
 			route.ServeHTTP(w, r)
 		}),
 	}
