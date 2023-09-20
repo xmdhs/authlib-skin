@@ -15,7 +15,9 @@ import Backdrop from '@mui/material/Backdrop';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useSetAtom } from 'jotai';
 import { token, username } from '@/store/store'
-
+import { login } from '@/apis/apis'
+import { checkEmail } from '@/utils/email'
+import { Link as RouterLink } from "react-router-dom";
 
 function Loading() {
     return (
@@ -30,27 +32,6 @@ function Loading() {
     )
 }
 
-interface tokenData {
-    accessToken: string
-    selectedProfile: {
-        name: string
-    }
-}
-
-async function tologin(username: string, password: string) {
-    const v = await fetch(import.meta.env.VITE_APIADDR + "/api/yggdrasil/authserver/authenticate", {
-        method: "POST",
-        body: JSON.stringify({
-            "username": username,
-            "password": password,
-        })
-    })
-    const data = await v.json()
-    if (!v.ok) {
-        throw data?.errorMessage
-    }
-    return data as tokenData
-}
 
 
 export default function SignIn() {
@@ -67,13 +48,13 @@ export default function SignIn() {
             email: data.get('email')?.toString(),
             password: data.get('password')?.toString(),
         }
-        if (!postData.email?.includes("@")) {
+        if (!checkEmail(postData.email ?? "")) {
             setEmailErr("需要为邮箱")
             return
         }
         if (loading) return
         setLoading(true)
-        tologin(postData.email, postData.password ?? "").
+        login(postData.email!, postData.password ?? "").
             then(v => {
                 if (!v) return
                 setToken(v.accessToken)
@@ -137,7 +118,7 @@ export default function SignIn() {
                             </Link>
                         </Grid>
                         <Grid item>
-                            <Link href="#" variant="body2">
+                            <Link component={RouterLink} to="/register" variant="body2">
                                 {"注册"}
                             </Link>
                         </Grid>
