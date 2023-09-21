@@ -9,21 +9,14 @@ import Box from '@mui/material/Box';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
-import { useState } from 'react';
-import { checkEmail } from '@/utils/email';
 import { Link as RouterLink } from "react-router-dom";
-
-
+import { register } from '@/apis/apis'
+import CheckInput, { refType } from '@/components/CheckInput'
 
 export default function SignUp() {
-    const [emailErr, setEmailErr] = useState("");
-    const [passErr, setpassErr] = useState("");
-
-
+    const checkList = React.useRef<{ [id: string]: refType }>({})
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-        setEmailErr("")
-        setpassErr("")
         event.preventDefault();
         const data = new FormData(event.currentTarget);
         const d = {
@@ -32,18 +25,9 @@ export default function SignUp() {
             password1: data.get('password1')?.toString(),
             username: data.get("username")?.toString()
         }
-        if (!checkEmail(d.email ?? "")) {
-            setEmailErr("需要为邮箱")
-            return
-        }
-        if (d.password != d.password1) {
-            setpassErr("密码不一致")
-            return
-        }
-        if (d.password == "") {
-            setpassErr("密码为空")
-            return
-        }
+        console.log(Object.values(checkList.current).every(v => v.verify()))
+
+        register(d.email ?? "", d.username ?? "", d.password ?? "")
     };
 
     return (
@@ -66,14 +50,21 @@ export default function SignUp() {
                 <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 3 }}>
                     <Grid container spacing={2}>
                         <Grid item xs={12}>
-                            <TextField
-                                error={emailErr != ""}
-                                helperText={emailErr}
+                            <CheckInput
+                                checkList={[
+                                    {
+                                        errMsg: "需为邮箱",
+                                        reg: /^hello/
+                                    }
+                                ]}
                                 required
                                 fullWidth
                                 name="email"
                                 label="邮箱"
                                 autoComplete="email"
+                                ref={(dom) => {
+                                    dom && [checkList.current["1"] = dom]
+                                }}
                             />
                         </Grid>
                         <Grid item xs={12}>
@@ -87,8 +78,6 @@ export default function SignUp() {
                         </Grid>
                         <Grid item xs={12}>
                             <TextField
-                                error={passErr != ""}
-                                helperText={passErr}
                                 required
                                 fullWidth
                                 label="密码"
