@@ -11,49 +11,35 @@ import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
-import Backdrop from '@mui/material/Backdrop';
-import CircularProgress from '@mui/material/CircularProgress';
 import { useSetAtom } from 'jotai';
 import { token, username } from '@/store/store'
 import { login } from '@/apis/apis'
-import { checkEmail } from '@/utils/email'
 import { Link as RouterLink } from "react-router-dom";
-
-function Loading() {
-    return (
-        <>
-            <Backdrop
-                sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
-                open={true}
-            >
-                <CircularProgress color="inherit" />
-            </Backdrop>
-        </>
-    )
-}
+import Loading from '@/components/Loading'
+import CheckInput, { refType } from '@/components/CheckInput'
 
 
 
 export default function SignIn() {
-    const [emailErr, setEmailErr] = useState("");
     const [err, setErr] = useState("");
     const [loading, setLoading] = useState(false);
     const setToken = useSetAtom(token)
     const setUsername = useSetAtom(username)
+    const checkList = React.useRef<Map<string, refType>>(new Map<string, refType>())
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        if (loading) return
+        setLoading(true)
+
         const data = new FormData(event.currentTarget);
         const postData = {
             email: data.get('email')?.toString(),
             password: data.get('password')?.toString(),
         }
-        if (!checkEmail(postData.email ?? "")) {
-            setEmailErr("需要为邮箱")
+        if (!Array.from(checkList.current.values()).every(v => v.verify())) {
             return
         }
-        if (loading) return
-        setLoading(true)
         login(postData.email!, postData.password ?? "").
             then(v => {
                 if (!v) return
@@ -83,9 +69,16 @@ export default function SignIn() {
                     登录
                 </Typography>
                 <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
-                    <TextField
-                        error={emailErr != ""}
-                        helperText={emailErr}
+                    <CheckInput
+                        ref={(dom) => {
+                            dom && checkList.current.set("1", dom)
+                        }}
+                        checkList={[
+                            {
+                                errMsg: "需为邮箱",
+                                reg: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+                            }
+                        ]}
                         margin="normal"
                         fullWidth
                         id="email"

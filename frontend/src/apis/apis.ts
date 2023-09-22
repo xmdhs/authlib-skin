@@ -28,6 +28,5 @@ export async function register(email: string, username: string, password: string
     if (!v.ok) {
         throw data
     }
-    return data as tokenData
-
+    return
 }

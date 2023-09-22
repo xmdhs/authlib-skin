@@ -2,7 +2,6 @@ import * as React from 'react';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import CssBaseline from '@mui/material/CssBaseline';
-import TextField from '@mui/material/TextField';
 import Link from '@mui/material/Link';
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
@@ -12,22 +11,37 @@ import Container from '@mui/material/Container';
 import { Link as RouterLink } from "react-router-dom";
 import { register } from '@/apis/apis'
 import CheckInput, { refType } from '@/components/CheckInput'
+import { useState } from 'react';
+import Alert from '@mui/material/Alert';
+import Snackbar from '@mui/material/Snackbar';
+import Loading from '@/components/Loading'
+import { useNavigate } from "react-router-dom";
 
 export default function SignUp() {
-    const checkList = React.useRef<{ [id: string]: refType }>({})
+    const [regErr, setRegErr] = useState("");
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
+
+
+    const checkList = React.useRef<Map<string, refType>>(new Map<string, refType>())
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        if (loading) return
+        setLoading(true)
         const data = new FormData(event.currentTarget);
         const d = {
             email: data.get('email')?.toString(),
             password: data.get('password')?.toString(),
-            password1: data.get('password1')?.toString(),
             username: data.get("username")?.toString()
         }
-        console.log(Object.values(checkList.current).every(v => v.verify()))
-
-        register(d.email ?? "", d.username ?? "", d.password ?? "")
+        if (!Array.from(checkList.current.values()).every(v => v.verify())) {
+            return
+        }
+        register(d.email ?? "", d.username ?? "", d.password ?? "").
+            then(() => navigate("/login")).
+            catch(v => [setRegErr(String(v)), console.warn(v)]).
+            finally(() => setLoading(false))
     };
 
     return (
@@ -54,7 +68,7 @@ export default function SignUp() {
                                 checkList={[
                                     {
                                         errMsg: "需为邮箱",
-                                        reg: /^hello/
+                                        reg: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
                                     }
                                 ]}
                                 required
@@ -63,36 +77,44 @@ export default function SignUp() {
                                 label="邮箱"
                                 autoComplete="email"
                                 ref={(dom) => {
-                                    dom && [checkList.current["1"] = dom]
+                                    dom && checkList.current.set("1", dom)
                                 }}
                             />
                         </Grid>
                         <Grid item xs={12}>
-                            <TextField
+                            <CheckInput
+                                ref={(dom) => {
+                                    dom && checkList.current.set("2", dom)
+                                }}
+                                checkList={[
+                                    {
+                                        errMsg: "长度在 3-16 之间",
+                                        reg: /.{3,16}/
+                                    }
+                                ]}
                                 required
                                 fullWidth
                                 name="username"
                                 label="角色名"
-                                autoComplete="email"
+                                autoComplete="username"
                             />
                         </Grid>
                         <Grid item xs={12}>
-                            <TextField
+                            <CheckInput
+                                ref={(dom) => {
+                                    dom && checkList.current.set("3", dom)
+                                }}
+                                checkList={[
+                                    {
+                                        errMsg: "长度在 6-50 之间",
+                                        reg: /.{6,50}/
+                                    }
+                                ]}
                                 required
                                 fullWidth
                                 label="密码"
                                 type="password"
                                 name="password"
-                                autoComplete="new-password"
-                            />
-                        </Grid>
-                        <Grid item xs={12}>
-                            <TextField
-                                required
-                                fullWidth
-                                label="确认密码"
-                                type="password"
-                                name="password1"
                                 autoComplete="new-password"
                             />
                         </Grid>
@@ -114,6 +136,10 @@ export default function SignUp() {
                     </Grid>
                 </Box>
             </Box>
+            <Snackbar anchorOrigin={{ vertical: 'top', horizontal: 'center' }} open={regErr !== ""} onClose={() => setRegErr("")}  >
+                <Alert onClose={() => setRegErr("")} severity="error">{regErr}</Alert>
+            </Snackbar>
+            {loading && <Loading />}
         </Container>
     );
 }
