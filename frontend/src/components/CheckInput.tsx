@@ -15,9 +15,25 @@ type prop = {
 
 export const CheckInput = forwardRef<refType, prop>(({ required, checkList, ...textFied }, ref) => {
     const [err, setErr] = useState("");
+    const [value, setValue] = useState("");
+
+    const check = (value: string) => {
+        if (required && (!value || value == "")) {
+            setErr("此项必填")
+            return false
+        }
+        for (const v of checkList) {
+            if (!v.reg.test(value)) {
+                setErr(v.errMsg)
+                return false
+            }
+        }
+        setErr("")
+        return true
+    }
 
     const verify = () => {
-        return err == ""
+        return check(value)
     }
 
     useImperativeHandle(ref, () => {
@@ -28,17 +44,8 @@ export const CheckInput = forwardRef<refType, prop>(({ required, checkList, ...t
 
     const onChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const value = event.target.value
-        if (required && (!value || value == "")) {
-            setErr("此项必填")
-            return
-        }
-        for (const v of checkList) {
-            if (!v.reg.test(value)) {
-                setErr(v.errMsg)
-                return
-            }
-        }
-        setErr("")
+        setValue(value)
+        check(value)
     }
 
 
@@ -48,6 +55,7 @@ export const CheckInput = forwardRef<refType, prop>(({ required, checkList, ...t
         onChange={onChange}
         helperText={err}
         required={required}
+        value={value}
         {...textFied}
     />
 })

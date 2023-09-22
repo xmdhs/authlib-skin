@@ -35,7 +35,8 @@ export default function SignUp() {
             password: data.get('password')?.toString(),
             username: data.get("username")?.toString()
         }
-        if (!Array.from(checkList.current.values()).every(v => v.verify())) {
+        if (!Array.from(checkList.current.values()).map(v => v.verify()).reduce((p, v) => (p == true) && (v == true))) {
+            setLoading(false)
             return
         }
         register(d.email ?? "", d.username ?? "", d.password ?? "").

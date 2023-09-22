@@ -37,7 +37,8 @@ export default function SignIn() {
             email: data.get('email')?.toString(),
             password: data.get('password')?.toString(),
         }
-        if (!Array.from(checkList.current.values()).every(v => v.verify())) {
+        if (!Array.from(checkList.current.values()).map(v => v.verify()).reduce((p, v) => (p == true) && (v == true))) {
+            setLoading(false)
             return
         }
         login(postData.email!, postData.password ?? "").
