@@ -90,7 +90,7 @@ export default function SignUp() {
                                 checkList={[
                                     {
                                         errMsg: "长度在 3-16 之间",
-                                        reg: /.{3,16}/
+                                        reg: /^.{3,16}$/
                                     }
                                 ]}
                                 required
@@ -108,7 +108,7 @@ export default function SignUp() {
                                 checkList={[
                                     {
                                         errMsg: "长度在 6-50 之间",
-                                        reg: /.{6,50}/
+                                        reg: /^.{6,50}$/
                                     }
                                 ]}
                                 required
