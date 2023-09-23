@@ -23,4 +23,9 @@ type Config struct {
 	HomepageUrl    string
 	RegisterUrl    string
 	ServerName     string
+
+	Captcha struct {
+		Type    string
+		SiteKey string
+	}
 }

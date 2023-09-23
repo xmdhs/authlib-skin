@@ -11,4 +11,11 @@ export interface Api<T> {
     data: T
 }
 
-export type ApiErr = Api<unknown> 
+export type ApiErr = Api<unknown>
+
+interface captcha {
+    type: string
+    siteKey: string
+}
+
+export type ApiCaptcha = Api<captcha>

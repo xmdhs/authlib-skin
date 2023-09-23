@@ -23,3 +23,8 @@ type TokenClaims struct {
 	UID int `json:"uid"`
 	jwt.RegisteredClaims
 }
+
+type Captcha struct {
+	Type    string `json:"type"`
+	SiteKey string `json:"siteKey"`
+}

@@ -12,13 +12,15 @@
   "dependencies": {
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
+    "@marsidev/react-turnstile": "^0.3.1",
     "@mui/icons-material": "^5.14.9",
     "@mui/material": "^5.14.10",
     "immer": "^10.0.2",
     "jotai": "^2.4.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.16.0"
+    "react-router-dom": "^6.16.0",
+    "swr": "^2.2.2"
   },
   "devDependencies": {
     "@types/node": "^20.6.2",

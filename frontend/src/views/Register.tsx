@@ -16,6 +16,7 @@ import Alert from '@mui/material/Alert';
 import Snackbar from '@mui/material/Snackbar';
 import Loading from '@/components/Loading'
 import { useNavigate } from "react-router-dom";
+import TurnstileWidget from '@/components/TurnstileWidget';
 
 export default function SignUp() {
     const [regErr, setRegErr] = useState("");
@@ -118,6 +119,9 @@ export default function SignUp() {
                                 name="password"
                                 autoComplete="new-password"
                             />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TurnstileWidget onSuccess={v => console.log(v)} />
                         </Grid>
                     </Grid>
                     <Button

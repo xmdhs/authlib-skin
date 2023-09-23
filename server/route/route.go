@@ -60,5 +60,6 @@ func newYggdrasil(r *httprouter.Router, handelY yggdrasil.Yggdrasil) error {
 
 func newSkinApi(r *httprouter.Router, handel *handle.Handel) error {
 	r.PUT("/api/v1/user/reg", handel.Reg())
+	r.GET("/api/v1/captcha", handel.GetCaptcha())
 	return nil
 }
