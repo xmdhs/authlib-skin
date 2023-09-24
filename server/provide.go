@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
 
 	entsql "entgo.io/ent/dialect/sql"
@@ -96,4 +97,8 @@ func ProvidePubKey(pri *rsa.PrivateKey) (yggdrasil.PubRsaKey, error) {
 	return yggdrasil.PubRsaKey(s), nil
 }
 
-var Set = wire.NewSet(ProvideSlog, ProvideDB, ProvideEnt, ProvideValidate, ProvideCache, ProvidePriKey, ProvidePubKey)
+func ProvideHttpClient() *http.Client {
+	return &http.Client{}
+}
+
+var Set = wire.NewSet(ProvideSlog, ProvideDB, ProvideEnt, ProvideValidate, ProvideCache, ProvidePriKey, ProvidePubKey, ProvideHttpClient)

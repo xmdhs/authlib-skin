@@ -15,18 +15,19 @@ export async function login(username: string, password: string) {
     return data as tokenData
 }
 
-export async function register(email: string, username: string, password: string) {
+export async function register(email: string, username: string, password: string, captchaToken: string) {
     const v = await fetch(import.meta.env.VITE_APIADDR + "/api/v1/user/reg", {
-        method: "POST",
+        method: "PUT",
         body: JSON.stringify({
             "Email": email,
             "Password": password,
-            "Name": username
+            "Name": username,
+            "CaptchaToken": captchaToken
         })
     })
     const data = await v.json()
     if (!v.ok) {
-        throw data
+        throw data.msg
     }
     return
 }

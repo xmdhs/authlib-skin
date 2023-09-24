@@ -21,17 +21,23 @@ var (
 	ErrRegLimit  = errors.New("超过注册 ip 限制")
 )
 
-func (w *WebService) Reg(ctx context.Context, u model.User, ip string) error {
+func (w *WebService) Reg(ctx context.Context, u model.User, ipPrefix, ip string) error {
 	var userUuid string
 	if w.config.OfflineUUID {
 		userUuid = utils.UUIDGen(u.Name)
 	} else {
 		userUuid = strings.ReplaceAll(uuid.New().String(), "-", "")
 	}
-	p, s := utils.Argon2ID(u.Password)
+
+	if w.config.Captcha.Type == "turnstile" {
+		err := w.verifyTurnstile(ctx, u.CaptchaToken, ip)
+		if err != nil {
+			return fmt.Errorf("Reg: %w", err)
+		}
+	}
 
 	if w.config.MaxIpUser != 0 {
-		c, err := w.client.User.Query().Where(user.RegIPEQ(ip)).Count(ctx)
+		c, err := w.client.User.Query().Where(user.RegIPEQ(ipPrefix)).Count(ctx)
 		if err != nil {
 			return fmt.Errorf("Reg: %w", err)
 		}
@@ -39,6 +45,8 @@ func (w *WebService) Reg(ctx context.Context, u model.User, ip string) error {
 			return fmt.Errorf("Reg: %w", ErrRegLimit)
 		}
 	}
+
+	p, s := utils.Argon2ID(u.Password)
 
 	err := utils.WithTx(ctx, w.client, func(tx *ent.Tx) error {
 		count, err := tx.User.Query().Where(user.EmailEQ(u.Email)).ForUpdate().Count(ctx)
@@ -60,7 +68,7 @@ func (w *WebService) Reg(ctx context.Context, u model.User, ip string) error {
 			SetPassword(p).
 			SetSalt(s).
 			SetRegTime(time.Now().Unix()).
-			SetRegIP(ip).
+			SetRegIP(ipPrefix).
 			SetState(0).Save(ctx)
 		if err != nil {
 			return err

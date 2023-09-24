@@ -9,9 +9,10 @@ type API[T any] struct {
 }
 
 type User struct {
-	Email    string `validate:"required,email"`
-	Password string `validate:"required,min=6,max=50"`
-	Name     string `validate:"required,min=3,max=16"`
+	Email        string `validate:"required,email"`
+	Password     string `validate:"required,min=6,max=50"`
+	Name         string `validate:"required,min=3,max=16"`
+	CaptchaToken string
 }
 
 type TokenClaims struct {

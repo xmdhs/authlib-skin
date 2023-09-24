@@ -11,7 +11,7 @@ interface prop {
     onSuccess: ((token: string) => void)
 }
 
-const TurnstileWidget = memo(({ onSuccess }: prop) => {
+function CaptchaWidget({ onSuccess }: prop) {
     const ref = useRef<TurnstileInstance>(null)
     const [key, setKey] = useState(1)
     const { data, error, isLoading } = useSWR<ApiCaptcha>(import.meta.env.VITE_APIADDR + '/api/v1/captcha')
@@ -21,11 +21,15 @@ const TurnstileWidget = memo(({ onSuccess }: prop) => {
         return <Alert severity="warning">{String(error)}</Alert>
     }
     if (isLoading) {
-        return <Skeleton variant="rectangular" width={210} height={118} />
+        return <Skeleton variant="rectangular" width={300} height={65} />
     }
     if (data?.code != 0) {
         console.warn(error)
         return <Alert severity="warning">{String(data?.msg)}</Alert>
+    }
+    if (data.data.type != "turnstile") {
+        onSuccess("ok")
+        return <></>
     }
     return (
         <>
@@ -33,6 +37,8 @@ const TurnstileWidget = memo(({ onSuccess }: prop) => {
             <Button onClick={() => setKey(key + 1)}>刷新验证码</Button>
         </>
     )
-})
+}
 
-export default TurnstileWidget
+const CaptchaWidgetMemo = memo(CaptchaWidget)
+
+export default CaptchaWidgetMemo

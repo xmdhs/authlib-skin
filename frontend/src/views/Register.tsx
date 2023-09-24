@@ -16,12 +16,13 @@ import Alert from '@mui/material/Alert';
 import Snackbar from '@mui/material/Snackbar';
 import Loading from '@/components/Loading'
 import { useNavigate } from "react-router-dom";
-import TurnstileWidget from '@/components/TurnstileWidget';
+import CaptchaWidget from '@/components/CaptchaWidget';
 
 export default function SignUp() {
     const [regErr, setRegErr] = useState("");
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const [captchaToken, setCaptchaToken] = useState("");
 
 
     const checkList = React.useRef<Map<string, refType>>(new Map<string, refType>())
@@ -40,7 +41,11 @@ export default function SignUp() {
             setLoading(false)
             return
         }
-        register(d.email ?? "", d.username ?? "", d.password ?? "").
+        if (captchaToken == "") {
+            setLoading(false)
+            setRegErr("验证码无效")
+        }
+        register(d.email ?? "", d.username ?? "", d.password ?? "", captchaToken).
             then(() => navigate("/login")).
             catch(v => [setRegErr(String(v)), console.warn(v)]).
             finally(() => setLoading(false))
@@ -121,7 +126,7 @@ export default function SignUp() {
                             />
                         </Grid>
                         <Grid item xs={12}>
-                            <TurnstileWidget onSuccess={v => console.log(v)} />
+                            <CaptchaWidget onSuccess={setCaptchaToken} />
                         </Grid>
                     </Grid>
                     <Button

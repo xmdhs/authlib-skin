@@ -27,5 +27,6 @@ type Config struct {
 	Captcha struct {
 		Type    string
 		SiteKey string
+		Secret  string
 	}
 }
