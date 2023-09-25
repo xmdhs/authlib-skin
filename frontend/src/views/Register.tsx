@@ -11,26 +11,41 @@ import Container from '@mui/material/Container';
 import { Link as RouterLink } from "react-router-dom";
 import { register } from '@/apis/apis'
 import CheckInput, { refType } from '@/components/CheckInput'
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Alert from '@mui/material/Alert';
 import Snackbar from '@mui/material/Snackbar';
 import Loading from '@/components/Loading'
 import { useNavigate } from "react-router-dom";
 import CaptchaWidget from '@/components/CaptchaWidget';
+import { useRequest } from 'ahooks';
+import type { refType as CaptchaWidgetRef } from '@/components/CaptchaWidget'
 
 export default function SignUp() {
     const [regErr, setRegErr] = useState("");
-    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const [captchaToken, setCaptchaToken] = useState("");
+    const captchaRef = useRef<CaptchaWidgetRef>(null)
 
 
     const checkList = React.useRef<Map<string, refType>>(new Map<string, refType>())
 
+    const { loading, run } = useRequest(register, {
+        manual: true,
+        onSuccess: () => {
+            navigate("/login")
+        },
+        onError: (e) => {
+            setRegErr(String(e))
+            console.warn(e)
+            captchaRef.current?.reload()
+        }
+    })
+
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        if (loading) return
-        setLoading(true)
+        if (loading) {
+            return
+        }
         const data = new FormData(event.currentTarget);
         const d = {
             email: data.get('email')?.toString(),
@@ -38,17 +53,14 @@ export default function SignUp() {
             username: data.get("username")?.toString()
         }
         if (!Array.from(checkList.current.values()).map(v => v.verify()).reduce((p, v) => (p == true) && (v == true))) {
-            setLoading(false)
             return
         }
         if (captchaToken == "") {
-            setLoading(false)
             setRegErr("验证码无效")
         }
-        register(d.email ?? "", d.username ?? "", d.password ?? "", captchaToken).
-            then(() => navigate("/login")).
-            catch(v => [setRegErr(String(v)), console.warn(v)]).
-            finally(() => setLoading(false))
+
+        run(d.email ?? "", d.username ?? "", d.password ?? "", captchaToken)
+
     };
 
     return (
@@ -126,7 +138,7 @@ export default function SignUp() {
                             />
                         </Grid>
                         <Grid item xs={12}>
-                            <CaptchaWidget onSuccess={setCaptchaToken} />
+                            <CaptchaWidget ref={captchaRef} onSuccess={setCaptchaToken} />
                         </Grid>
                     </Grid>
                     <Button
