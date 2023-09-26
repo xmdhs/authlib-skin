@@ -14,7 +14,7 @@ import Alert from '@mui/material/Alert';
 import { useSetAtom } from 'jotai';
 import { token, username } from '@/store/store'
 import { login } from '@/apis/apis'
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import Loading from '@/components/Loading'
 import CheckInput, { refType } from '@/components/CheckInput'
 
@@ -26,11 +26,10 @@ export default function SignIn() {
     const setToken = useSetAtom(token)
     const setUsername = useSetAtom(username)
     const checkList = React.useRef<Map<string, refType>>(new Map<string, refType>())
+    const navigate = useNavigate();
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        if (loading) return
-        setLoading(true)
 
         const data = new FormData(event.currentTarget);
         const postData = {
@@ -38,14 +37,17 @@ export default function SignIn() {
             password: data.get('password')?.toString(),
         }
         if (!Array.from(checkList.current.values()).map(v => v.verify()).reduce((p, v) => (p == true) && (v == true))) {
-            setLoading(false)
             return
         }
+
+        if (loading) return
+        setLoading(true)
         login(postData.email!, postData.password ?? "").
             then(v => {
                 if (!v) return
                 setToken(v.accessToken)
                 setUsername(v.selectedProfile.name)
+                navigate("/user")
             }).
             catch(v => [setErr(String(v)), console.warn(v)]).
             finally(() => setLoading(false))
