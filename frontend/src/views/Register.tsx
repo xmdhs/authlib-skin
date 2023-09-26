@@ -48,7 +48,7 @@ export default function SignUp() {
         setLoading(true)
         register(d.email ?? "", d.username ?? "", d.password ?? "", captchaToken).
             then(() => navigate("/login")).
-            catch(v => [setRegErr(String(v)), console.warn(v)]).
+            catch(v => [setRegErr(String(v)), console.warn(v), captchaRef.current?.reload()]).
             finally(() => setLoading(false))
     };
 
