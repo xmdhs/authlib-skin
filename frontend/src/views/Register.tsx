@@ -17,7 +17,6 @@ import Snackbar from '@mui/material/Snackbar';
 import Loading from '@/components/Loading'
 import { useNavigate } from "react-router-dom";
 import CaptchaWidget from '@/components/CaptchaWidget';
-import { useRequest } from 'ahooks';
 import type { refType as CaptchaWidgetRef } from '@/components/CaptchaWidget'
 
 export default function SignUp() {
@@ -25,27 +24,15 @@ export default function SignUp() {
     const navigate = useNavigate();
     const [captchaToken, setCaptchaToken] = useState("");
     const captchaRef = useRef<CaptchaWidgetRef>(null)
+    const [loading, setLoading] = useState(false);
 
 
     const checkList = React.useRef<Map<string, refType>>(new Map<string, refType>())
 
-    const { loading, run } = useRequest(register, {
-        manual: true,
-        onSuccess: () => {
-            navigate("/login")
-        },
-        onError: (e) => {
-            setRegErr(String(e))
-            console.warn(e)
-            captchaRef.current?.reload()
-        }
-    })
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        if (loading) {
-            return
-        }
+        if (loading) return
         const data = new FormData(event.currentTarget);
         const d = {
             email: data.get('email')?.toString(),
@@ -58,9 +45,11 @@ export default function SignUp() {
         if (captchaToken == "") {
             setRegErr("验证码无效")
         }
-
-        run(d.email ?? "", d.username ?? "", d.password ?? "", captchaToken)
-
+        setLoading(true)
+        register(d.email ?? "", d.username ?? "", d.password ?? "", captchaToken).
+            then(() => navigate("/login")).
+            catch(v => [setRegErr(String(v)), console.warn(v)]).
+            finally(() => setLoading(false))
     };
 
     return (

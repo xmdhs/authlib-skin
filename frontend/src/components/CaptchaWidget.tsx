@@ -19,7 +19,9 @@ export type refType = {
 const CaptchaWidget = forwardRef<refType, prop>(({ onSuccess }, ref) => {
     const Turnstileref = useRef<TurnstileInstance>(null)
     const [key, setKey] = useState(1)
-    const { data, error, loading } = useRequest(() => fetch(import.meta.env.VITE_APIADDR + '/api/v1/captcha').then(v => v.json() as Promise<ApiCaptcha>))
+    const { data, error, loading } = useRequest(() => fetch(import.meta.env.VITE_APIADDR + '/api/v1/captcha').then(v => v.json() as Promise<ApiCaptcha>), {
+        loadingDelay: 500
+    })
 
     useImperativeHandle(ref, () => {
         return {
