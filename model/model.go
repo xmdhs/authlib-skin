@@ -29,3 +29,8 @@ type Captcha struct {
 	Type    string `json:"type"`
 	SiteKey string `json:"siteKey"`
 }
+
+type UserInfo struct {
+	UID  int    `json:"uid"`
+	UUID string `json:"uuid"`
+}

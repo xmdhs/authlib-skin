@@ -1,16 +1,13 @@
 package handle
 
 import (
-	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
-	"net/netip"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/samber/lo"
 	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/service"
+	utilsService "github.com/xmdhs/authlib-skin/service/utils"
 	"github.com/xmdhs/authlib-skin/utils"
 )
 
@@ -53,22 +50,34 @@ func (h *Handel) Reg() httprouter.Handle {
 			handleError(ctx, w, err.Error(), model.ErrService, 500)
 			return
 		}
-		json.NewEncoder(w).Encode(model.API[any]{
+		encodeJson(w, model.API[any]{
 			Code: 0,
-			Data: nil,
-			Msg:  "",
 		})
-
 	}
 }
 
-func getPrefix(ip string) (string, error) {
-	ipa, err := netip.ParseAddr(ip)
-	if err != nil {
-		return "", fmt.Errorf("getPrefix: %w", err)
+func (h *Handel) UserInfo() httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+		ctx := r.Context()
+		token := h.getTokenbyAuthorization(ctx, w, r)
+		if token == "" {
+			return
+		}
+
+		u, err := h.webService.Info(ctx, token)
+		if err != nil {
+			if errors.Is(err, utilsService.ErrTokenInvalid) {
+				h.logger.DebugContext(ctx, "token 无效")
+				handleError(ctx, w, "token 无效", model.ErrAuth, 401)
+				return
+			}
+			h.logger.InfoContext(ctx, err.Error())
+			handleError(ctx, w, err.Error(), model.ErrUnknown, 500)
+			return
+		}
+		encodeJson(w, model.API[model.UserInfo]{
+			Code: 0,
+			Data: u,
+		})
 	}
-	if ipa.Is6() {
-		return lo.Must1(ipa.Prefix(48)).String(), nil
-	}
-	return lo.Must1(ipa.Prefix(24)).String(), nil
 }

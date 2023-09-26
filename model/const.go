@@ -9,4 +9,5 @@ const (
 	ErrService
 	ErrExistUser
 	ErrRegLimit
+	ErrAuth
 )

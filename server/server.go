@@ -33,9 +33,22 @@ func NewServer(c config.Config, sl *slog.Logger, route *httprouter.Router) (*htt
 			if c.Debug && sl.Enabled(ctx, slog.LevelDebug) {
 				sl.DebugContext(ctx, r.Method)
 			}
-			w.Header().Set("Access-Control-Allow-Origin", "*")
-			route.ServeHTTP(w, r)
+			cors(route).ServeHTTP(w, r)
 		}),
 	}
 	return s, func() { s.Close() }
+}
+
+func cors(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		header := w.Header()
+		if r.Header.Get("Access-Control-Request-Method") != "" {
+			header.Set("Access-Control-Allow-Methods", r.Header.Get("Access-Control-Request-Method"))
+		}
+		header.Set("Access-Control-Allow-Origin", "*")
+		header.Set("Access-Control-Allow-Headers", "*")
+		header.Set("Access-Control-Allow-Private-Network", "true")
+		header.Set("Access-Control-Max-Age", "3600")
+		h.ServeHTTP(w, r)
+	})
 }

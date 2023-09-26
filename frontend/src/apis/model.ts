@@ -19,3 +19,10 @@ interface captcha {
 }
 
 export type ApiCaptcha = Api<captcha>
+
+interface user {
+    uid: string
+    uuid: string
+}
+
+export type ApiUser = Api<user>

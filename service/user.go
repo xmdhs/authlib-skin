@@ -12,6 +12,8 @@ import (
 	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
 	"github.com/xmdhs/authlib-skin/model"
+	"github.com/xmdhs/authlib-skin/model/yggdrasil"
+	utilsService "github.com/xmdhs/authlib-skin/service/utils"
 	"github.com/xmdhs/authlib-skin/utils"
 )
 
@@ -87,4 +89,15 @@ func (w *WebService) Reg(ctx context.Context, u model.User, ipPrefix, ip string)
 		return fmt.Errorf("Reg: %w", err)
 	}
 	return nil
+}
+
+func (w *WebService) Info(ctx context.Context, token string) (model.UserInfo, error) {
+	t, err := utilsService.Auth(ctx, yggdrasil.ValidateToken{AccessToken: token}, w.client, w.cache, &w.prikey.PublicKey, false)
+	if err != nil {
+		return model.UserInfo{}, fmt.Errorf("Info: %w", err)
+	}
+	return model.UserInfo{
+		UID:  t.UID,
+		UUID: t.Subject,
+	}, nil
 }

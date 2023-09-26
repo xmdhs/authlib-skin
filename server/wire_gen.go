@@ -52,7 +52,7 @@ func InitializeRoute(ctx context.Context, c config.Config) (*http.Server, func()
 	}
 	yggdrasil3 := yggdrasil2.NewYggdrasil(logger, validate, yggdrasilYggdrasil, c, pubRsaKey)
 	httpClient := ProvideHttpClient()
-	webService := service.NewWebService(c, client, httpClient)
+	webService := service.NewWebService(c, client, httpClient, cache, privateKey)
 	handel := handle.NewHandel(webService, validate, c, logger)
 	router, err := route.NewRoute(yggdrasil3, handel)
 	if err != nil {
