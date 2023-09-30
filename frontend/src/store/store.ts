@@ -1,4 +1,7 @@
 import { atomWithStorage } from 'jotai/utils'
 
 export const token = atomWithStorage("token", "")
-export const username = atomWithStorage("username", "")
+export const user = atomWithStorage("username", {
+    name: "",
+    uuid: ""
+})

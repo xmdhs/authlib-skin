@@ -12,7 +12,7 @@ import Container from '@mui/material/Container';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import { useSetAtom } from 'jotai';
-import { token, username } from '@/store/store'
+import { token, user } from '@/store/store'
 import { login } from '@/apis/apis'
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import Loading from '@/components/Loading'
@@ -24,7 +24,7 @@ export default function SignIn() {
     const [err, setErr] = useState("");
     const [loading, setLoading] = useState(false);
     const setToken = useSetAtom(token)
-    const setUsername = useSetAtom(username)
+    const setUserInfo = useSetAtom(user)
     const checkList = React.useRef<Map<string, refType>>(new Map<string, refType>())
     const navigate = useNavigate();
 
@@ -46,7 +46,10 @@ export default function SignIn() {
             then(v => {
                 if (!v) return
                 setToken(v.accessToken)
-                setUsername(v.selectedProfile.name)
+                setUserInfo({
+                    uuid: v.selectedProfile.uuid,
+                    name: v.selectedProfile.name,
+                })
                 navigate("/user")
             }).
             catch(v => [setErr(String(v)), console.warn(v)]).
