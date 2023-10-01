@@ -50,7 +50,7 @@ export default function SignIn() {
                     uuid: v.selectedProfile.uuid,
                     name: v.selectedProfile.name,
                 })
-                navigate("/user")
+                navigate("/")
             }).
             catch(v => [setErr(String(v)), console.warn(v)]).
             finally(() => setLoading(false))

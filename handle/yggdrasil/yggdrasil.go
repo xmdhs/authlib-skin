@@ -61,13 +61,16 @@ func (y *Yggdrasil) YggdrasilRoot() httprouter.Handle {
 				return h, err
 			}, r.Host)
 		}
+		homepage, _ := url.JoinPath(y.config.WebBaseUrl, "/login")
+		register, _ := url.JoinPath(y.config.WebBaseUrl, "/register")
+
 		w.Write(lo.Must1(json.Marshal(yggdrasilM.Yggdrasil{
 			Meta: yggdrasilM.YggdrasilMeta{
 				ImplementationName:    "authlib-skin",
 				ImplementationVersion: "0.0.1",
 				Links: yggdrasilM.YggdrasilMetaLinks{
-					Homepage: y.config.HomepageUrl,
-					Register: y.config.RegisterUrl,
+					Homepage: homepage,
+					Register: register,
 				},
 				ServerName:       y.config.ServerName,
 				EnableProfileKey: true,

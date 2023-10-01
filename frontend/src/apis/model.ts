@@ -21,9 +21,14 @@ interface captcha {
 
 export type ApiCaptcha = Api<captcha>
 
-interface user {
+export interface ApiUser {
     uid: string
     uuid: string
+    is_admin: boolean
 }
 
-export type ApiUser = Api<user>
+export interface ApiServerInfo {
+    meta: {
+        serverName: string
+    }
+}

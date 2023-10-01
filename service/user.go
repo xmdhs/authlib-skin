@@ -96,8 +96,17 @@ func (w *WebService) Info(ctx context.Context, token string) (model.UserInfo, er
 	if err != nil {
 		return model.UserInfo{}, fmt.Errorf("Info: %w", err)
 	}
+	u, err := w.client.User.Query().Where(user.ID(t.UID)).First(ctx)
+	if err != nil {
+		return model.UserInfo{}, fmt.Errorf("Info: %w", err)
+	}
+	isAdmin := false
+	if u.State&1 == 1 {
+		isAdmin = true
+	}
 	return model.UserInfo{
-		UID:  t.UID,
-		UUID: t.Subject,
+		UID:     t.UID,
+		UUID:    t.Subject,
+		IsAdmin: isAdmin,
 	}, nil
 }

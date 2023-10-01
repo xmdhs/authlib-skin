@@ -28,7 +28,8 @@ func (User) Fields() []ent.Field {
 		field.String("reg_ip").SchemaType(map[string]string{
 			dialect.MySQL: "VARCHAR(32)",
 		}),
-		// 二进制状态位，保留
+		// 二进制状态位
+		// 第一位为 1 则是 admin
 		field.Int("state"),
 		field.Int64("reg_time"),
 	}

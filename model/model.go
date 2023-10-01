@@ -31,6 +31,7 @@ type Captcha struct {
 }
 
 type UserInfo struct {
-	UID  int    `json:"uid"`
-	UUID string `json:"uuid"`
+	UID     int    `json:"uid"`
+	UUID    string `json:"uuid"`
+	IsAdmin bool   `json:"is_admin"`
 }

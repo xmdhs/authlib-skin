@@ -20,8 +20,7 @@ type Config struct {
 	RsaPriKey      string
 	TexturePath    string
 	TextureBaseUrl string
-	HomepageUrl    string
-	RegisterUrl    string
+	WebBaseUrl     string
 	ServerName     string
 
 	Captcha struct {

@@ -1,5 +1,5 @@
-import type { tokenData, ApiUser } from '@/apis/model'
-import { apiWrapGet } from '@/apis/utils'
+import type { tokenData, ApiUser, ApiServerInfo } from '@/apis/model'
+import { apiGet } from '@/apis/utils'
 
 export async function login(username: string, password: string) {
     const v = await fetch(import.meta.env.VITE_APIADDR + "/api/yggdrasil/authserver/authenticate", {
@@ -11,7 +11,7 @@ export async function login(username: string, password: string) {
     })
     const data = await v.json()
     if (!v.ok) {
-        throw data?.errorMessage
+        throw new Error(data?.errorMessage)
     }
     return data as tokenData
 }
@@ -26,7 +26,7 @@ export async function register(email: string, username: string, password: string
             "CaptchaToken": captchaToken
         })
     })
-    return await apiWrapGet(v)
+    return await apiGet(v)
 }
 
 export async function userInfo(token: string) {
@@ -36,6 +36,11 @@ export async function userInfo(token: string) {
             "Authorization": "Bearer " + token
         }
     })
-    return await apiWrapGet<ApiUser>(v)
+    return await apiGet<ApiUser>(v)
 }
 
+
+export async function serverInfo() {
+    const v = await fetch(import.meta.env.VITE_APIADDR + "/api/yggdrasil")
+    return await v.json() as ApiServerInfo
+}
