@@ -13,15 +13,13 @@ import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import InboxIcon from '@mui/icons-material/MoveToInbox';
-import MailIcon from '@mui/icons-material/Mail';
 import AppBar from '@mui/material/AppBar';
 import { Outlet } from 'react-router-dom';
 import { AccountCircle } from '@mui/icons-material';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import { token, user } from '@/store/store';
-import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { LayoutAlertErr, token, user } from '@/store/store';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import Button from '@mui/material/Button';
 import { useNavigate } from "react-router-dom";
 import { useRequest, useMemoizedFn } from 'ahooks';
@@ -30,12 +28,13 @@ import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import { memo } from 'react';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import useTilg from 'tilg'
 import { ApiErr } from '@/apis/error';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
-
-export const AlertErr = atom("")
+import PersonIcon from '@mui/icons-material/Person';
+import SecurityIcon from '@mui/icons-material/Security';
+import SettingsIcon from '@mui/icons-material/Settings';
+import useTilg from 'tilg'
 
 const drawerWidth = 240;
 
@@ -48,15 +47,20 @@ const DrawerHeader = styled('div')(({ theme }) => ({
     justifyContent: 'flex-end',
 }));
 
+interface ListItem {
+    icon: JSX.Element
+    title: string
+    link: string
+}
 
-export default function Layout() {
+
+const Layout = memo(function Layout() {
     const theme = useTheme();
     const isLg = useMediaQuery(theme.breakpoints.up('lg'))
     const [open, setOpen] = React.useState(false);
     const nowToken = useAtomValue(token)
-    const [err, setErr] = useAtom(AlertErr)
+    const [err, setErr] = useAtom(LayoutAlertErr)
     const navigate = useNavigate();
-
 
     const userinfo = useRequest(() => userInfo(nowToken), {
         refreshDeps: [nowToken],
@@ -71,7 +75,32 @@ export default function Layout() {
         }
     })
 
-    useTilg(isLg, open)
+    const userDrawerList = React.useMemo(() => [
+        {
+            icon: <PersonIcon />,
+            title: '个人信息',
+            link: '/profile'
+        },
+        {
+            icon: <SettingsIcon />,
+            title: '皮肤设置',
+            link: '/textures'
+        },
+        {
+            icon: <SecurityIcon />,
+            title: '安全设置',
+            link: '/setting'
+        }
+    ] as ListItem[], [])
+
+    const adminDrawerList = React.useMemo(() => [
+        {
+            icon: <PersonIcon />,
+            title: 'test'
+        }
+    ] as ListItem[], [])
+
+    useTilg()
 
     return (<>
         <Box sx={{ display: 'flex' }}>
@@ -103,33 +132,11 @@ export default function Layout() {
                         </IconButton>
                     </DrawerHeader>
                     <Divider />
-                    <List>
-                        {['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
-                            <ListItem key={text} disablePadding>
-                                <ListItemButton>
-                                    <ListItemIcon>
-                                        {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
-                                    </ListItemIcon>
-                                    <ListItemText primary={text} />
-                                </ListItemButton>
-                            </ListItem>
-                        ))}
-                    </List>
+                    <MyList list={userDrawerList} />
                     {userinfo.data?.is_admin && (
                         <>
                             <Divider />
-                            <List>
-                                {['All mail', 'Trash', 'Spam'].map((text, index) => (
-                                    <ListItem key={text} disablePadding>
-                                        <ListItemButton>
-                                            <ListItemIcon>
-                                                {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
-                                            </ListItemIcon>
-                                            <ListItemText primary={text} />
-                                        </ListItemButton>
-                                    </ListItem>
-                                ))}
-                            </List>
+                            <MyList list={adminDrawerList} />
                         </>)}
                 </Drawer>
             )}
@@ -149,14 +156,14 @@ export default function Layout() {
             </Box>
         </Box>
     </>)
-}
+})
 
-const MyToolbar = memo((p: { setOpen: (v: boolean) => void }) => {
+const MyToolbar = memo(function MyToolbar(p: { setOpen: (v: boolean) => void }) {
     const [nowUser, setNowUser] = useAtom(user)
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const navigate = useNavigate();
     const [, setToken] = useAtom(token)
-    const setErr = useSetAtom(AlertErr)
+    const setErr = useSetAtom(LayoutAlertErr)
 
     const server = useRequest(serverInfo, {
         cacheKey: "/api/yggdrasil",
@@ -168,15 +175,12 @@ const MyToolbar = memo((p: { setOpen: (v: boolean) => void }) => {
     })
 
 
-
     const handleLogOut = useMemoizedFn(() => {
         setAnchorEl(null);
         setNowUser({ name: "", uuid: "" })
         setToken("")
         navigate("/")
     })
-
-
 
     return (
         <>
@@ -234,3 +238,38 @@ const MyToolbar = memo((p: { setOpen: (v: boolean) => void }) => {
             </Toolbar>
         </>)
 })
+
+const MyList = memo(function MyList(p: { list: ListItem[] }) {
+    useTilg()
+
+    return (
+        <>
+            <List>
+                {p.list.map(item =>
+                    <MyListItem {...item} key={item.title} />
+                )}
+            </List>
+        </>
+    )
+})
+
+const MyListItem = memo(function MyListItem(p: ListItem) {
+    const navigate = useNavigate();
+
+    const handleClick = useMemoizedFn(() => {
+        navigate(p.link)
+    })
+
+    return (
+        <ListItem disablePadding>
+            <ListItemButton onClick={handleClick}>
+                <ListItemIcon>
+                    {p.icon}
+                </ListItemIcon>
+                <ListItemText primary={p.title} />
+            </ListItemButton>
+        </ListItem>
+    )
+})
+
+export default Layout

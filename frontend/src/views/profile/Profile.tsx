@@ -6,10 +6,9 @@ import Typography from '@mui/material/Typography';
 import CardHeader from '@mui/material/CardHeader';
 import { useHover, useRequest } from 'ahooks';
 import { ApiErr } from '@/apis/error';
-import { token } from '@/store/store';
+import { LayoutAlertErr, token } from '@/store/store';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { userInfo, yggProfile } from '@/apis/apis';
-import { AlertErr } from '@/views/Layout';
 import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import { memo, useEffect, useRef, useState } from 'react';
@@ -19,12 +18,11 @@ import type { ReactSkinview3dOptions } from "react-skinview3d"
 import { WalkingAnimation } from "skinview3d"
 import type { SkinViewer } from "skinview3d"
 import Skeleton from '@mui/material/Skeleton';
-import useTilg from 'tilg';
 
-const Profile = () => {
+const Profile = memo(function Profile() {
     const nowToken = useAtomValue(token)
     const navigate = useNavigate();
-    const setErr = useSetAtom(AlertErr)
+    const setErr = useSetAtom(LayoutAlertErr)
     const [textures, setTextures] = useState({ skin: "", cape: "", model: "default" })
 
     const userinfo = useRequest(() => userInfo(nowToken), {
@@ -67,10 +65,10 @@ const Profile = () => {
                 <Card sx={{ gridArea: "a" }}>
                     <CardHeader title="信息" />
                     <CardContent sx={{ display: "grid", gridTemplateColumns: "4em auto" }}>
-                        <Typography>用户名</Typography>
-                        <Typography>{SkinInfo.loading || userinfo.loading ? <Skeleton /> : SkinInfo.data?.name}</Typography>
                         <Typography>uid</Typography>
                         <Typography sx={{ wordBreak: 'break-all' }}>{userinfo.loading ? <Skeleton /> : userinfo.data?.uid}</Typography>
+                        <Typography>name</Typography>
+                        <Typography>{SkinInfo.loading || userinfo.loading ? <Skeleton /> : SkinInfo.data?.name}</Typography>
                         <Typography>uuid</Typography>
                         <Typography sx={{ wordBreak: 'break-all' }}>{userinfo.loading ? <Skeleton /> : userinfo.data?.uuid}</Typography>
                     </CardContent>
@@ -94,25 +92,24 @@ const Profile = () => {
                         }
                     </CardContent>
                     <CardActions>
-                        <Button size="small">更改</Button>
+                        <Button onClick={() => navigate('/textures')} size="small">更改</Button>
                     </CardActions>
                 </Card>
                 <Card sx={{ gridArea: "c" }}>
                     <CardHeader title="启动器设置" />
                     <CardContent>
                         <Typography>本站 Yggdrasil API 地址</Typography>
-                        <code>{import.meta.env.VITE_APIADDR + "/api/yggdrasil"}</code>
+                        <code>{getYggRoot()}</code>
                     </CardContent>
                 </Card>
                 <Box sx={{ gridArea: "d" }}></Box>
             </Box >
         </>
     )
-}
+})
 
 
-
-const MySkin = memo((p: ReactSkinview3dOptions) => {
+const MySkin = memo(function MySkin(p: ReactSkinview3dOptions) {
     const refSkinview3d = useRef(null);
     const skinisHovering = useHover(refSkinview3d);
     const skinview3dView = useRef<SkinViewer | null>(null);
@@ -126,7 +123,6 @@ const MySkin = memo((p: ReactSkinview3dOptions) => {
         }
     }, [skinisHovering])
 
-    useTilg(`refSkinview3d= `, refSkinview3d, `skinisHovering=${skinisHovering}`);
     return <div ref={refSkinview3d}>
         <ReactSkinview3d
             {...p}
@@ -134,5 +130,10 @@ const MySkin = memo((p: ReactSkinview3dOptions) => {
         />
     </div>
 })
+
+function getYggRoot() {
+    const u = new URL((import.meta.env.VITE_APIADDR ?? location.origin) + "/api/yggdrasil")
+    return u.toString()
+}
 
 export default Profile
