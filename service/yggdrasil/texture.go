@@ -94,6 +94,10 @@ func (y *Yggdrasil) DelTexture(ctx context.Context, uuid string, token string, t
 	if err != nil {
 		return fmt.Errorf("DelTexture: %w", err)
 	}
+	err = y.cache.Del([]byte("Profile" + uuid))
+	if err != nil {
+		return fmt.Errorf("DelTexture: %w", err)
+	}
 	return nil
 }
 
@@ -149,6 +153,10 @@ func (y *Yggdrasil) PutTexture(ctx context.Context, token string, texturebyte []
 		return fmt.Errorf("PutTexture: %w", err)
 	}
 	err = createTextureFile(y.config.TexturePath, texturebyte, hashstr)
+	if err != nil {
+		return fmt.Errorf("PutTexture: %w", err)
+	}
+	err = y.cache.Del([]byte("Profile" + uuid))
 	if err != nil {
 		return fmt.Errorf("PutTexture: %w", err)
 	}

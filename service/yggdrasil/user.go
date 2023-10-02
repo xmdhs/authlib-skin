@@ -17,6 +17,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/samber/lo"
+	"github.com/xmdhs/authlib-skin/db/cache"
 	"github.com/xmdhs/authlib-skin/db/ent"
 	"github.com/xmdhs/authlib-skin/db/ent/texture"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
@@ -187,14 +188,6 @@ func (y *Yggdrasil) Refresh(ctx context.Context, token yggdrasil.RefreshToken) (
 }
 
 func (y *Yggdrasil) GetProfile(ctx context.Context, uuid string, unsigned bool, host string) (yggdrasil.UserInfo, error) {
-	up, err := y.client.UserProfile.Query().Where(userprofile.UUID(uuid)).WithUsertexture().Only(ctx)
-	if err != nil {
-		var nf *ent.NotFoundError
-		if errors.As(err, &nf) {
-			return yggdrasil.UserInfo{}, fmt.Errorf("GetProfile: %w", ErrNotUser)
-		}
-		return yggdrasil.UserInfo{}, fmt.Errorf("GetProfile: %w", err)
-	}
 	baseURl := func() string {
 		if y.config.TextureBaseUrl == "" {
 			u := &url.URL{}
@@ -206,27 +199,62 @@ func (y *Yggdrasil) GetProfile(ctx context.Context, uuid string, unsigned bool, 
 		return y.config.TextureBaseUrl
 	}()
 
-	ut := yggdrasil.UserTextures{
-		ProfileID:   up.UUID,
-		ProfileName: up.Name,
-		Textures:    map[string]yggdrasil.Textures{},
-		Timestamp:   time.Now().UnixMilli(),
+	c := cache.CacheHelp[yggdrasil.UserTextures]{Cache: y.cache}
+	key := []byte("Profile" + uuid)
+	ut, err := c.Get(key)
+	if err != nil {
+		return yggdrasil.UserInfo{}, fmt.Errorf("GetProfile: %w", err)
 	}
+	if ut.ProfileName != "" {
+		for k, v := range ut.Textures {
+			u, err := url.Parse(v.Url)
+			if err != nil {
+				return yggdrasil.UserInfo{}, fmt.Errorf("GetProfile: %w", err)
+			}
+			baseu, err := url.Parse(baseURl)
+			if err != nil {
+				return yggdrasil.UserInfo{}, fmt.Errorf("GetProfile: %w", err)
+			}
+			u.Host = baseu.Host
+			v.Url = u.String()
+			ut.Textures[k] = v
+		}
+	} else {
+		up, err := y.client.UserProfile.Query().Where(userprofile.UUID(uuid)).WithUsertexture().Only(ctx)
+		if err != nil {
+			var nf *ent.NotFoundError
+			if errors.As(err, &nf) {
+				return yggdrasil.UserInfo{}, fmt.Errorf("GetProfile: %w", ErrNotUser)
+			}
+			return yggdrasil.UserInfo{}, fmt.Errorf("GetProfile: %w", err)
+		}
 
-	for _, v := range up.Edges.Usertexture {
-		dt, err := y.client.Texture.Query().Where(texture.ID(v.TextureID)).Only(ctx)
+		ut = yggdrasil.UserTextures{
+			ProfileID:   up.UUID,
+			ProfileName: up.Name,
+			Textures:    map[string]yggdrasil.Textures{},
+			Timestamp:   time.Now().UnixMilli(),
+		}
+
+		for _, v := range up.Edges.Usertexture {
+			dt, err := y.client.Texture.Query().Where(texture.ID(v.TextureID)).Only(ctx)
+			if err != nil {
+				return yggdrasil.UserInfo{}, fmt.Errorf("GetProfile: %w", err)
+			}
+			hashstr := dt.TextureHash
+			t := yggdrasil.Textures{
+				Url:      lo.Must1(url.JoinPath(baseURl, hashstr[:2], hashstr[2:4], hashstr)),
+				Metadata: map[string]string{},
+			}
+			if v.Variant == "slim" {
+				t.Metadata["model"] = "slim"
+			}
+			ut.Textures[strings.ToTitle(v.Type)] = t
+		}
+		err = c.Put(key, ut, time.Now().Add(30*time.Minute))
 		if err != nil {
 			return yggdrasil.UserInfo{}, fmt.Errorf("GetProfile: %w", err)
 		}
-		hashstr := dt.TextureHash
-		t := yggdrasil.Textures{
-			Url:      lo.Must1(url.JoinPath(baseURl, hashstr[:2], hashstr[2:4], hashstr)),
-			Metadata: map[string]string{},
-		}
-		if v.Variant == "slim" {
-			t.Metadata["model"] = "slim"
-		}
-		ut.Textures[strings.ToTitle(v.Type)] = t
 	}
 
 	texturesBase64 := ut.Base64()
@@ -253,8 +281,8 @@ func (y *Yggdrasil) GetProfile(ctx context.Context, uuid string, unsigned bool, 
 	}
 
 	uinfo := yggdrasil.UserInfo{
-		ID:         up.UUID,
-		Name:       up.Name,
+		ID:         ut.ProfileID,
+		Name:       ut.ProfileName,
 		Properties: pl,
 	}
 

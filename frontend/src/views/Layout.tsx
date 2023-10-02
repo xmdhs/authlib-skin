@@ -65,7 +65,6 @@ const Layout = memo(function Layout() {
     const userinfo = useRequest(() => userInfo(nowToken), {
         refreshDeps: [nowToken],
         cacheKey: "/api/v1/user",
-        cacheTime: 10000,
         onError: e => {
             if (e instanceof ApiErr && e.code == 5) {
                 navigate("/login")
@@ -167,7 +166,6 @@ const MyToolbar = memo(function MyToolbar(p: { setOpen: (v: boolean) => void }) 
 
     const server = useRequest(serverInfo, {
         cacheKey: "/api/yggdrasil",
-        cacheTime: 100000,
         onError: e => {
             console.warn(e)
             setErr(String(e))
@@ -253,12 +251,12 @@ const MyList = memo(function MyList(p: { list: ListItem[] }) {
     )
 })
 
-const MyListItem = memo(function MyListItem(p: ListItem) {
+const MyListItem = function MyListItem(p: ListItem) {
     const navigate = useNavigate();
 
-    const handleClick = useMemoizedFn(() => {
+    const handleClick = () => {
         navigate(p.link)
-    })
+    }
 
     return (
         <ListItem disablePadding>
@@ -270,6 +268,6 @@ const MyListItem = memo(function MyListItem(p: ListItem) {
             </ListItemButton>
         </ListItem>
     )
-})
+}
 
 export default Layout

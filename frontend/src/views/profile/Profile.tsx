@@ -28,7 +28,6 @@ const Profile = memo(function Profile() {
     const userinfo = useRequest(() => userInfo(nowToken), {
         refreshDeps: [nowToken],
         cacheKey: "/api/v1/user",
-        cacheTime: 10000,
         onError: e => {
             if (e instanceof ApiErr && e.code == 5) {
                 navigate("/login")
@@ -39,6 +38,7 @@ const Profile = memo(function Profile() {
     })
 
     const SkinInfo = useRequest(() => yggProfile(userinfo.data?.uuid ?? ""), {
+        cacheKey: "/api/yggdrasil/sessionserver/session/minecraft/profile/" + userinfo.data?.uuid,
         onError: e => {
             console.warn(e)
             setErr(String(e))
@@ -66,11 +66,11 @@ const Profile = memo(function Profile() {
                     <CardHeader title="信息" />
                     <CardContent sx={{ display: "grid", gridTemplateColumns: "4em auto" }}>
                         <Typography>uid</Typography>
-                        <Typography sx={{ wordBreak: 'break-all' }}>{userinfo.loading ? <Skeleton /> : userinfo.data?.uid}</Typography>
+                        <Typography sx={{ wordBreak: 'break-all' }}>{(userinfo.loading && !userinfo.data) ? <Skeleton /> : userinfo.data?.uid}</Typography>
                         <Typography>name</Typography>
-                        <Typography>{SkinInfo.loading || userinfo.loading ? <Skeleton /> : SkinInfo.data?.name}</Typography>
+                        <Typography>{(SkinInfo.loading || userinfo.loading) && !SkinInfo.data ? <Skeleton /> : SkinInfo.data?.name}</Typography>
                         <Typography>uuid</Typography>
-                        <Typography sx={{ wordBreak: 'break-all' }}>{userinfo.loading ? <Skeleton /> : userinfo.data?.uuid}</Typography>
+                        <Typography sx={{ wordBreak: 'break-all' }}>{(userinfo.loading && !userinfo.data) ? <Skeleton /> : userinfo.data?.uuid}</Typography>
                     </CardContent>
                     {/* <CardActions>
                     <Button size="small">更改</Button>
@@ -80,7 +80,7 @@ const Profile = memo(function Profile() {
                     <CardHeader title="皮肤" />
                     <CardContent sx={{ display: "flex", justifyContent: 'center' }}>
                         {
-                            SkinInfo.loading ? <Skeleton variant="rectangular" width={250} height={250} />
+                            (SkinInfo.loading && !SkinInfo.data) ? <Skeleton variant="rectangular" width={250} height={250} />
                                 : (textures.skin != "" || textures.cape != "") && (
                                     <MySkin
                                         skinUrl={textures.skin}
