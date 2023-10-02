@@ -118,10 +118,16 @@ func (y *Yggdrasil) PutTexture() httprouter.Handle {
 func getUUIDbyParams(ctx context.Context, p httprouter.Params, l *slog.Logger, w http.ResponseWriter) (string, string, bool) {
 	uuid := p.ByName("uuid")
 	textureType := p.ByName("textureType")
-	if uuid == "" || textureType == "" {
-		l.DebugContext(ctx, "路径中缺少参数 uuid / textureType")
+	if uuid == "" {
+		l.DebugContext(ctx, "路径中缺少参数 uuid")
 		handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: "路径中缺少参数 uuid / textureType"}, 400)
 		return "", "", false
+	}
+	if textureType != "skin" && textureType != "cape" {
+		l.DebugContext(ctx, "上传类型错误")
+		handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: "上传类型错误"}, 400)
+		return "", "", false
+
 	}
 	return uuid, textureType, true
 }

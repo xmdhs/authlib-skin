@@ -21,7 +21,7 @@ import { AccountCircle } from '@mui/icons-material';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { token, user } from '@/store/store';
-import { useAtom, useAtomValue } from 'jotai';
+import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import Button from '@mui/material/Button';
 import { useNavigate } from "react-router-dom";
 import { useRequest, useMemoizedFn } from 'ahooks';
@@ -33,7 +33,9 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import useTilg from 'tilg'
 import { ApiErr } from '@/apis/error';
 import Typography from '@mui/material/Typography';
+import Container from '@mui/material/Container';
 
+export const AlertErr = atom("")
 
 const drawerWidth = 240;
 
@@ -52,7 +54,7 @@ export default function Layout() {
     const isLg = useMediaQuery(theme.breakpoints.up('lg'))
     const [open, setOpen] = React.useState(false);
     const nowToken = useAtomValue(token)
-    const [err, setErr] = React.useState("");
+    const [err, setErr] = useAtom(AlertErr)
     const navigate = useNavigate();
 
 
@@ -140,7 +142,10 @@ export default function Layout() {
                     flexGrow: 1, bgcolor: 'background.default', p: 3
                 }}
             >
-                <Outlet />
+                <Toolbar />
+                <Container maxWidth="lg">
+                    <Outlet />
+                </Container>
             </Box>
         </Box>
     </>)
@@ -151,12 +156,14 @@ const MyToolbar = memo((p: { setOpen: (v: boolean) => void }) => {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const navigate = useNavigate();
     const [, setToken] = useAtom(token)
+    const setErr = useSetAtom(AlertErr)
 
     const server = useRequest(serverInfo, {
         cacheKey: "/api/yggdrasil",
         cacheTime: 100000,
         onError: e => {
             console.warn(e)
+            setErr(String(e))
         }
     })
 

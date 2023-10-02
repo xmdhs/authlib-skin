@@ -1,4 +1,4 @@
-import type { tokenData, ApiUser, ApiServerInfo } from '@/apis/model'
+import type { tokenData, ApiUser, ApiServerInfo, YggProfile } from '@/apis/model'
 import { apiGet } from '@/apis/utils'
 
 export async function login(username: string, password: string) {
@@ -43,4 +43,14 @@ export async function userInfo(token: string) {
 export async function serverInfo() {
     const v = await fetch(import.meta.env.VITE_APIADDR + "/api/yggdrasil")
     return await v.json() as ApiServerInfo
+}
+
+export async function yggProfile(uuid: string) {
+    if (uuid == "") return
+    const v = await fetch(import.meta.env.VITE_APIADDR + "/api/yggdrasil/sessionserver/session/minecraft/profile/" + uuid)
+    const data = await v.json()
+    if (!v.ok) {
+        throw new Error(data?.errorMessage)
+    }
+    return data as YggProfile
 }

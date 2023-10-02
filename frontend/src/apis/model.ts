@@ -32,3 +32,11 @@ export interface ApiServerInfo {
         serverName: string
     }
 }
+
+export interface YggProfile {
+    name: string
+    properties: {
+        name: string
+        value: string
+    }[]
+}
