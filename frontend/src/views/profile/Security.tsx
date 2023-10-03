@@ -1,6 +1,91 @@
+import Button from "@mui/material/Button";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import CardHeader from "@mui/material/CardHeader";
+import TextField from "@mui/material/TextField";
+import { useEffect, useState } from "react";
+import { produce } from 'immer'
+import { changePasswd } from "@/apis/apis";
+import { useAtom, useSetAtom } from "jotai";
+import { LayoutAlertErr, token } from "@/store/store";
+import Loading from "@/components/Loading";
+import { ApiErr } from "@/apis/error";
+import { useNavigate } from "react-router-dom";
 
 export default function Security() {
+    const [pass, setPass] = useState({
+        old: "",
+        pass1: "",
+        pass2: "",
+    })
+    const [err, setErr] = useState("")
+    const [oldPassErr, setOldPassErr] = useState(false)
+    const [nowToken, setToken] = useAtom(token)
+    const [load, setLoad] = useState(false)
+    const setLayoutErr = useSetAtom(LayoutAlertErr)
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (pass.pass1 != pass.pass2 && pass.pass2 != "") {
+            setErr("密码不相等")
+            return
+        }
+        setErr("")
+    }, [pass.pass1, pass.pass2])
+
+    const handelClick = () => {
+        if (pass.pass1 != pass.pass2) return
+        if (load) return
+        setLoad(true)
+        changePasswd(pass.old, pass.pass1, nowToken).catch(e => {
+            if (e instanceof ApiErr && e.code == 6) {
+                setOldPassErr(true)
+                return
+            }
+            setLayoutErr(String(e))
+        }).finally(() => setLoad(false)).then(() => [navigate("/login"), setToken("no")])
+    }
+
+
     return (<>
-        <p>密码设置</p>
+        <Card sx={{ maxWidth: "30em" }}>
+            <CardHeader title="更改密码" />
+            <CardContent>
+                <TextField
+                    margin='dense'
+                    fullWidth
+                    label="旧密码"
+                    type="password"
+                    required
+                    error={oldPassErr}
+                    helperText={oldPassErr ? "旧密码错误" : ""}
+                    onChange={p => setPass(produce(v => { v.old = p.target.value; return v }))}
+                    autoComplete="current-password"
+                />
+                <TextField
+                    margin='dense'
+                    fullWidth
+                    label="新密码"
+                    type="password"
+                    required
+                    onChange={p => setPass(produce(v => { v.pass1 = p.target.value; return v }))}
+                    autoComplete="new-password"
+                />
+                <TextField
+                    margin='dense'
+                    fullWidth
+                    label="确认新密码"
+                    type="password"
+                    required
+                    error={err != ""}
+                    helperText={err}
+                    onChange={p => setPass(produce(v => { v.pass2 = p.target.value; return v }))}
+                    autoComplete="new-password"
+                />
+                <Button sx={{ marginTop: "1em" }} onClick={handelClick} variant='contained'>提交</Button>
+            </CardContent>
+        </Card>
+        {load && <Loading />}
+
     </>)
 }

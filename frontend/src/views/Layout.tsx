@@ -70,7 +70,7 @@ const Layout = memo(function Layout() {
                 <MyToolbar />
             </AppBar>
             <MyDrawer />
-            <Snackbar anchorOrigin={{ vertical: 'top', horizontal: 'center' }} open={err != ""} onClose={() => setErr("")}  >
+            <Snackbar anchorOrigin={{ vertical: 'top', horizontal: 'center' }} open={err != ""} >
                 <Alert onClose={() => setErr("")} severity="error">{err}</Alert>
             </Snackbar>
             <Box

@@ -71,3 +71,17 @@ export async function upTextures(uuid: string, token: string, textureType: 'skin
         throw new Error("上传失败 " + String(r.status))
     }
 }
+
+export async function changePasswd(old: string, newpa: string, token: string) {
+    const r = await fetch(import.meta.env.VITE_APIADDR + "/api/v1/user/password", {
+        method: "POST",
+        body: JSON.stringify({
+            "old": old,
+            "new": newpa
+        }),
+        headers: {
+            "Authorization": "Bearer " + token
+        }
+    })
+    return await apiGet<unknown>(r)
+}

@@ -55,5 +55,6 @@ func newSkinApi(r *httprouter.Router, handel *handle.Handel) error {
 	r.PUT("/api/v1/user/reg", handel.Reg())
 	r.GET("/api/v1/captcha", handel.GetCaptcha())
 	r.GET("/api/v1/user", handel.UserInfo())
+	r.POST("/api/v1/user/password", handel.ChangePasswd())
 	return nil
 }

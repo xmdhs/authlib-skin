@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -117,7 +118,7 @@ func (w *WebService) ChangePasswd(ctx context.Context, p model.ChangePasswd, tok
 	if err != nil {
 		return fmt.Errorf("ChangePasswd: %w", err)
 	}
-	u, err := w.client.User.Query().Where(user.IDEQ(t.UID)).First(ctx)
+	u, err := w.client.User.Query().Where(user.IDEQ(t.UID)).WithToken().First(ctx)
 	if err != nil {
 		return fmt.Errorf("ChangePasswd: %w", err)
 	}
@@ -125,6 +126,12 @@ func (w *WebService) ChangePasswd(ctx context.Context, p model.ChangePasswd, tok
 		return fmt.Errorf("ChangePasswd: %w", ErrPassWord)
 	}
 	pass, salt := utils.Argon2ID(p.New)
+
+	err = w.client.UserToken.UpdateOne(u.Edges.Token).AddTokenID(1).Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("ChangePasswd: %w", err)
+	}
+	w.cache.Del([]byte("auth" + strconv.Itoa(t.UID)))
 
 	err = w.client.User.UpdateOne(u).SetPassword(pass).SetSalt(salt).Exec(ctx)
 	if err != nil {

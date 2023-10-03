@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import Card from '@mui/material/Card';
-import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import FormControl from "@mui/material/FormControl";
 import FormLabel from "@mui/material/FormLabel";
@@ -107,11 +106,10 @@ const Textures = function Textures() {
                         </RadioGroup>
                         <br />
                         <MuiFileInput label="选择文件" value={file} inputProps={{ accept: 'image/png' }} onChange={handleChange} />
+                        <br />
+                        <Button variant="contained" sx={{ maxWidth: "3em" }} onClick={handleToUpload}>上传</Button>
                     </FormControl>
                 </CardContent>
-                <CardActions>
-                    <Button variant="contained" sx={{ maxWidth: "3em" }} onClick={handleToUpload}>上传</Button>
-                </CardActions>
             </Card>
             <Card sx={{ gridArea: "b" }}>
                 <CardHeader title="预览" />

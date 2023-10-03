@@ -149,7 +149,7 @@ export default function SignUp() {
                     </Grid>
                 </Box>
             </Box>
-            <Snackbar anchorOrigin={{ vertical: 'top', horizontal: 'center' }} open={regErr !== ""} onClose={() => setRegErr("")}  >
+            <Snackbar anchorOrigin={{ vertical: 'top', horizontal: 'center' }} open={regErr !== ""}>
                 <Alert onClose={() => setRegErr("")} severity="error">{regErr}</Alert>
             </Snackbar>
             {loading && <Loading />}

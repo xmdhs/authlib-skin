@@ -114,9 +114,9 @@ export default function SignIn() {
                     </Button>
                     <Grid container>
                         <Grid item xs>
-                            <Link href="#" variant="body2">
+                            {/* <Link href="#" variant="body2">
                                 忘记密码？
-                            </Link>
+                            </Link> */}
                         </Grid>
                         <Grid item>
                             <Link component={RouterLink} to="/register" variant="body2">
@@ -126,7 +126,7 @@ export default function SignIn() {
                     </Grid>
                 </Box>
             </Box>
-            <Snackbar anchorOrigin={{ vertical: 'top', horizontal: 'center' }} open={err !== ""} onClose={() => setErr("")}  >
+            <Snackbar anchorOrigin={{ vertical: 'top', horizontal: 'center' }} open={err !== ""}>
                 <Alert onClose={() => setErr("")} severity="error">{err}</Alert>
             </Snackbar>
             {loading && <Loading />}
