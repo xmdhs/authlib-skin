@@ -64,7 +64,7 @@ func Auth(ctx context.Context, t yggdrasil.ValidateToken, client *ent.Client, c 
 		ut, err := client.UserToken.Query().Where(usertoken.HasUserWith(user.ID(claims.UID))).First(ctx)
 		if err != nil {
 			var ne *ent.NotFoundError
-			if !errors.As(err, &ne) {
+			if errors.As(err, &ne) {
 				return 0, errors.Join(err, ErrTokenInvalid)
 			}
 			return 0, err

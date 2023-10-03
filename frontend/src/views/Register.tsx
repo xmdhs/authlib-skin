@@ -18,6 +18,7 @@ import Loading from '@/components/Loading'
 import { useNavigate } from "react-router-dom";
 import CaptchaWidget from '@/components/CaptchaWidget';
 import type { refType as CaptchaWidgetRef } from '@/components/CaptchaWidget'
+import useTitle from '@/hooks/useTitle';
 
 export default function SignUp() {
     const [regErr, setRegErr] = useState("");
@@ -25,6 +26,7 @@ export default function SignUp() {
     const [captchaToken, setCaptchaToken] = useState("");
     const captchaRef = useRef<CaptchaWidgetRef>(null)
     const [loading, setLoading] = useState(false);
+    useTitle("注册")
 
 
     const checkList = React.useRef<Map<string, refType>>(new Map<string, refType>())

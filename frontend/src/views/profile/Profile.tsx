@@ -4,30 +4,34 @@ import CardContent from '@mui/material/CardContent';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import CardHeader from '@mui/material/CardHeader';
-import { useHover, useRequest } from 'ahooks';
+import { useHover, useRequest, useUnmount } from 'ahooks';
 import { ApiErr } from '@/apis/error';
 import { LayoutAlertErr, token } from '@/store/store';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { userInfo, yggProfile } from '@/apis/apis';
 import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
-import { memo, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { decodeSkin } from '@/utils/skin';
 import ReactSkinview3d from "react-skinview3d"
 import type { ReactSkinview3dOptions } from "react-skinview3d"
 import { WalkingAnimation } from "skinview3d"
 import type { SkinViewer } from "skinview3d"
 import Skeleton from '@mui/material/Skeleton';
+import useTilg from 'tilg';
+import useTitle from '@/hooks/useTitle';
 
-const Profile = memo(function Profile() {
+const Profile = function Profile() {
     const nowToken = useAtomValue(token)
     const navigate = useNavigate();
     const setErr = useSetAtom(LayoutAlertErr)
     const [textures, setTextures] = useState({ skin: "", cape: "", model: "default" })
+    useTitle("个人信息")
 
     const userinfo = useRequest(() => userInfo(nowToken), {
         refreshDeps: [nowToken],
-        cacheKey: "/api/v1/user",
+        cacheKey: "/api/v1/user" + nowToken,
+        staleTime: 60000,
         onError: e => {
             if (e instanceof ApiErr && e.code == 5) {
                 navigate("/login")
@@ -53,6 +57,7 @@ const Profile = memo(function Profile() {
     }, [SkinInfo.data])
 
 
+    useTilg()
 
     return (
         <>
@@ -106,10 +111,10 @@ const Profile = memo(function Profile() {
             </Box >
         </>
     )
-})
+}
 
 
-const MySkin = memo(function MySkin(p: ReactSkinview3dOptions) {
+const MySkin = function MySkin(p: ReactSkinview3dOptions) {
     const refSkinview3d = useRef(null);
     const skinisHovering = useHover(refSkinview3d);
     const skinview3dView = useRef<SkinViewer | null>(null);
@@ -123,13 +128,17 @@ const MySkin = memo(function MySkin(p: ReactSkinview3dOptions) {
         }
     }, [skinisHovering])
 
+    useUnmount(() => {
+        skinview3dView.current?.dispose()
+    })
+
     return <div ref={refSkinview3d}>
         <ReactSkinview3d
             {...p}
             onReady={v => [v.viewer.animation = new WalkingAnimation(), v.viewer.autoRotate = true, skinview3dView.current = v.viewer]}
         />
     </div>
-})
+}
 
 function getYggRoot() {
     const u = new URL((import.meta.env.VITE_APIADDR ?? location.origin) + "/api/yggdrasil")

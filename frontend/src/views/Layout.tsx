@@ -19,7 +19,7 @@ import { AccountCircle } from '@mui/icons-material';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { LayoutAlertErr, token, user } from '@/store/store';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import Button from '@mui/material/Button';
 import { useNavigate } from "react-router-dom";
 import { useRequest, useMemoizedFn } from 'ahooks';
@@ -37,6 +37,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import useTilg from 'tilg'
 
 const drawerWidth = 240;
+const DrawerOpen = atom(false)
 
 const DrawerHeader = styled('div')(({ theme }) => ({
     display: 'flex',
@@ -53,51 +54,9 @@ interface ListItem {
     link: string
 }
 
-
 const Layout = memo(function Layout() {
     const theme = useTheme();
-    const isLg = useMediaQuery(theme.breakpoints.up('lg'))
-    const [open, setOpen] = React.useState(false);
-    const nowToken = useAtomValue(token)
     const [err, setErr] = useAtom(LayoutAlertErr)
-    const navigate = useNavigate();
-
-    const userinfo = useRequest(() => userInfo(nowToken), {
-        refreshDeps: [nowToken],
-        cacheKey: "/api/v1/user",
-        onError: e => {
-            if (e instanceof ApiErr && e.code == 5) {
-                navigate("/login")
-            }
-            console.warn(e)
-            setErr(String(e))
-        }
-    })
-
-    const userDrawerList = React.useMemo(() => [
-        {
-            icon: <PersonIcon />,
-            title: '个人信息',
-            link: '/profile'
-        },
-        {
-            icon: <SettingsIcon />,
-            title: '皮肤设置',
-            link: '/textures'
-        },
-        {
-            icon: <SecurityIcon />,
-            title: '安全设置',
-            link: '/setting'
-        }
-    ] as ListItem[], [])
-
-    const adminDrawerList = React.useMemo(() => [
-        {
-            icon: <PersonIcon />,
-            title: 'test'
-        }
-    ] as ListItem[], [])
 
     useTilg()
 
@@ -108,37 +67,9 @@ const Layout = memo(function Layout() {
                     zIndex: { lg: theme.zIndex.drawer + 1 }
                 }}
             >
-                <MyToolbar setOpen={setOpen}></MyToolbar>
+                <MyToolbar />
             </AppBar>
-            {userinfo.data && (
-                <Drawer
-                    sx={{
-                        width: drawerWidth,
-                        flexShrink: 0,
-                        '& .MuiDrawer-paper': {
-                            width: drawerWidth,
-                            boxSizing: 'border-box',
-                        },
-                    }}
-                    variant={isLg ? "persistent" : "temporary"}
-                    anchor="left"
-                    open={open || isLg}
-                    onClose={() => setOpen(false)}
-                >
-                    <DrawerHeader>
-                        <IconButton onClick={() => setOpen(false)}>
-                            {theme.direction === 'ltr' ? <ChevronLeftIcon /> : <ChevronRightIcon />}
-                        </IconButton>
-                    </DrawerHeader>
-                    <Divider />
-                    <MyList list={userDrawerList} />
-                    {userinfo.data?.is_admin && (
-                        <>
-                            <Divider />
-                            <MyList list={adminDrawerList} />
-                        </>)}
-                </Drawer>
-            )}
+            <MyDrawer />
             <Snackbar anchorOrigin={{ vertical: 'top', horizontal: 'center' }} open={err != ""} onClose={() => setErr("")}  >
                 <Alert onClose={() => setErr("")} severity="error">{err}</Alert>
             </Snackbar>
@@ -157,15 +88,17 @@ const Layout = memo(function Layout() {
     </>)
 })
 
-const MyToolbar = memo(function MyToolbar(p: { setOpen: (v: boolean) => void }) {
+const MyToolbar = memo(function MyToolbar() {
     const [nowUser, setNowUser] = useAtom(user)
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const navigate = useNavigate();
     const [, setToken] = useAtom(token)
     const setErr = useSetAtom(LayoutAlertErr)
+    const setOpen = useSetAtom(DrawerOpen)
 
     const server = useRequest(serverInfo, {
         cacheKey: "/api/yggdrasil",
+        staleTime: 60000,
         onError: e => {
             console.warn(e)
             setErr(String(e))
@@ -180,6 +113,8 @@ const MyToolbar = memo(function MyToolbar(p: { setOpen: (v: boolean) => void }) 
         navigate("/")
     })
 
+    useTilg()
+
     return (
         <>
             <Toolbar>
@@ -190,7 +125,7 @@ const MyToolbar = memo(function MyToolbar(p: { setOpen: (v: boolean) => void }) 
                         color="inherit"
                         aria-label="menu"
                         sx={{ mr: 2, display: { lg: 'none' } }}
-                        onClick={() => p.setOpen(true)}
+                        onClick={() => setOpen(true)}
                     >
                         <MenuIcon />
                     </IconButton >
@@ -268,6 +203,87 @@ const MyListItem = function MyListItem(p: ListItem) {
             </ListItemButton>
         </ListItem>
     )
+}
+
+const MyDrawer = function MyDrawer() {
+    const nowToken = useAtomValue(token)
+    const setErr = useSetAtom(LayoutAlertErr)
+    const navigate = useNavigate();
+    const theme = useTheme();
+    const isLg = useMediaQuery(theme.breakpoints.up('lg'))
+    const [open, setOpen] = useAtom(DrawerOpen)
+
+    const userinfo = useRequest(() => userInfo(nowToken), {
+        refreshDeps: [nowToken],
+        cacheKey: "/api/v1/user" + nowToken,
+        staleTime: 60000,
+        onError: e => {
+            if (e instanceof ApiErr && e.code == 5) {
+                navigate("/login")
+            }
+            console.warn(e)
+            setErr(String(e))
+        },
+    })
+
+    const userDrawerList = React.useMemo(() => [
+        {
+            icon: <PersonIcon />,
+            title: '个人信息',
+            link: '/profile'
+        },
+        {
+            icon: <SettingsIcon />,
+            title: '皮肤设置',
+            link: '/textures'
+        },
+        {
+            icon: <SecurityIcon />,
+            title: '安全设置',
+            link: '/setting'
+        }
+    ] as ListItem[], [])
+
+    const adminDrawerList = React.useMemo(() => [
+        {
+            icon: <PersonIcon />,
+            title: 'test'
+        }
+    ] as ListItem[], [])
+
+    useTilg()
+
+    return (<>
+        {userinfo.data && (
+            <Drawer
+                sx={{
+                    width: drawerWidth,
+                    flexShrink: 0,
+                    '& .MuiDrawer-paper': {
+                        width: drawerWidth,
+                        boxSizing: 'border-box',
+                    },
+                }}
+                variant={isLg ? "persistent" : "temporary"}
+                anchor="left"
+                open={open || isLg}
+                onClose={() => setOpen(false)}
+            >
+                <DrawerHeader>
+                    <IconButton onClick={() => setOpen(false)}>
+                        {theme.direction === 'ltr' ? <ChevronLeftIcon /> : <ChevronRightIcon />}
+                    </IconButton>
+                </DrawerHeader>
+                <Divider />
+                <MyList list={userDrawerList} />
+                {userinfo.data?.is_admin && (
+                    <>
+                        <Divider />
+                        <MyList list={adminDrawerList} />
+                    </>)}
+            </Drawer>
+        )}
+    </>)
 }
 
 export default Layout

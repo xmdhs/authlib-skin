@@ -17,6 +17,7 @@ import { login } from '@/apis/apis'
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import Loading from '@/components/Loading'
 import CheckInput, { refType } from '@/components/CheckInput'
+import useTitle from '@/hooks/useTitle';
 
 
 
@@ -27,6 +28,7 @@ export default function SignIn() {
     const setUserInfo = useSetAtom(user)
     const checkList = React.useRef<Map<string, refType>>(new Map<string, refType>())
     const navigate = useNavigate();
+    useTitle("登录")
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -50,7 +52,7 @@ export default function SignIn() {
                     uuid: v.selectedProfile.uuid,
                     name: v.selectedProfile.name,
                 })
-                navigate("/")
+                navigate("/profile")
             }).
             catch(v => [setErr(String(v)), console.warn(v)]).
             finally(() => setLoading(false))
