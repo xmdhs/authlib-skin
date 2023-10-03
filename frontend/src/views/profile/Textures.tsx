@@ -30,6 +30,7 @@ const Textures = function Textures() {
     useUnmount(() => {
         skin.current.skinUrl && URL.revokeObjectURL(skin.current.skinUrl)
         skin.current.capeUrl && URL.revokeObjectURL(skin.current.capeUrl)
+        skinview3dView.current?.dispose()
     })
 
     useEffect(() => {
@@ -37,6 +38,8 @@ const Textures = function Textures() {
             const nu = URL.createObjectURL(file)
             skin.current.skinUrl && URL.revokeObjectURL(skin.current.skinUrl)
             skin.current.capeUrl && URL.revokeObjectURL(skin.current.capeUrl)
+            skinview3dView.current?.loadSkin(null)
+            skinview3dView.current?.loadCape(null)
             switch (redioValue) {
                 case "skin":
                     skin.current.skinUrl = nu
@@ -59,10 +62,6 @@ const Textures = function Textures() {
         }
     }, [file, redioValue])
 
-    useEffect(() => {
-        skinview3dView.current?.render()
-        return skinview3dView.current?.dispose
-    }, [])
 
     const onRadioChange = (_a: React.ChangeEvent<HTMLInputElement>, value: string) => {
         setRedioValue(value)
