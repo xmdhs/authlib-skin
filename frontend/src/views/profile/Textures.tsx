@@ -16,45 +16,48 @@ import Box from "@mui/material/Box";
 import ReactSkinview3d from "react-skinview3d";
 import { useUnmount } from "ahooks";
 import { SkinViewer } from "skinview3d";
+import { useAtomValue, useSetAtom } from "jotai";
+import { LayoutAlertErr, token, user } from "@/store/store";
+import { upTextures } from "@/apis/apis";
+import Loading from "@/components/Loading";
 
 const Textures = function Textures() {
     const [redioValue, setRedioValue] = useState("skin")
     useTitle("上传皮肤")
     const [file, setFile] = useState<File | null>(null)
-    const skin = useRef({
-        skinUrl: "",
-        capeUrl: "",
-    })
+    const skin = useRef("")
     const skinview3dView = useRef<SkinViewer | null>(null);
+    const setErr = useSetAtom(LayoutAlertErr)
+    const [loading, setLoading] = useState(false)
+    const userinfo = useAtomValue(user)
+    const nowToken = useAtomValue(token)
 
     useUnmount(() => {
-        skin.current.skinUrl && URL.revokeObjectURL(skin.current.skinUrl)
-        skin.current.capeUrl && URL.revokeObjectURL(skin.current.capeUrl)
+        skin.current && URL.revokeObjectURL(skin.current)
         skinview3dView.current?.dispose()
     })
 
     useEffect(() => {
         if (file) {
             const nu = URL.createObjectURL(file)
-            skin.current.skinUrl && URL.revokeObjectURL(skin.current.skinUrl)
-            skin.current.capeUrl && URL.revokeObjectURL(skin.current.capeUrl)
+            skin.current && URL.revokeObjectURL(skin.current)
             skinview3dView.current?.loadSkin(null)
             skinview3dView.current?.loadCape(null)
             switch (redioValue) {
                 case "skin":
-                    skin.current.skinUrl = nu
+                    skin.current = nu
                     skinview3dView.current?.loadSkin(nu, { model: "default" }).then(() =>
                         skinview3dView.current?.loadSkin(nu, { model: "default" })
                     )
                     break
                 case "slim":
-                    skin.current.skinUrl = nu
+                    skin.current = nu
                     skinview3dView.current?.loadSkin(nu, { model: "slim" }).then(() =>
                         skinview3dView.current?.loadSkin(nu, { model: "slim" })
                     )
                     break
                 case "cape":
-                    skin.current.capeUrl = nu
+                    skin.current = nu
                     skinview3dView.current?.loadCape(nu).then(() => {
                         skinview3dView.current?.loadCape(nu)
                     })
@@ -68,6 +71,15 @@ const Textures = function Textures() {
     }
     const handleChange = (newFile: File | null) => {
         setFile(newFile)
+    }
+
+    const handleToUpload = () => {
+        if (!file || loading) return
+        setLoading(true)
+        const textureType = redioValue == "cape" ? "cape" : "skin"
+        const model = redioValue == "slim" ? "slim" : ""
+        upTextures(userinfo.uuid, nowToken, textureType, model, file).catch(e => [setErr(String(e)), console.warn(e)]).
+            finally(() => setLoading(false))
     }
 
     useTilg()
@@ -98,7 +110,7 @@ const Textures = function Textures() {
                     </FormControl>
                 </CardContent>
                 <CardActions>
-                    <Button variant="contained" sx={{ maxWidth: "3em" }}>上传</Button>
+                    <Button variant="contained" sx={{ maxWidth: "3em" }} onClick={handleToUpload}>上传</Button>
                 </CardActions>
             </Card>
             <Card sx={{ gridArea: "b" }}>
@@ -114,6 +126,7 @@ const Textures = function Textures() {
                 </CardContent>
             </Card>
         </Box>
+        {loading && <Loading />}
     </>)
 }
 

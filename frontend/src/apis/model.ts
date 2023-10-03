@@ -2,7 +2,7 @@ export interface tokenData {
     accessToken: string
     selectedProfile: {
         name: string
-        uuid: string
+        id: string
     }
 }
 

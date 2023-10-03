@@ -5,10 +5,9 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import CardHeader from '@mui/material/CardHeader';
 import { useHover, useRequest, useUnmount } from 'ahooks';
-import { ApiErr } from '@/apis/error';
-import { LayoutAlertErr, token } from '@/store/store';
+import { LayoutAlertErr, user } from '@/store/store';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { userInfo, yggProfile } from '@/apis/apis';
+import { yggProfile } from '@/apis/apis';
 import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import { useEffect, useRef, useState } from 'react';
@@ -22,32 +21,21 @@ import useTilg from 'tilg';
 import useTitle from '@/hooks/useTitle';
 
 const Profile = function Profile() {
-    const nowToken = useAtomValue(token)
     const navigate = useNavigate();
     const setErr = useSetAtom(LayoutAlertErr)
+    const userinfo = useAtomValue(user)
+
     const [textures, setTextures] = useState({ skin: "", cape: "", model: "default" })
     useTitle("个人信息")
 
-    const userinfo = useRequest(() => userInfo(nowToken), {
-        refreshDeps: [nowToken],
-        cacheKey: "/api/v1/user" + nowToken,
-        staleTime: 60000,
-        onError: e => {
-            if (e instanceof ApiErr && e.code == 5) {
-                navigate("/login")
-            }
-            console.warn(e)
-            setErr(String(e))
-        }
-    })
 
-    const SkinInfo = useRequest(() => yggProfile(userinfo.data?.uuid ?? ""), {
-        cacheKey: "/api/yggdrasil/sessionserver/session/minecraft/profile/" + userinfo.data?.uuid,
+    const SkinInfo = useRequest(() => yggProfile(userinfo.uuid ?? ""), {
+        cacheKey: "/api/yggdrasil/sessionserver/session/minecraft/profile/" + userinfo?.uuid,
         onError: e => {
             console.warn(e)
             setErr(String(e))
         },
-        refreshDeps: [userinfo.data?.uuid],
+        refreshDeps: [userinfo?.uuid],
     })
 
     useEffect(() => {
@@ -70,12 +58,10 @@ const Profile = function Profile() {
                 <Card sx={{ gridArea: "a" }}>
                     <CardHeader title="信息" />
                     <CardContent sx={{ display: "grid", gridTemplateColumns: "4em auto" }}>
-                        <Typography>uid</Typography>
-                        <Typography sx={{ wordBreak: 'break-all' }}>{(userinfo.loading && !userinfo.data) ? <Skeleton /> : userinfo.data?.uid}</Typography>
                         <Typography>name</Typography>
-                        <Typography>{(SkinInfo.loading || userinfo.loading) && !SkinInfo.data ? <Skeleton /> : SkinInfo.data?.name}</Typography>
+                        <Typography>{userinfo.name}</Typography>
                         <Typography>uuid</Typography>
-                        <Typography sx={{ wordBreak: 'break-all' }}>{(userinfo.loading && !userinfo.data) ? <Skeleton /> : userinfo.data?.uuid}</Typography>
+                        <Typography sx={{ wordBreak: 'break-all' }}>{userinfo.uuid}</Typography>
                     </CardContent>
                     {/* <CardActions>
                     <Button size="small">更改</Button>

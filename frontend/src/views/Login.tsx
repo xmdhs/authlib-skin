@@ -49,7 +49,7 @@ export default function SignIn() {
                 if (!v) return
                 setToken(v.accessToken)
                 setUserInfo({
-                    uuid: v.selectedProfile.uuid,
+                    uuid: v.selectedProfile.id,
                     name: v.selectedProfile.name,
                 })
                 navigate("/profile")

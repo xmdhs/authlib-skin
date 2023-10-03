@@ -110,7 +110,7 @@ const MyToolbar = memo(function MyToolbar() {
         setAnchorEl(null);
         setNowUser({ name: "", uuid: "" })
         setToken("")
-        navigate("/")
+        navigate("/login")
     })
 
     useTilg()
@@ -240,7 +240,7 @@ const MyDrawer = function MyDrawer() {
         {
             icon: <SecurityIcon />,
             title: '安全设置',
-            link: '/setting'
+            link: '/security'
         }
     ] as ListItem[], [])
 

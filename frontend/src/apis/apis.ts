@@ -54,3 +54,20 @@ export async function yggProfile(uuid: string) {
     }
     return data as YggProfile
 }
+
+export async function upTextures(uuid: string, token: string, textureType: 'skin' | 'cape', model: 'slim' | '', file: File) {
+    const f = new FormData()
+    f.set("file", file)
+    f.set("model", model)
+
+    const r = await fetch(import.meta.env.VITE_APIADDR + "/api/yggdrasil/api/user/profile/" + uuid + "/" + textureType, {
+        method: "PUT",
+        body: f,
+        headers: {
+            "Authorization": "Bearer " + token
+        }
+    })
+    if (r.status != 204) {
+        throw new Error("上传失败 " + String(r.status))
+    }
+}

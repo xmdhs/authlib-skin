@@ -4,6 +4,7 @@ import Login from '@/views/Login'
 import Register from '@/views/Register'
 import Profile from '@/views/profile/Profile'
 import Textures from '@/views/profile/Textures'
+import Security from '@/views/profile/Security'
 import Layout from '@/views/Layout'
 
 const router = createBrowserRouter([
@@ -19,7 +20,7 @@ function Root() {
                     <Route path="/register" element={<Register />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/textures" element={<Textures />} />
-
+                    <Route path="/security" element={<Security />} />
                 </Route>
             </Routes>
             <ScrollRestoration />
