@@ -10,4 +10,5 @@ const (
 	ErrExistUser
 	ErrRegLimit
 	ErrAuth
+	ErrPassWord
 )

@@ -35,3 +35,8 @@ type UserInfo struct {
 	UUID    string `json:"uuid"`
 	IsAdmin bool   `json:"is_admin"`
 }
+
+type ChangePasswd struct {
+	Old string `json:"old"`
+	New string `json:"new"`
+}

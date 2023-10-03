@@ -40,14 +40,12 @@ func encodeJson[T any](w io.Writer, m model.API[T]) {
 func (h *Handel) getTokenbyAuthorization(ctx context.Context, w http.ResponseWriter, r *http.Request) string {
 	auth := r.Header.Get("Authorization")
 	if auth == "" {
-		h.logger.DebugContext(ctx, "缺少 Authorization")
-		handleError(ctx, w, "缺少 Authorization", model.ErrAuth, 401)
+		h.handleError(ctx, w, "缺少 Authorization", model.ErrAuth, 401, slog.LevelDebug)
 		return ""
 	}
 	al := strings.Split(auth, " ")
 	if len(al) != 2 || al[0] != "Bearer" {
-		h.logger.DebugContext(ctx, "Authorization 格式错误")
-		handleError(ctx, w, "Authorization 格式错误", model.ErrAuth, 401)
+		h.handleError(ctx, w, "Authorization 格式错误", model.ErrAuth, 401, slog.LevelDebug)
 		return ""
 	}
 	return al[1]

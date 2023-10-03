@@ -21,6 +21,7 @@ var (
 	ErrExistUser = errors.New("邮箱已存在")
 	ErrExitsName = errors.New("用户名已存在")
 	ErrRegLimit  = errors.New("超过注册 ip 限制")
+	ErrPassWord  = errors.New("错误的密码")
 )
 
 func (w *WebService) Reg(ctx context.Context, u model.User, ipPrefix, ip string) error {
@@ -109,4 +110,25 @@ func (w *WebService) Info(ctx context.Context, token string) (model.UserInfo, er
 		UUID:    t.Subject,
 		IsAdmin: isAdmin,
 	}, nil
+}
+
+func (w *WebService) ChangePasswd(ctx context.Context, p model.ChangePasswd, token string) error {
+	t, err := utilsService.Auth(ctx, yggdrasil.ValidateToken{AccessToken: token}, w.client, w.cache, &w.prikey.PublicKey, false)
+	if err != nil {
+		return fmt.Errorf("ChangePasswd: %w", err)
+	}
+	u, err := w.client.User.Query().Where(user.IDEQ(t.UID)).First(ctx)
+	if err != nil {
+		return fmt.Errorf("ChangePasswd: %w", err)
+	}
+	if !utils.Argon2Compare(p.Old, u.Password, u.Salt) {
+		return fmt.Errorf("ChangePasswd: %w", ErrPassWord)
+	}
+	pass, salt := utils.Argon2ID(p.New)
+
+	err = w.client.User.UpdateOne(u).SetPassword(pass).SetSalt(salt).Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("ChangePasswd: %w", err)
+	}
+	return nil
 }
