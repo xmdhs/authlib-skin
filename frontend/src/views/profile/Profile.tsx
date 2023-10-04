@@ -17,7 +17,6 @@ import type { ReactSkinview3dOptions } from "react-skinview3d"
 import { WalkingAnimation } from "skinview3d"
 import type { SkinViewer } from "skinview3d"
 import Skeleton from '@mui/material/Skeleton';
-import useTilg from 'tilg';
 import useTitle from '@/hooks/useTitle';
 
 const Profile = function Profile() {
@@ -45,7 +44,7 @@ const Profile = function Profile() {
     }, [SkinInfo.data])
 
 
-    useTilg()
+    
 
     return (
         <>

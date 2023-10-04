@@ -7,10 +7,11 @@ import { useEffect, useState } from "react";
 import { produce } from 'immer'
 import { changePasswd } from "@/apis/apis";
 import { useAtom, useSetAtom } from "jotai";
-import { LayoutAlertErr, token } from "@/store/store";
+import { LayoutAlertErr, token, user } from "@/store/store";
 import Loading from "@/components/Loading";
 import { ApiErr } from "@/apis/error";
 import { useNavigate } from "react-router-dom";
+import useTitle from "@/hooks/useTitle";
 
 export default function Security() {
     const [pass, setPass] = useState({
@@ -23,7 +24,9 @@ export default function Security() {
     const [nowToken, setToken] = useAtom(token)
     const [load, setLoad] = useState(false)
     const setLayoutErr = useSetAtom(LayoutAlertErr)
+    const setUser = useSetAtom(user)
     const navigate = useNavigate();
+    useTitle("安全设置")
 
     useEffect(() => {
         if (pass.pass1 != pass.pass2 && pass.pass2 != "") {
@@ -43,7 +46,7 @@ export default function Security() {
                 return
             }
             setLayoutErr(String(e))
-        }).finally(() => setLoad(false)).then(() => [navigate("/login"), setToken("no")])
+        }).finally(() => setLoad(false)).then(() => [navigate("/login"), setToken(""), setUser({ name: "", uuid: "" })])
     }
 
 

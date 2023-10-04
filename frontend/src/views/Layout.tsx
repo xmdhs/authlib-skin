@@ -34,7 +34,8 @@ import Container from '@mui/material/Container';
 import PersonIcon from '@mui/icons-material/Person';
 import SecurityIcon from '@mui/icons-material/Security';
 import SettingsIcon from '@mui/icons-material/Settings';
-import useTilg from 'tilg'
+import { Link } from "react-router-dom";
+
 
 const drawerWidth = 240;
 const DrawerOpen = atom(false)
@@ -57,8 +58,6 @@ interface ListItem {
 const Layout = memo(function Layout() {
     const theme = useTheme();
     const [err, setErr] = useAtom(LayoutAlertErr)
-
-    useTilg()
 
     return (<>
         <Box sx={{ display: 'flex' }}>
@@ -113,7 +112,7 @@ const MyToolbar = memo(function MyToolbar() {
         navigate("/login")
     })
 
-    useTilg()
+
 
     return (
         <>
@@ -132,7 +131,9 @@ const MyToolbar = memo(function MyToolbar() {
                 </>)
                 }
                 <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                    {server.data?.meta.serverName ?? "皮肤站"}
+                    <Link to="/" style={{ color: "unset", textDecoration: "unset" }}>
+                        {server.data?.meta.serverName ?? "皮肤站"}
+                    </Link>
                 </Typography>
                 {nowUser.name != "" && (
                     <div>
@@ -173,7 +174,7 @@ const MyToolbar = memo(function MyToolbar() {
 })
 
 const MyList = memo(function MyList(p: { list: ListItem[] }) {
-    useTilg()
+
 
     return (
         <>
@@ -251,7 +252,7 @@ const MyDrawer = function MyDrawer() {
         }
     ] as ListItem[], [])
 
-    useTilg()
+
 
     return (<>
         {userinfo.data && (

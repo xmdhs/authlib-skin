@@ -81,7 +81,7 @@ const Textures = function Textures() {
             finally(() => setLoading(false))
     }
 
-    useTilg()
+    
 
     return (<>
         <Box sx={{
