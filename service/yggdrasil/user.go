@@ -30,9 +30,10 @@ import (
 )
 
 var (
-	ErrRate     = errors.New("频率限制")
-	ErrPassWord = errors.New("错误的密码或邮箱")
-	ErrNotUser  = errors.New("没有这个用户")
+	ErrRate        = errors.New("频率限制")
+	ErrPassWord    = errors.New("错误的密码或邮箱")
+	ErrNotUser     = errors.New("没有这个用户")
+	ErrUserDisable = errors.New("用户被禁用")
 )
 
 func (y *Yggdrasil) validatePass(cxt context.Context, email, pass string) (*ent.User, error) {
@@ -58,6 +59,10 @@ func (y *Yggdrasil) Authenticate(cxt context.Context, auth yggdrasil.Authenticat
 	u, err := y.validatePass(cxt, auth.Username, auth.Password)
 	if err != nil {
 		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", err)
+	}
+
+	if sutils.IsDisable(u.State) {
+		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", ErrUserDisable)
 	}
 
 	clientToken := auth.ClientToken

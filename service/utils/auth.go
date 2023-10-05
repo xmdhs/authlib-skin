@@ -79,3 +79,11 @@ func Auth(ctx context.Context, t yggdrasil.ValidateToken, client *ent.Client, c 
 	}
 	return claims, nil
 }
+
+func IsAdmin(state int) bool {
+	return state&1 == 1
+}
+
+func IsDisable(state int) bool {
+	return state&2 == 2
+}
