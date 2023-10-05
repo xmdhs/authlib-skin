@@ -1,6 +1,6 @@
 module github.com/xmdhs/authlib-skin
 
-go 1.21.0
+go 1.21
 
 require (
 	entgo.io/ent v0.12.3
