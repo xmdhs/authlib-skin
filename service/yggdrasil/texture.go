@@ -2,6 +2,7 @@ package yggdrasil
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -17,7 +18,6 @@ import (
 	"github.com/xmdhs/authlib-skin/model/yggdrasil"
 	utilsService "github.com/xmdhs/authlib-skin/service/utils"
 	"github.com/xmdhs/authlib-skin/utils"
-	"lukechampine.com/blake3"
 )
 
 var (
@@ -164,7 +164,7 @@ func (y *Yggdrasil) PutTexture(ctx context.Context, token string, texturebyte []
 }
 
 func getHash(b []byte) string {
-	hashed := blake3.Sum256(b)
+	hashed := sha256.Sum256(b)
 	return hex.EncodeToString(hashed[:])
 }
 
