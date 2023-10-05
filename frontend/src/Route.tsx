@@ -8,6 +8,9 @@ import Security from '@/views/profile/Security'
 import Layout from '@/views/Layout'
 import { useAtomValue } from "jotai";
 import { token } from "@/store/store";
+import { ApiErr } from "@/apis/error";
+import { userInfo } from "@/apis/apis";
+import { useRequest } from "ahooks";
 
 const router = createBrowserRouter([
     { path: "*", Component: Root },
@@ -46,6 +49,17 @@ export function PageRoute() {
 function NeedLogin({ children }: { children: JSX.Element }) {
     const t = useAtomValue(token)
     const navigate = useNavigate();
+    useRequest(() => userInfo(t), {
+        refreshDeps: [t],
+        cacheKey: "/api/v1/user" + t,
+        staleTime: 60000,
+        onError: e => {
+            if (e instanceof ApiErr && e.code == 5) {
+                navigate("/login")
+            }
+            console.warn(e)
+        },
+    })
     if (t == "") {
         navigate("/login")
         return

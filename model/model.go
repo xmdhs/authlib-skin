@@ -5,7 +5,12 @@ import "github.com/golang-jwt/jwt/v5"
 type API[T any] struct {
 	Code APIStatus `json:"code"`
 	Data T         `json:"data"`
-	Msg  string    `json:"msg"`
+	Msg  string    `json:"msg,omitempty"`
+}
+
+type List[T any] struct {
+	Total int `json:"total"`
+	List  []T `json:"list"`
 }
 
 type User struct {
@@ -38,5 +43,11 @@ type UserInfo struct {
 
 type ChangePasswd struct {
 	Old string `json:"old"`
-	New string `json:"new"`
+	New string `json:"new" validate:"required,min=6,max=50"`
+}
+
+type UserList struct {
+	UserInfo
+	Email string `json:"email"`
+	RegIp string `json:"reg_ip"`
 }

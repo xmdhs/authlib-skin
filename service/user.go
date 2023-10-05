@@ -102,10 +102,7 @@ func (w *WebService) Info(ctx context.Context, token string) (model.UserInfo, er
 	if err != nil {
 		return model.UserInfo{}, fmt.Errorf("Info: %w", err)
 	}
-	isAdmin := false
-	if u.State&1 == 1 {
-		isAdmin = true
-	}
+	isAdmin := utilsService.IsAdmin(u.State)
 	return model.UserInfo{
 		UID:     t.UID,
 		UUID:    t.Subject,
@@ -131,8 +128,10 @@ func (w *WebService) ChangePasswd(ctx context.Context, p model.ChangePasswd, tok
 	if err != nil {
 		return fmt.Errorf("ChangePasswd: %w", err)
 	}
-	w.cache.Del([]byte("auth" + strconv.Itoa(t.UID)))
-
+	err = w.cache.Del([]byte("auth" + strconv.Itoa(t.UID)))
+	if err != nil {
+		return fmt.Errorf("ChangePasswd: %w", err)
+	}
 	err = w.client.User.UpdateOne(u).SetPassword(pass).SetSalt(salt).Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("ChangePasswd: %w", err)

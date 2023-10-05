@@ -28,7 +28,6 @@ import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import { memo } from 'react';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import { ApiErr } from '@/apis/error';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import PersonIcon from '@mui/icons-material/Person';
@@ -209,7 +208,6 @@ const MyListItem = function MyListItem(p: ListItem) {
 const MyDrawer = function MyDrawer() {
     const nowToken = useAtomValue(token)
     const setErr = useSetAtom(LayoutAlertErr)
-    const navigate = useNavigate();
     const theme = useTheme();
     const isLg = useMediaQuery(theme.breakpoints.up('lg'))
     const [open, setOpen] = useAtom(DrawerOpen)
@@ -219,9 +217,6 @@ const MyDrawer = function MyDrawer() {
         cacheKey: "/api/v1/user" + nowToken,
         staleTime: 60000,
         onError: e => {
-            if (e instanceof ApiErr && e.code == 5) {
-                navigate("/login")
-            }
             console.warn(e)
             setErr(String(e))
         },
