@@ -90,7 +90,7 @@ const MyToolbar = memo(function MyToolbar() {
     const [nowUser, setNowUser] = useAtom(user)
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const navigate = useNavigate();
-    const [, setToken] = useAtom(token)
+    const setToken = useSetAtom(token)
     const setErr = useSetAtom(LayoutAlertErr)
     const setOpen = useSetAtom(DrawerOpen)
 

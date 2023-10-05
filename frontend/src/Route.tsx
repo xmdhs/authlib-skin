@@ -57,7 +57,7 @@ export function PageRoute() {
 function NeedLogin({ children, needAdmin = false }: { children: JSX.Element, needAdmin?: boolean }) {
     const t = useAtomValue(token)
     const navigate = useNavigate();
-    const { data, loading } = useRequest(() => userInfo(t), {
+    useRequest(() => userInfo(t), {
         refreshDeps: [t],
         cacheKey: "/api/v1/user" + t,
         staleTime: 60000,
@@ -67,12 +67,21 @@ function NeedLogin({ children, needAdmin = false }: { children: JSX.Element, nee
             }
             console.warn(e)
         },
+        onSuccess: u => {
+            if (!u) return
+            if (!u.is_admin && needAdmin) {
+                navigate("/login")
+            }
+            if (u.uuid == "") {
+                navigate("/login")
+            }
+        }
     })
-    if (t == "") {
+
+    if (!localStorage.getItem("token") || localStorage.getItem("token") == '""') {
         return <Navigate to="/login" />
     }
-    if (!loading && data && needAdmin && !data.is_admin) {
-        return <Navigate to="/login" />
-    }
+
+
     return <> {children}</>
 }
