@@ -140,7 +140,7 @@ func (w *WebService) ChangePasswd(ctx context.Context, p model.ChangePasswd, tok
 	return nil
 }
 
-func (w *WebService) changeName(ctx context.Context, newName string, uid int) error {
+func (w *WebService) changeName(ctx context.Context, newName string, uid int, uuid string) error {
 	if w.config.OfflineUUID {
 		return fmt.Errorf("changeName: %w", ErrChangeName)
 	}
@@ -155,6 +155,7 @@ func (w *WebService) changeName(ctx context.Context, newName string, uid int) er
 	if err != nil {
 		return fmt.Errorf("changeName: %w", err)
 	}
+	w.cache.Del([]byte("Profile" + uuid))
 	return err
 }
 
@@ -163,7 +164,7 @@ func (w *WebService) ChangeName(ctx context.Context, newName string, token strin
 	if err != nil {
 		return fmt.Errorf("ChangeName: %w", err)
 	}
-	err = w.changeName(ctx, newName, t.UID)
+	err = w.changeName(ctx, newName, t.UID, t.Subject)
 	if err != nil {
 		return fmt.Errorf("ChangeName: %w", err)
 	}
