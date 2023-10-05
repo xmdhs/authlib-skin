@@ -46,6 +46,7 @@ export default function SignUp() {
         }
         if (captchaToken == "") {
             setRegErr("验证码无效")
+            return
         }
         setLoading(true)
         register(d.email ?? "", d.username ?? "", d.password ?? "", captchaToken).

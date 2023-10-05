@@ -41,9 +41,6 @@ dependencies:
   react-router-dom:
     specifier: ^6.16.0
     version: 6.16.0(react-dom@18.2.0)(react@18.2.0)
-  react-skinview3d:
-    specifier: ^5.0.2
-    version: 5.0.2(react-dom@18.2.0)(react@18.2.0)
   skinview3d:
     specifier: ^3.0.1
     version: 3.0.1
@@ -2018,18 +2015,6 @@ packages:
     dependencies:
       '@remix-run/router': 1.9.0
       react: 18.2.0
-    dev: false
-
-  /react-skinview3d@5.0.2(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-4vB1pPm9u0cX03hWZNCcceQH+yMuZee7xHqqq2Kc0ur6l39+haDEvrJAbLZv6bKvJVj5Gu3Mur1P8HPoy0/HhA==}
-    engines: {node: '>=16'}
-    peerDependencies:
-      react: '>=16.8.0'
-      react-dom: '>=16.8.0'
-    dependencies:
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-      skinview3d: 3.0.1
     dev: false
 
   /react-transition-group@4.4.5(react-dom@18.2.0)(react@18.2.0):

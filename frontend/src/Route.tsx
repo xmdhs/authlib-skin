@@ -1,4 +1,4 @@
-import { Routes, Route, createBrowserRouter, RouterProvider, useNavigate } from "react-router-dom";
+import { Routes, Route, createBrowserRouter, RouterProvider, useNavigate, Outlet } from "react-router-dom";
 import { ScrollRestoration } from "react-router-dom";
 import Login from '@/views/Login'
 import Register from '@/views/Register'
@@ -11,6 +11,7 @@ import { token } from "@/store/store";
 import { ApiErr } from "@/apis/error";
 import { userInfo } from "@/apis/apis";
 import { useRequest } from "ahooks";
+import UserAdmin from "@/views/admin/UserAdmin";
 
 const router = createBrowserRouter([
     { path: "*", Component: Root },
@@ -26,9 +27,16 @@ function Root() {
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
 
-                    <Route path="/profile" element={<NeedLogin><Profile /></NeedLogin>} />
-                    <Route path="/textures" element={<NeedLogin><Textures /></NeedLogin>} />
-                    <Route path="/security" element={<NeedLogin><Security /></NeedLogin>} />
+                    <Route element={<NeedLogin><Outlet /></NeedLogin>}>
+                        <Route path="/profile" element={<Profile />} />
+                        <Route path="/textures" element={<Textures />} />
+                        <Route path="/security" element={<Security />} />
+                    </Route>
+
+                    <Route path="admin" element={<NeedLogin needAdmin><Outlet /></NeedLogin>}>
+                        <Route path="user" element={<UserAdmin />} />
+                    </Route>
+
                 </Route>
             </Routes>
             <ScrollRestoration />
@@ -46,10 +54,10 @@ export function PageRoute() {
 }
 
 
-function NeedLogin({ children }: { children: JSX.Element }) {
+function NeedLogin({ children, needAdmin = false }: { children: JSX.Element, needAdmin?: boolean }) {
     const t = useAtomValue(token)
     const navigate = useNavigate();
-    useRequest(() => userInfo(t), {
+    const { data, loading } = useRequest(() => userInfo(t), {
         refreshDeps: [t],
         cacheKey: "/api/v1/user" + t,
         staleTime: 60000,
@@ -62,7 +70,11 @@ function NeedLogin({ children }: { children: JSX.Element }) {
     })
     if (t == "") {
         navigate("/login")
-        return
+        return <></>
+    }
+    if (!loading && data && needAdmin && !data.is_admin) {
+        navigate("/login")
+        return <></>
     }
     return <> {children}</>
 }

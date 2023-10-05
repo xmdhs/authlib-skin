@@ -4,7 +4,7 @@ import CardContent from '@mui/material/CardContent';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import CardHeader from '@mui/material/CardHeader';
-import { useHover, useRequest, useUnmount } from 'ahooks';
+import { useHover, useMemoizedFn, useRequest, useUnmount } from 'ahooks';
 import { LayoutAlertErr, user } from '@/store/store';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { yggProfile } from '@/apis/apis';
@@ -12,8 +12,8 @@ import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import { useEffect, useRef, useState } from 'react';
 import { decodeSkin } from '@/utils/skin';
-import ReactSkinview3d from "react-skinview3d"
-import type { ReactSkinview3dOptions } from "react-skinview3d"
+import ReactSkinview3d from '@/components/Skinview3d'
+import type { ReactSkinview3dOptions } from '@/components/Skinview3d'
 import { WalkingAnimation } from "skinview3d"
 import type { SkinViewer } from "skinview3d"
 import Skeleton from '@mui/material/Skeleton';
@@ -44,7 +44,7 @@ const Profile = function Profile() {
     }, [SkinInfo.data])
 
 
-    
+
 
     return (
         <>
@@ -71,14 +71,17 @@ const Profile = function Profile() {
                     <CardContent sx={{ display: "flex", justifyContent: 'center' }}>
                         {
                             (SkinInfo.loading && !SkinInfo.data) ? <Skeleton variant="rectangular" width={250} height={250} />
-                                : (textures.skin != "" || textures.cape != "") && (
+                                : (textures.skin != "" || textures.cape != "") ? (
                                     <MySkin
                                         skinUrl={textures.skin}
                                         capeUrl={textures.cape}
                                         height="250"
                                         width="250"
                                         options={{ model: textures.model as "default" | "slim" }}
-                                    />)
+                                    />) : <Box sx={{ minHeight: "250px" }}>
+                                    <Typography>你还没有设置皮肤</Typography>
+                                </Box>
+
                         }
                     </CardContent>
                     <CardActions>
@@ -117,10 +120,16 @@ const MySkin = function MySkin(p: ReactSkinview3dOptions) {
         skinview3dView.current?.dispose()
     })
 
+    const handelOnReady = useMemoizedFn(v => {
+        v.viewer.animation = new WalkingAnimation()
+        v.viewer.autoRotate = true
+        skinview3dView.current = v.viewer
+    })
+
     return <div ref={refSkinview3d}>
         <ReactSkinview3d
             {...p}
-            onReady={v => [v.viewer.animation = new WalkingAnimation(), v.viewer.autoRotate = true, skinview3dView.current = v.viewer]}
+            onReady={handelOnReady}
         />
     </div>
 }

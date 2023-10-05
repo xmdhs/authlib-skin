@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import FormControl from "@mui/material/FormControl";
@@ -11,54 +11,51 @@ import { CardHeader } from "@mui/material";
 import useTitle from "@/hooks/useTitle";
 import { MuiFileInput } from 'mui-file-input'
 import Box from "@mui/material/Box";
-import ReactSkinview3d from "react-skinview3d";
+import ReactSkinview3d from '@/components/Skinview3d'
 import { useUnmount } from "ahooks";
-import { SkinViewer } from "skinview3d";
 import { useAtomValue, useSetAtom } from "jotai";
 import { LayoutAlertErr, token, user } from "@/store/store";
 import { upTextures } from "@/apis/apis";
 import Loading from "@/components/Loading";
+import Snackbar from "@mui/material/Snackbar";
 
 const Textures = function Textures() {
     const [redioValue, setRedioValue] = useState("skin")
     useTitle("上传皮肤")
     const [file, setFile] = useState<File | null>(null)
-    const skin = useRef("")
-    const skinview3dView = useRef<SkinViewer | null>(null);
     const setErr = useSetAtom(LayoutAlertErr)
     const [loading, setLoading] = useState(false)
     const userinfo = useAtomValue(user)
     const nowToken = useAtomValue(token)
+    const [ok, setOk] = useState(false)
+    const [skinInfo, setSkinInfo] = useState({
+        skin: "",
+        cape: "",
+        model: "default"
+    })
 
     useUnmount(() => {
-        skin.current && URL.revokeObjectURL(skin.current)
-        skinview3dView.current?.dispose()
+        skinInfo.skin && URL.revokeObjectURL(skinInfo.skin)
+        skinInfo.cape && URL.revokeObjectURL(skinInfo.cape)
     })
 
     useEffect(() => {
         if (file) {
+            setSkinInfo(v => {
+                URL.revokeObjectURL(v.skin);
+                URL.revokeObjectURL(v.cape);
+                return { skin: "", cape: "", model: "" }
+            })
             const nu = URL.createObjectURL(file)
-            skin.current && URL.revokeObjectURL(skin.current)
-            skinview3dView.current?.loadSkin(null)
-            skinview3dView.current?.loadCape(null)
             switch (redioValue) {
                 case "skin":
-                    skin.current = nu
-                    skinview3dView.current?.loadSkin(nu, { model: "default" }).then(() =>
-                        skinview3dView.current?.loadSkin(nu, { model: "default" })
-                    )
+                    setSkinInfo({ skin: nu, cape: "", model: "default" })
                     break
                 case "slim":
-                    skin.current = nu
-                    skinview3dView.current?.loadSkin(nu, { model: "slim" }).then(() =>
-                        skinview3dView.current?.loadSkin(nu, { model: "slim" })
-                    )
+                    setSkinInfo({ skin: nu, cape: "", model: "slim" })
                     break
                 case "cape":
-                    skin.current = nu
-                    skinview3dView.current?.loadCape(nu).then(() => {
-                        skinview3dView.current?.loadCape(nu)
-                    })
+                    setSkinInfo({ skin: "", cape: nu, model: "slim" })
             }
         }
     }, [file, redioValue])
@@ -77,10 +74,10 @@ const Textures = function Textures() {
         const textureType = redioValue == "cape" ? "cape" : "skin"
         const model = redioValue == "slim" ? "slim" : ""
         upTextures(userinfo.uuid, nowToken, textureType, model, file).catch(e => [setErr(String(e)), console.warn(e)]).
-            finally(() => setLoading(false))
+            finally(() => setLoading(false)).then(() => setOk(true))
     }
 
-    
+
 
     return (<>
         <Box sx={{
@@ -114,15 +111,22 @@ const Textures = function Textures() {
                 <CardHeader title="预览" />
                 <CardContent>
                     {file && <ReactSkinview3d
-                        skinUrl={""}
-                        capeUrl={""}
+                        skinUrl={skinInfo.skin}
+                        capeUrl={skinInfo.cape}
                         height="250"
                         width="250"
-                        onReady={v => skinview3dView.current = v.viewer}
+                        options={{ model: skinInfo.model as "default" | "slim" }}
                     />}
                 </CardContent>
             </Card>
         </Box>
+        <Snackbar
+            open={ok}
+            autoHideDuration={6000}
+            anchorOrigin={{ vertical: "top", horizontal: "center" }}
+            onClose={() => setOk(false)}
+            message="成功"
+        />
         {loading && <Loading />}
     </>)
 }
