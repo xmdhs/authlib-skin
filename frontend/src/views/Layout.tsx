@@ -235,7 +235,7 @@ const MyDrawer = function MyDrawer() {
         },
         {
             icon: <SecurityIcon />,
-            title: '安全设置',
+            title: '账号设置',
             link: '/security'
         }
     ] as ListItem[], [])

@@ -21,7 +21,7 @@ import DialogContentText from "@mui/material/DialogContentText";
 import DialogActions from "@mui/material/DialogActions";
 
 export default function Security() {
-    useTitle("安全设置")
+    useTitle("账号设置")
     const setLayoutErr = useSetAtom(LayoutAlertErr)
 
     const { data } = useRequest(getConfig, {
@@ -169,6 +169,7 @@ function ChangeName() {
                     required
                     error={err != ""}
                     helperText={err}
+                    value={name}
                     onChange={v => setName(v.target.value)}
                     autoComplete="username"
                 />
