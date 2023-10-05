@@ -38,6 +38,10 @@ func (h *Handel) Reg() httprouter.Handle {
 				h.handleError(ctx, w, err.Error(), model.ErrExistUser, 400, slog.LevelDebug)
 				return
 			}
+			if errors.Is(err, service.ErrExitsName) {
+				h.handleError(ctx, w, err.Error(), model.ErrExitsName, 400, slog.LevelDebug)
+				return
+			}
 			if errors.Is(err, service.ErrRegLimit) {
 				h.handleError(ctx, w, err.Error(), model.ErrRegLimit, 400, slog.LevelDebug)
 				return
@@ -101,5 +105,32 @@ func (h *Handel) ChangePasswd() httprouter.Handle {
 			Code: 0,
 		})
 
+	}
+}
+
+func (h *Handel) ChangeName() httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+		ctx := r.Context()
+		token := h.getTokenbyAuthorization(ctx, w, r)
+		if token == "" {
+			return
+		}
+		c, err := utils.DeCodeBody[model.ChangeName](r.Body, h.validate)
+		if err != nil {
+			h.handleError(ctx, w, err.Error(), model.ErrInput, 400, slog.LevelDebug)
+			return
+		}
+		err = h.webService.ChangeName(ctx, c.Name, token)
+		if err != nil {
+			if errors.Is(err, service.ErrExitsName) {
+				h.handleError(ctx, w, err.Error(), model.ErrExitsName, 400, slog.LevelDebug)
+				return
+			}
+			h.handleError(ctx, w, err.Error(), model.ErrService, 500, slog.LevelWarn)
+			return
+		}
+		encodeJson(w, model.API[any]{
+			Code: 0,
+		})
 	}
 }

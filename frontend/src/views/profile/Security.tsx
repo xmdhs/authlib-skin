@@ -5,15 +5,47 @@ import CardHeader from "@mui/material/CardHeader";
 import TextField from "@mui/material/TextField";
 import { useEffect, useState } from "react";
 import { produce } from 'immer'
-import { changePasswd } from "@/apis/apis";
-import { useAtom, useSetAtom } from "jotai";
+import { changeName, changePasswd, getConfig } from "@/apis/apis";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { LayoutAlertErr, token, user } from "@/store/store";
 import Loading from "@/components/Loading";
 import { ApiErr } from "@/apis/error";
 import { useNavigate } from "react-router-dom";
 import useTitle from "@/hooks/useTitle";
+import Box from "@mui/material/Box";
+import { useRequest } from "ahooks";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogActions from "@mui/material/DialogActions";
 
 export default function Security() {
+    useTitle("安全设置")
+    const setLayoutErr = useSetAtom(LayoutAlertErr)
+
+    const { data } = useRequest(getConfig, {
+        cacheKey: "/api/v1/config",
+        staleTime: 600000,
+        onError: e => {
+            setLayoutErr(String(e))
+        }
+    })
+
+    return (<>
+        <Box sx={{
+            display: "grid", gap: "1em",
+            gridTemplateColumns: {
+                lg: "1fr 1fr"
+            }
+        }}>
+            <ChangePasswd />
+            {data?.AllowChangeName && <ChangeName />}
+        </Box>
+    </>)
+}
+
+function ChangePasswd() {
     const [pass, setPass] = useState({
         old: "",
         pass1: "",
@@ -26,7 +58,6 @@ export default function Security() {
     const setLayoutErr = useSetAtom(LayoutAlertErr)
     const setUser = useSetAtom(user)
     const navigate = useNavigate();
-    useTitle("安全设置")
 
     useEffect(() => {
         if (pass.pass1 != pass.pass2 && pass.pass2 != "") {
@@ -90,5 +121,79 @@ export default function Security() {
         </Card>
         {load && <Loading />}
 
+    </>)
+}
+
+function ChangeName() {
+    const [err, setErr] = useState("")
+    const [name, setName] = useState("")
+    const [open, setOpen] = useState(false)
+    const [load, setLoad] = useState(false)
+    const nowToken = useAtomValue(token)
+    const setUser = useSetAtom(user)
+
+    const handelClick = () => {
+        if (name == "") return
+        setOpen(true)
+    }
+
+    const handleClose = () => {
+        setOpen(false)
+    }
+
+    const handleSubmit = () => {
+        if (load) return
+        setLoad(true)
+        changeName(name, nowToken).then(() => {
+            setName("")
+            setUser(v => { return { name: name, uuid: v.uuid } })
+        }).catch(e => {
+            if (e instanceof ApiErr && e.code == 7) {
+                setErr("用户名已存在")
+                return
+            }
+            setErr(String(e))
+            console.warn(e)
+        }).finally(() => [setLoad(false), setOpen(false)])
+    }
+
+    return (<>
+        <Card sx={{ height: "min-content" }}>
+            <CardHeader title="更改用户名" />
+            <CardContent>
+                <TextField
+                    margin='dense'
+                    fullWidth
+                    label="新用户名"
+                    type='text'
+                    required
+                    error={err != ""}
+                    helperText={err}
+                    onChange={v => setName(v.target.value)}
+                    autoComplete="username"
+                />
+                <Button sx={{ marginTop: "1em" }} onClick={handelClick} variant='contained'>提交</Button>
+            </CardContent>
+        </Card>
+        <Dialog
+            open={open}
+            onClose={handleClose}
+        >
+            <DialogTitle>
+                确认修改后的用户名
+            </DialogTitle>
+            <DialogContent>
+                <DialogContentText>
+                    {`用户名改为`}  {<code> {name} </code>} {`？`}
+                </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={handleClose}>取消</Button>
+                <Button onClick={handleSubmit} autoFocus>
+                    好
+                </Button>
+            </DialogActions>
+        </Dialog>
+        {load && <Loading />}
     </>)
 }

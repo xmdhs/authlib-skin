@@ -12,14 +12,12 @@ export interface Api<T> {
     data: T
 }
 
-export type ApiErr = Api<unknown>
 
 interface captcha {
     type: string
     siteKey: string
 }
 
-export type ApiCaptcha = Api<captcha>
 
 export interface ApiUser {
     uid: string
@@ -39,4 +37,9 @@ export interface YggProfile {
         name: string
         value: string
     }[]
+}
+
+export interface ApiConfig {
+    captcha: captcha
+    AllowChangeName: boolean
 }

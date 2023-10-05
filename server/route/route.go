@@ -53,9 +53,11 @@ func newYggdrasil(r *httprouter.Router, handelY yggdrasil.Yggdrasil) error {
 
 func newSkinApi(r *httprouter.Router, handel *handle.Handel) error {
 	r.PUT("/api/v1/user/reg", handel.Reg())
-	r.GET("/api/v1/captcha", handel.GetCaptcha())
+	r.GET("/api/v1/config", handel.GetConfig())
 	r.GET("/api/v1/user", handel.UserInfo())
 	r.POST("/api/v1/user/password", handel.ChangePasswd())
+	r.POST("/api/v1/user/name", handel.ChangeName())
+
 	r.GET("/api/v1/admin/users", handel.NeedAdmin(handel.ListUser()))
 	return nil
 }

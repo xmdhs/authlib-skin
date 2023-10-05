@@ -8,11 +8,11 @@ import (
 	"github.com/xmdhs/authlib-skin/model"
 )
 
-func (h *Handel) GetCaptcha() httprouter.Handle {
+func (h *Handel) GetConfig() httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		ctx := r.Context()
-		c := h.webService.GetCaptcha(ctx)
-		m := model.API[model.Captcha]{
+		c := h.webService.GetConfig(ctx)
+		m := model.API[model.Config]{
 			Code: 0,
 			Data: c,
 		}

@@ -1,4 +1,4 @@
-import type { tokenData, ApiUser, ApiServerInfo, YggProfile } from '@/apis/model'
+import type { tokenData, ApiUser, ApiServerInfo, YggProfile, ApiConfig } from '@/apis/model'
 import { apiGet } from '@/apis/utils'
 
 export async function login(username: string, password: string) {
@@ -78,6 +78,24 @@ export async function changePasswd(old: string, newpa: string, token: string) {
         body: JSON.stringify({
             "old": old,
             "new": newpa
+        }),
+        headers: {
+            "Authorization": "Bearer " + token
+        }
+    })
+    return await apiGet<unknown>(r)
+}
+
+export async function getConfig() {
+    const r = await fetch(import.meta.env.VITE_APIADDR + "/api/v1/config")
+    return await apiGet<ApiConfig>(r)
+}
+
+export async function changeName(name: string, token: string) {
+    const r = await fetch(import.meta.env.VITE_APIADDR + "/api/v1/user/name", {
+        method: "POST",
+        body: JSON.stringify({
+            "name": name,
         }),
         headers: {
             "Authorization": "Bearer " + token

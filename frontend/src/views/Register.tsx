@@ -19,6 +19,7 @@ import { useNavigate } from "react-router-dom";
 import CaptchaWidget from '@/components/CaptchaWidget';
 import type { refType as CaptchaWidgetRef } from '@/components/CaptchaWidget'
 import useTitle from '@/hooks/useTitle';
+import { ApiErr } from '@/apis/error';
 
 export default function SignUp() {
     const [regErr, setRegErr] = useState("");
@@ -51,7 +52,23 @@ export default function SignUp() {
         setLoading(true)
         register(d.email ?? "", d.username ?? "", d.password ?? "", captchaToken).
             then(() => navigate("/login")).
-            catch(v => [setRegErr(String(v)), console.warn(v), captchaRef.current?.reload()]).
+            catch(v => {
+                captchaRef.current?.reload()
+                console.warn(v)
+
+                if (v instanceof ApiErr) {
+                    switch (v.code) {
+                        case 3:
+                            setRegErr("邮箱已存在")
+                            break
+                        case 7:
+                            setRegErr("用户名已存在")
+                            break
+                    }
+                    return
+                }
+                setRegErr(String(v))
+            }).
             finally(() => setLoading(false))
     };
 

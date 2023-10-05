@@ -19,10 +19,11 @@ import (
 )
 
 var (
-	ErrExistUser = errors.New("邮箱已存在")
-	ErrExitsName = errors.New("用户名已存在")
-	ErrRegLimit  = errors.New("超过注册 ip 限制")
-	ErrPassWord  = errors.New("错误的密码")
+	ErrExistUser  = errors.New("邮箱已存在")
+	ErrExitsName  = errors.New("用户名已存在")
+	ErrRegLimit   = errors.New("超过注册 ip 限制")
+	ErrPassWord   = errors.New("错误的密码")
+	ErrChangeName = errors.New("离线模式 uuid 不允许修改用户名")
 )
 
 func (w *WebService) Reg(ctx context.Context, u model.User, ipPrefix, ip string) error {
@@ -135,6 +136,36 @@ func (w *WebService) ChangePasswd(ctx context.Context, p model.ChangePasswd, tok
 	err = w.client.User.UpdateOne(u).SetPassword(pass).SetSalt(salt).Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("ChangePasswd: %w", err)
+	}
+	return nil
+}
+
+func (w *WebService) changeName(ctx context.Context, newName string, uid int) error {
+	if w.config.OfflineUUID {
+		return fmt.Errorf("changeName: %w", ErrChangeName)
+	}
+	c, err := w.client.UserProfile.Query().Where(userprofile.Name(newName)).Count(ctx)
+	if err != nil {
+		return fmt.Errorf("changeName: %w", err)
+	}
+	if c != 0 {
+		return fmt.Errorf("changeName: %w", ErrExitsName)
+	}
+	err = w.client.UserProfile.Update().Where(userprofile.HasUserWith(user.ID(uid))).SetName(newName).Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("changeName: %w", err)
+	}
+	return err
+}
+
+func (w *WebService) ChangeName(ctx context.Context, newName string, token string) error {
+	t, err := utilsService.Auth(ctx, yggdrasil.ValidateToken{AccessToken: token}, w.client, w.cache, &w.prikey.PublicKey, false)
+	if err != nil {
+		return fmt.Errorf("ChangeName: %w", err)
+	}
+	err = w.changeName(ctx, newName, t.UID)
+	if err != nil {
+		return fmt.Errorf("ChangeName: %w", err)
 	}
 	return nil
 }

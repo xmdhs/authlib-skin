@@ -1,11 +1,11 @@
 import { Turnstile } from '@marsidev/react-turnstile'
 import Button from '@mui/material/Button'
-import { useRef, useState, memo, forwardRef, useImperativeHandle } from 'react'
+import { useRef, useState, memo, forwardRef, useImperativeHandle, useEffect } from 'react'
 import type { TurnstileInstance } from '@marsidev/react-turnstile'
-import { ApiCaptcha } from '@/apis/model';
 import Alert from '@mui/material/Alert';
 import Skeleton from '@mui/material/Skeleton';
 import { useRequest } from 'ahooks';
+import { getConfig } from '@/apis/apis';
 
 interface prop {
     onSuccess: ((token: string) => void)
@@ -19,7 +19,9 @@ export type refType = {
 const CaptchaWidget = forwardRef<refType, prop>(({ onSuccess }, ref) => {
     const Turnstileref = useRef<TurnstileInstance>(null)
     const [key, setKey] = useState(1)
-    const { data, error, loading } = useRequest(() => fetch(import.meta.env.VITE_APIADDR + '/api/v1/captcha').then(v => v.json() as Promise<ApiCaptcha>), {
+    const { data, error, loading } = useRequest(getConfig, {
+        cacheKey: "/api/v1/config",
+        staleTime: 600000,
         loadingDelay: 200
     })
 
@@ -30,6 +32,12 @@ const CaptchaWidget = forwardRef<refType, prop>(({ onSuccess }, ref) => {
             }
         }
     })
+    useEffect(() => {
+        if (data?.captcha?.type != "turnstile") {
+            onSuccess("ok")
+            return
+        }
+    }, [data?.captcha?.type, onSuccess])
 
 
     if (error) {
@@ -39,18 +47,10 @@ const CaptchaWidget = forwardRef<refType, prop>(({ onSuccess }, ref) => {
     if (loading) {
         return <Skeleton variant="rectangular" width={300} height={65} />
     }
-    if (data?.code != 0) {
-        console.warn(error)
-        return <Alert severity="warning">{String(data?.msg)}</Alert>
-    }
-    if (data.data.type != "turnstile") {
-        onSuccess("ok")
-        return <></>
-    }
 
     return (
         <>
-            <Turnstile siteKey={data?.data.siteKey ?? ""} key={key} onSuccess={onSuccess} ref={Turnstileref} scriptOptions={{ async: true }} />
+            <Turnstile siteKey={data?.captcha?.siteKey ?? ""} key={key} onSuccess={onSuccess} ref={Turnstileref} scriptOptions={{ async: true }} />
             <Button onClick={() => setKey(key + 1)}>刷新验证码</Button>
         </>
     )

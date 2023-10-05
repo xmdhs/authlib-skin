@@ -1,4 +1,4 @@
-import { Routes, Route, createBrowserRouter, RouterProvider, useNavigate, Outlet } from "react-router-dom";
+import { Routes, Route, createBrowserRouter, RouterProvider, useNavigate, Outlet, Navigate } from "react-router-dom";
 import { ScrollRestoration } from "react-router-dom";
 import Login from '@/views/Login'
 import Register from '@/views/Register'
@@ -69,12 +69,10 @@ function NeedLogin({ children, needAdmin = false }: { children: JSX.Element, nee
         },
     })
     if (t == "") {
-        navigate("/login")
-        return <></>
+        return <Navigate to="/login" />
     }
     if (!loading && data && needAdmin && !data.is_admin) {
-        navigate("/login")
-        return <></>
+        return <Navigate to="/login" />
     }
     return <> {children}</>
 }

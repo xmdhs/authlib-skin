@@ -51,3 +51,12 @@ type UserList struct {
 	Email string `json:"email"`
 	RegIp string `json:"reg_ip"`
 }
+
+type ChangeName struct {
+	Name string `json:"name" validate:"required,min=3,max=16"`
+}
+
+type Config struct {
+	Captcha         Captcha `json:"captcha"`
+	AllowChangeName bool
+}

@@ -11,4 +11,5 @@ const (
 	ErrRegLimit
 	ErrAuth
 	ErrPassWord
+	ErrExitsName
 )
