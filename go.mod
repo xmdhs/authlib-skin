@@ -6,12 +6,13 @@ require (
 	entgo.io/ent v0.12.3
 	github.com/VictoriaMetrics/fastcache v1.12.1
 	github.com/alecthomas/binary v0.0.0-20221018225505-74871811ee56
+	github.com/go-chi/chi/v5 v5.0.10
+	github.com/go-chi/cors v1.2.1
 	github.com/go-playground/validator/v10 v10.15.3
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/golang-jwt/jwt/v5 v5.0.0
 	github.com/google/uuid v1.3.1
 	github.com/google/wire v0.5.0
-	github.com/julienschmidt/httprouter v1.3.0
 	github.com/samber/lo v1.38.1
 	golang.org/x/crypto v0.7.0
 )
@@ -22,6 +23,7 @@ require (
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
+	github.com/go-chi/chi v1.5.5
 	github.com/go-openapi/inflect v0.19.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect

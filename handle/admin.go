@@ -6,13 +6,12 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/xmdhs/authlib-skin/model"
 	utilsService "github.com/xmdhs/authlib-skin/service/utils"
 )
 
-func (h *Handel) NeedAdmin(handle httprouter.Handle) httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (h *Handel) NeedAdmin(handle http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		token := h.getTokenbyAuthorization(ctx, w, r)
 		if token == "" {
@@ -27,12 +26,12 @@ func (h *Handel) NeedAdmin(handle httprouter.Handle) httprouter.Handle {
 			h.handleError(ctx, w, err.Error(), model.ErrService, 500, slog.LevelWarn)
 			return
 		}
-		handle(w, r, p)
-	}
+		handle.ServeHTTP(w, r)
+	})
 }
 
-func (h *Handel) ListUser() httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (h *Handel) ListUser() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		page := r.FormValue("page")
 		pagei := 1

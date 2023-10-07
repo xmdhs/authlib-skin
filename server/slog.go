@@ -3,40 +3,18 @@ package server
 import (
 	"context"
 	"log/slog"
+
+	"github.com/go-chi/chi/v5/middleware"
 )
-
-type reqInfo struct {
-	URL     string
-	IP      string
-	TrackId uint64
-}
-
-type reqInfoKeyType string
-
-var reqinfoKey reqInfoKeyType = "reqinfoKey"
-
-func setCtx(ctx context.Context, r *reqInfo) context.Context {
-	return context.WithValue(ctx, reqinfoKey, r)
-}
-
-func getFromCtx(ctx context.Context) *reqInfo {
-	v := ctx.Value(reqinfoKey)
-	if v == nil {
-		return nil
-	}
-	return v.(*reqInfo)
-}
 
 type warpSlogHandle struct {
 	slog.Handler
 }
 
 func (w *warpSlogHandle) Handle(ctx context.Context, r slog.Record) error {
-	if w.Enabled(ctx, slog.LevelInfo) {
-		ri := getFromCtx(ctx)
-		if ri != nil {
-			r.AddAttrs(slog.String("ip", ri.IP), slog.String("url", ri.URL), slog.Uint64("trackID", ri.TrackId))
-		}
+	id := middleware.GetReqID(ctx)
+	if id != "" {
+		r.AddAttrs(slog.String("trackID", id))
 	}
 	return w.Handler.Handle(ctx, r)
 }

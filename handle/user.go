@@ -5,18 +5,17 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/service"
 	utilsService "github.com/xmdhs/authlib-skin/service/utils"
 	"github.com/xmdhs/authlib-skin/utils"
 )
 
-func (h *Handel) Reg() httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (h *Handel) Reg() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		ip, err := utils.GetIP(r, h.config.RaelIP)
+		ip, err := utils.GetIP(r)
 		if err != nil {
 			h.handleError(ctx, w, err.Error(), model.ErrInput, 400, slog.LevelDebug)
 			return
@@ -55,8 +54,8 @@ func (h *Handel) Reg() httprouter.Handle {
 	}
 }
 
-func (h *Handel) UserInfo() httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (h *Handel) UserInfo() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		token := h.getTokenbyAuthorization(ctx, w, r)
 		if token == "" {
@@ -79,8 +78,8 @@ func (h *Handel) UserInfo() httprouter.Handle {
 	}
 }
 
-func (h *Handel) ChangePasswd() httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (h *Handel) ChangePasswd() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		token := h.getTokenbyAuthorization(ctx, w, r)
 		if token == "" {
@@ -108,8 +107,8 @@ func (h *Handel) ChangePasswd() httprouter.Handle {
 	}
 }
 
-func (h *Handel) ChangeName() httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (h *Handel) ChangeName() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		token := h.getTokenbyAuthorization(ctx, w, r)
 		if token == "" {

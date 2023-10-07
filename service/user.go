@@ -124,10 +124,11 @@ func (w *WebService) ChangePasswd(ctx context.Context, p model.ChangePasswd, tok
 		return fmt.Errorf("ChangePasswd: %w", ErrPassWord)
 	}
 	pass, salt := utils.Argon2ID(p.New)
-
-	err = w.client.UserToken.UpdateOne(u.Edges.Token).AddTokenID(1).Exec(ctx)
-	if err != nil {
-		return fmt.Errorf("ChangePasswd: %w", err)
+	if u.Edges.Token != nil {
+		err := w.client.UserToken.UpdateOne(u.Edges.Token).AddTokenID(1).Exec(ctx)
+		if err != nil {
+			return fmt.Errorf("ChangePasswd: %w", err)
+		}
 	}
 	err = w.cache.Del([]byte("auth" + strconv.Itoa(t.UID)))
 	if err != nil {

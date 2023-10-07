@@ -50,6 +50,7 @@ type UserList struct {
 	UserInfo
 	Email string `json:"email"`
 	RegIp string `json:"reg_ip"`
+	Name  string `json:"name"`
 }
 
 type ChangeName struct {

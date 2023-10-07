@@ -5,15 +5,15 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/julienschmidt/httprouter"
+	"github.com/go-chi/chi/v5"
 	"github.com/samber/lo"
 	"github.com/xmdhs/authlib-skin/model/yggdrasil"
 	sutils "github.com/xmdhs/authlib-skin/service/utils"
 	yggdrasilS "github.com/xmdhs/authlib-skin/service/yggdrasil"
 )
 
-func (y *Yggdrasil) Authenticate() httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (y *Yggdrasil) Authenticate() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		cxt := r.Context()
 		a, has := getAnyModel[yggdrasil.Authenticate](cxt, w, r.Body, y.validate, y.logger)
 		if !has {
@@ -34,8 +34,8 @@ func (y *Yggdrasil) Authenticate() httprouter.Handle {
 	}
 }
 
-func (y *Yggdrasil) Validate() httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (y *Yggdrasil) Validate() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		cxt := r.Context()
 		a, has := getAnyModel[yggdrasil.ValidateToken](cxt, w, r.Body, y.validate, y.logger)
 		if !has {
@@ -55,8 +55,8 @@ func (y *Yggdrasil) Validate() httprouter.Handle {
 	}
 }
 
-func (y *Yggdrasil) Signout() httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (y *Yggdrasil) Signout() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		cxt := r.Context()
 		a, has := getAnyModel[yggdrasil.Pass](cxt, w, r.Body, y.validate, y.logger)
 		if !has {
@@ -76,8 +76,8 @@ func (y *Yggdrasil) Signout() httprouter.Handle {
 	}
 }
 
-func (y *Yggdrasil) Invalidate() httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (y *Yggdrasil) Invalidate() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(204)
 		cxt := r.Context()
 		a, has := getAnyModel[yggdrasil.ValidateToken](cxt, w, r.Body, y.validate, y.logger)
@@ -95,8 +95,8 @@ func (y *Yggdrasil) Invalidate() httprouter.Handle {
 	}
 }
 
-func (y *Yggdrasil) Refresh() httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (y *Yggdrasil) Refresh() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		cxt := r.Context()
 		a, has := getAnyModel[yggdrasil.RefreshToken](cxt, w, r.Body, y.validate, y.logger)
 		if !has {
@@ -117,10 +117,11 @@ func (y *Yggdrasil) Refresh() httprouter.Handle {
 	}
 }
 
-func (y *Yggdrasil) GetProfile() httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (y *Yggdrasil) GetProfile() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		uuid := p.ByName("uuid")
+		uuid := chi.URLParamFromCtx(ctx, "uuid")
+
 		unsigned := r.FormValue("unsigned")
 
 		unsignedBool := true
@@ -151,8 +152,8 @@ func (y *Yggdrasil) GetProfile() httprouter.Handle {
 	}
 }
 
-func (y *Yggdrasil) BatchProfile() httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (y *Yggdrasil) BatchProfile() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		a, has := getAnyModel[[]string](ctx, w, r.Body, nil, y.logger)
 		if !has {
@@ -172,8 +173,8 @@ func (y *Yggdrasil) BatchProfile() httprouter.Handle {
 	}
 }
 
-func (y *Yggdrasil) PlayerCertificates() httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (y *Yggdrasil) PlayerCertificates() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		token := y.getTokenbyAuthorization(ctx, w, r)
 		if token == "" {

@@ -54,13 +54,8 @@ func InitializeRoute(ctx context.Context, c config.Config) (*http.Server, func()
 	httpClient := ProvideHttpClient()
 	webService := service.NewWebService(c, client, httpClient, cache, privateKey)
 	handel := handle.NewHandel(webService, validate, c, logger)
-	router, err := route.NewRoute(yggdrasil3, handel)
-	if err != nil {
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	server, cleanup3 := NewServer(c, logger, router)
+	httpHandler := route.NewRoute(yggdrasil3, handel, c, handler)
+	server, cleanup3 := NewServer(c, httpHandler)
 	return server, func() {
 		cleanup3()
 		cleanup2()

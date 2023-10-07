@@ -10,11 +10,9 @@ import (
 	"net/url"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/julienschmidt/httprouter"
 	"github.com/samber/lo"
 	"github.com/xmdhs/authlib-skin/config"
 	"github.com/xmdhs/authlib-skin/model/yggdrasil"
-	yggdrasilM "github.com/xmdhs/authlib-skin/model/yggdrasil"
 	yggdrasilS "github.com/xmdhs/authlib-skin/service/yggdrasil"
 	"github.com/xmdhs/authlib-skin/utils"
 )
@@ -49,8 +47,8 @@ func getAnyModel[K any](ctx context.Context, w http.ResponseWriter, r io.Reader,
 	return a, true
 }
 
-func (y *Yggdrasil) YggdrasilRoot() httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (y *Yggdrasil) YggdrasilRoot() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		var host string
 		if y.config.TextureBaseUrl != "" {
 			u := lo.Must(url.Parse(y.config.TextureBaseUrl))
@@ -64,11 +62,11 @@ func (y *Yggdrasil) YggdrasilRoot() httprouter.Handle {
 		homepage, _ := url.JoinPath(y.config.WebBaseUrl, "/login")
 		register, _ := url.JoinPath(y.config.WebBaseUrl, "/register")
 
-		w.Write(lo.Must1(json.Marshal(yggdrasilM.Yggdrasil{
-			Meta: yggdrasilM.YggdrasilMeta{
+		w.Write(lo.Must1(json.Marshal(yggdrasil.Yggdrasil{
+			Meta: yggdrasil.YggdrasilMeta{
 				ImplementationName:    "authlib-skin",
 				ImplementationVersion: "0.0.1",
-				Links: yggdrasilM.YggdrasilMetaLinks{
+				Links: yggdrasil.YggdrasilMetaLinks{
 					Homepage: homepage,
 					Register: register,
 				},
@@ -82,8 +80,8 @@ func (y *Yggdrasil) YggdrasilRoot() httprouter.Handle {
 	}
 }
 
-func (y *Yggdrasil) TextureAssets() httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (y *Yggdrasil) TextureAssets() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "image/png")
 		http.StripPrefix("/texture/", http.FileServer(http.Dir(y.config.TexturePath))).ServeHTTP(w, r)
 	}

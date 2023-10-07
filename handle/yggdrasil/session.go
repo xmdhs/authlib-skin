@@ -5,21 +5,20 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/samber/lo"
 	"github.com/xmdhs/authlib-skin/model/yggdrasil"
 	sutils "github.com/xmdhs/authlib-skin/service/utils"
 	"github.com/xmdhs/authlib-skin/utils"
 )
 
-func (y *Yggdrasil) SessionJoin() httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (y *Yggdrasil) SessionJoin() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		a, has := getAnyModel[yggdrasil.Session](ctx, w, r.Body, y.validate, y.logger)
 		if !has {
 			return
 		}
-		ip, err := utils.GetIP(r, y.config.RaelIP)
+		ip, err := utils.GetIP(r)
 		if err != nil {
 			y.handleYgError(ctx, w, err)
 			return
@@ -38,8 +37,8 @@ func (y *Yggdrasil) SessionJoin() httprouter.Handle {
 	}
 }
 
-func (y *Yggdrasil) HasJoined() httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (y *Yggdrasil) HasJoined() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		name := r.FormValue("username")
 		serverId := r.FormValue("serverId")

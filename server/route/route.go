@@ -1,63 +1,73 @@
 package route
 
 import (
-	"fmt"
+	"log/slog"
 	"net/http"
 
-	"github.com/julienschmidt/httprouter"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
+	"github.com/xmdhs/authlib-skin/config"
 	"github.com/xmdhs/authlib-skin/handle"
 	"github.com/xmdhs/authlib-skin/handle/yggdrasil"
 )
 
-func NewRoute(yggService *yggdrasil.Yggdrasil, handel *handle.Handel) (*httprouter.Router, error) {
-	r := httprouter.New()
-	r.HandleOPTIONS = true
-	r.GlobalOPTIONS = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(204)
+func NewRoute(handelY *yggdrasil.Yggdrasil, handel *handle.Handel, c config.Config, sl slog.Handler) http.Handler {
+	r := chi.NewRouter()
+	r.Use(middleware.RequestID)
+	r.Use(NewStructuredLogger(sl))
+	r.Use(middleware.Recoverer)
+	r.Use(cors.AllowAll().Handler)
+	if c.RaelIP {
+		r.Use(middleware.RealIP)
+	}
+
+	r.Mount("/api/v1", newSkinApi(handel))
+	r.Mount("/api/yggdrasil", newYggdrasil(handelY))
+
+	r.Get("/texture/*", handelY.TextureAssets())
+
+	return r
+}
+
+func newYggdrasil(handelY *yggdrasil.Yggdrasil) http.Handler {
+	r := chi.NewRouter()
+	r.Use(warpHJSON)
+
+	r.Post("/authserver/authenticate", handelY.Authenticate())
+	r.Post("/authserver/validate", handelY.Validate())
+	r.Post("/authserver/signout", handelY.Signout())
+	r.Post("/authserver/invalidate", handelY.Invalidate())
+	r.Post("/authserver/refresh", handelY.Refresh())
+
+	r.Put("/api/user/profile/{uuid}/{textureType}", handelY.PutTexture())
+	r.Delete("/api/user/profile/{uuid}/{textureType}", handelY.DelTexture())
+
+	r.Get("/sessionserver/session/minecraft/profile/{uuid}", handelY.GetProfile())
+	r.Post("/api/profiles/minecraft", handelY.BatchProfile())
+
+	r.Post("/sessionserver/session/minecraft/join", handelY.SessionJoin())
+	r.Get("/sessionserver/session/minecraft/hasJoined", handelY.HasJoined())
+
+	r.Post("/minecraftservices/player/certificates", handelY.PlayerCertificates())
+
+	r.Get("/", handelY.YggdrasilRoot())
+	return r
+}
+
+func newSkinApi(handel *handle.Handel) http.Handler {
+	r := chi.NewRouter()
+
+	r.Put("/user/reg", handel.Reg())
+	r.Get("/config", handel.GetConfig())
+	r.Get("/user", handel.UserInfo())
+	r.Post("/user/password", handel.ChangePasswd())
+	r.Post("/user/name", handel.ChangeName())
+
+	r.Group(func(r chi.Router) {
+		r.Use(handel.NeedAdmin)
+		r.Get("/admin/users", handel.ListUser())
+
 	})
-	err := newYggdrasil(r, *yggService)
-	if err != nil {
-		return nil, fmt.Errorf("NewRoute: %w", err)
-	}
-	err = newSkinApi(r, handel)
-	if err != nil {
-		return nil, fmt.Errorf("NewRoute: %w", err)
-	}
-	return r, nil
-}
-
-func newYggdrasil(r *httprouter.Router, handelY yggdrasil.Yggdrasil) error {
-	r.POST("/api/yggdrasil/authserver/authenticate", warpHJSON(handelY.Authenticate()))
-	r.POST("/api/yggdrasil/authserver/validate", warpHJSON(handelY.Validate()))
-	r.POST("/api/yggdrasil/authserver/signout", warpHJSON(handelY.Signout()))
-	r.POST("/api/yggdrasil/authserver/invalidate", handelY.Invalidate())
-	r.POST("/api/yggdrasil/authserver/refresh", warpHJSON(handelY.Refresh()))
-
-	r.PUT("/api/yggdrasil/api/user/profile/:uuid/:textureType", handelY.PutTexture())
-	r.DELETE("/api/yggdrasil/api/user/profile/:uuid/:textureType", warpHJSON(handelY.DelTexture()))
-
-	r.GET("/api/yggdrasil/sessionserver/session/minecraft/profile/:uuid", warpHJSON(handelY.GetProfile()))
-	r.POST("/api/yggdrasil/api/profiles/minecraft", warpHJSON(handelY.BatchProfile()))
-
-	r.POST("/api/yggdrasil/sessionserver/session/minecraft/join", warpHJSON(handelY.SessionJoin()))
-	r.GET("/api/yggdrasil/sessionserver/session/minecraft/hasJoined", warpHJSON(handelY.HasJoined()))
-
-	r.POST("/api/yggdrasil/minecraftservices/player/certificates", warpHJSON(handelY.PlayerCertificates()))
-
-	r.GET("/api/yggdrasil", warpHJSON(handelY.YggdrasilRoot()))
-	r.GET("/api/yggdrasil/", warpHJSON(handelY.YggdrasilRoot()))
-
-	r.GET("/texture/*filepath", handelY.TextureAssets())
-	return nil
-}
-
-func newSkinApi(r *httprouter.Router, handel *handle.Handel) error {
-	r.PUT("/api/v1/user/reg", handel.Reg())
-	r.GET("/api/v1/config", handel.GetConfig())
-	r.GET("/api/v1/user", handel.UserInfo())
-	r.POST("/api/v1/user/password", handel.ChangePasswd())
-	r.POST("/api/v1/user/name", handel.ChangeName())
-
-	r.GET("/api/v1/admin/users", handel.NeedAdmin(handel.ListUser()))
-	return nil
+	return r
 }

@@ -20,5 +20,4 @@ func handleYgError(ctx context.Context, w http.ResponseWriter, e yggdrasil.Error
 func (y *Yggdrasil) handleYgError(ctx context.Context, w http.ResponseWriter, err error) {
 	y.logger.WarnContext(ctx, err.Error())
 	handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: err.Error()}, 500)
-	return
 }

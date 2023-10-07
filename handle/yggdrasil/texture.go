@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/julienschmidt/httprouter"
+	"github.com/go-chi/chi/v5"
 	"github.com/xmdhs/authlib-skin/model/yggdrasil"
 	"github.com/xmdhs/authlib-skin/service/utils"
 )
@@ -44,10 +44,10 @@ func (y *Yggdrasil) validTextureType(ctx context.Context, w http.ResponseWriter,
 	return true
 }
 
-func (y *Yggdrasil) PutTexture() httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (y *Yggdrasil) PutTexture() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		uuid, textureType, ok := getUUIDbyParams(ctx, p, y.logger, w)
+		uuid, textureType, ok := getUUIDbyParams(ctx, y.logger, w)
 		if !ok {
 			return
 		}
@@ -115,9 +115,9 @@ func (y *Yggdrasil) PutTexture() httprouter.Handle {
 	}
 }
 
-func getUUIDbyParams(ctx context.Context, p httprouter.Params, l *slog.Logger, w http.ResponseWriter) (string, string, bool) {
-	uuid := p.ByName("uuid")
-	textureType := p.ByName("textureType")
+func getUUIDbyParams(ctx context.Context, l *slog.Logger, w http.ResponseWriter) (string, string, bool) {
+	uuid := chi.URLParamFromCtx(ctx, "uuid")
+	textureType := chi.URLParamFromCtx(ctx, "textureType")
 	if uuid == "" {
 		l.DebugContext(ctx, "路径中缺少参数 uuid")
 		handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: "路径中缺少参数 uuid / textureType"}, 400)
@@ -132,10 +132,10 @@ func getUUIDbyParams(ctx context.Context, p httprouter.Params, l *slog.Logger, w
 	return uuid, textureType, true
 }
 
-func (y *Yggdrasil) DelTexture() httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func (y *Yggdrasil) DelTexture() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		uuid, textureType, ok := getUUIDbyParams(ctx, p, y.logger, w)
+		uuid, textureType, ok := getUUIDbyParams(ctx, y.logger, w)
 		if !ok {
 			return
 		}

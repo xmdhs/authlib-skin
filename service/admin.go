@@ -36,6 +36,9 @@ func (w *WebService) ListUser(ctx context.Context, page int) ([]model.UserList, 
 	ul := make([]model.UserList, 0, len(u))
 
 	for _, v := range u {
+		if v.Edges.Profile == nil {
+			continue
+		}
 		ul = append(ul, model.UserList{
 			UserInfo: model.UserInfo{
 				UID:     v.ID,
@@ -44,6 +47,7 @@ func (w *WebService) ListUser(ctx context.Context, page int) ([]model.UserList, 
 			},
 			Email: v.Email,
 			RegIp: v.RegIP,
+			Name:  v.Edges.Profile.Name,
 		})
 	}
 
