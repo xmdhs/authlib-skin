@@ -1,4 +1,4 @@
-import type { tokenData, ApiUser, ApiServerInfo, YggProfile, ApiConfig } from '@/apis/model'
+import type { tokenData, ApiUser, ApiServerInfo, YggProfile, ApiConfig, List, UserInfo } from '@/apis/model'
 import { apiGet } from '@/apis/utils'
 
 export async function login(username: string, password: string) {
@@ -102,4 +102,14 @@ export async function changeName(name: string, token: string) {
         }
     })
     return await apiGet<unknown>(r)
+}
+
+export async function ListUser(page: number, token: string) {
+    const r = await fetch(import.meta.env.VITE_APIADDR + "/api/v1/admin/users?page=" + String(page), {
+        method: "GET",
+        headers: {
+            "Authorization": "Bearer " + token
+        }
+    })
+    return await apiGet<List<UserInfo>>(r)
 }

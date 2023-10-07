@@ -12,6 +12,11 @@ export interface Api<T> {
     data: T
 }
 
+export interface List<T> {
+    total: number
+    list: T[]
+}
+
 
 interface captcha {
     type: string
@@ -42,4 +47,13 @@ export interface YggProfile {
 export interface ApiConfig {
     captcha: captcha
     AllowChangeName: boolean
+}
+
+export interface UserInfo {
+    uid: number
+    uuid: number
+    is_admin: boolean
+    email: string
+    reg_ip: string
+    name: string
 }

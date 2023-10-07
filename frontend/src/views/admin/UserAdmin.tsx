@@ -6,58 +6,73 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import useTitle from '@/hooks/useTitle';
+import { useRequest } from 'ahooks';
+import { ListUser } from '@/apis/apis';
+import { useEffect, useState } from 'react';
+import { useAtomValue } from 'jotai';
+import { token } from '@/store/store';
+import TablePagination from '@mui/material/TablePagination';
+import Alert from '@mui/material/Alert';
+import Snackbar from '@mui/material/Snackbar';
+import Button from '@mui/material/Button';
 
-function createData(
-    name: string,
-    calories: number,
-    fat: number,
-    carbs: number,
-    protein: number,
-) {
-    return { name, calories, fat, carbs, protein };
-}
-
-const rows = [
-    createData('Frozen yoghurt', 159, 6.0, 24, 4.0),
-    createData('Ice cream sandwich', 237, 9.0, 37, 4.3),
-    createData('Eclair', 262, 16.0, 24, 6.0),
-    createData('Cupcake', 305, 3.7, 67, 4.3),
-    createData('Gingerbread', 356, 16.0, 49, 3.9),
-];
 
 export default function UserAdmin() {
     useTitle("用户管理")
+    const [page, setPage] = useState(1)
+    const nowtoken = useAtomValue(token)
+    const [err, setErr] = useState("")
+
+    const { data, run } = useRequest(ListUser, {
+        cacheKey: "/api/v1/admin/users?page=" + String(page),
+        onError: e => {
+            setErr(String(e))
+        }
+    })
+
+    useEffect(() => {
+        run(page, nowtoken)
+    }, [page, nowtoken, run])
 
 
-    return (
-        <TableContainer component={Paper}>
-            <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                <TableHead>
-                    <TableRow>
-                        <TableCell>Dessert (100g serving)</TableCell>
-                        <TableCell align="right">Calories</TableCell>
-                        <TableCell align="right">Fat&nbsp;(g)</TableCell>
-                        <TableCell align="right">Carbs&nbsp;(g)</TableCell>
-                        <TableCell align="right">Protein&nbsp;(g)</TableCell>
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {rows.map((row) => (
-                        <TableRow
-                            key={row.name}
-                            sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                        >
-                            <TableCell component="th" scope="row">
-                                {row.name}
-                            </TableCell>
-                            <TableCell align="right">{row.calories}</TableCell>
-                            <TableCell align="right">{row.fat}</TableCell>
-                            <TableCell align="right">{row.carbs}</TableCell>
-                            <TableCell align="right">{row.protein}</TableCell>
+    return (<>
+        <Paper>
+            <TableContainer >
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell>邮箱</TableCell>
+                            <TableCell>用户名</TableCell>
+                            <TableCell>注册 ip</TableCell>
+                            <TableCell>uuid</TableCell>
+                            <TableCell></TableCell>
                         </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </TableContainer>
-    );
+                    </TableHead>
+                    <TableBody>
+                        {data?.list.map((row) => (
+                            <TableRow key={row.uid}>
+                                <TableCell sx={{ maxWidth: 'min-content' }}>{row.email}</TableCell>
+                                <TableCell>{row.name}</TableCell>
+                                <TableCell>{row.reg_ip}</TableCell>
+                                <TableCell>{row.uuid}</TableCell>
+                                <TableCell><Button>编辑</Button></TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+            <TablePagination
+                rowsPerPageOptions={[20]}
+                component="div"
+                count={data?.total ?? 0}
+                rowsPerPage={20}
+                page={page - 1}
+                onPageChange={(_, page) => setPage(page + 1)}
+            />
+        </Paper >
+        <Snackbar anchorOrigin={{ vertical: 'top', horizontal: 'center' }} open={err != ""} >
+            <Alert onClose={() => setErr("")} severity="error">{err}</Alert>
+        </Snackbar>
+
+    </>);
 }
