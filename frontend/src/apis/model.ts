@@ -51,8 +51,9 @@ export interface ApiConfig {
 
 export interface UserInfo {
     uid: number
-    uuid: number
+    uuid: string
     is_admin: boolean
+    is_disable: boolean
     email: string
     reg_ip: string
     name: string
@@ -63,4 +64,6 @@ export interface EditUser {
     name: string
     password: string
     is_admin: boolean
+    is_disable: boolean
+    del_textures: boolean
 }

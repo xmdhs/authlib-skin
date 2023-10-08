@@ -34,7 +34,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import SecurityIcon from '@mui/icons-material/Security';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { Link } from "react-router-dom";
-
+import GroupIcon from '@mui/icons-material/Group';
 
 const drawerWidth = 240;
 const DrawerOpen = atom(false)
@@ -242,8 +242,9 @@ const MyDrawer = function MyDrawer() {
 
     const adminDrawerList = React.useMemo(() => [
         {
-            icon: <PersonIcon />,
-            title: 'test'
+            icon: <GroupIcon />,
+            title: '用户管理',
+            link: '/admin/user'
         }
     ] as ListItem[], [])
 

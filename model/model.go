@@ -48,9 +48,10 @@ type ChangePasswd struct {
 
 type UserList struct {
 	UserInfo
-	Email string `json:"email"`
-	RegIp string `json:"reg_ip"`
-	Name  string `json:"name"`
+	Email     string `json:"email"`
+	RegIp     string `json:"reg_ip"`
+	Name      string `json:"name"`
+	IsDisable bool   `json:"is_disable"`
 }
 
 type ChangeName struct {

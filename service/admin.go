@@ -63,9 +63,10 @@ func (w *WebService) ListUser(ctx context.Context, page int, email, name string)
 				UUID:    v.Edges.Profile.UUID,
 				IsAdmin: utilsService.IsAdmin(v.State),
 			},
-			Email: v.Email,
-			RegIp: v.RegIP,
-			Name:  v.Edges.Profile.Name,
+			Email:     v.Email,
+			RegIp:     v.RegIP,
+			Name:      v.Edges.Profile.Name,
+			IsDisable: utilsService.IsDisable(v.State),
 		})
 	}
 
@@ -77,6 +78,7 @@ func (w *WebService) ListUser(ctx context.Context, page int, email, name string)
 }
 
 func (w *WebService) EditUser(ctx context.Context, u model.EditUser, uid int) error {
+	uuid := ""
 	err := utils.WithTx(ctx, w.client, func(tx *ent.Tx) error {
 		up := tx.User.UpdateOneID(uid).SetEmail(u.Email)
 		if u.Password != "" {
@@ -93,13 +95,14 @@ func (w *WebService) EditUser(ctx context.Context, u model.EditUser, uid int) er
 		}
 
 		if u.DelTextures {
-			up, err := tx.UserProfile.Query().Where(userprofile.ID(uid)).First(ctx)
+			userProfile, err := tx.UserProfile.Query().Where(userprofile.ID(uid)).First(ctx)
 			if err != nil {
 				return err
 			}
+			uuid = userProfile.UUID
 			tl := []string{"skin", "cape"}
 			for _, v := range tl {
-				err := utilsService.DelTexture(ctx, up.ID, v, w.client, w.config)
+				err := utilsService.DelTexture(ctx, userProfile.ID, v, w.client, w.config)
 				if err != nil {
 					return err
 				}
@@ -122,9 +125,14 @@ func (w *WebService) EditUser(ctx context.Context, u model.EditUser, uid int) er
 
 		return nil
 	})
-
 	if err != nil {
 		return fmt.Errorf("EditUser: %w", err)
+	}
+	if uuid != "" {
+		err = w.cache.Del([]byte("Profile" + uuid))
+		if err != nil {
+			return fmt.Errorf("EditUser: %w", err)
+		}
 	}
 	return nil
 }
