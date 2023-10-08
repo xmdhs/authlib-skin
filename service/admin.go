@@ -5,12 +5,15 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/xmdhs/authlib-skin/db/ent"
 	"github.com/xmdhs/authlib-skin/db/ent/predicate"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
+	"github.com/xmdhs/authlib-skin/db/ent/usertoken"
 	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/model/yggdrasil"
 	utilsService "github.com/xmdhs/authlib-skin/service/utils"
+	"github.com/xmdhs/authlib-skin/utils"
 )
 
 var ErrNotAdmin = errors.New("无权限")
@@ -71,4 +74,57 @@ func (w *WebService) ListUser(ctx context.Context, page int, email, name string)
 		return nil, 0, fmt.Errorf("ListUser: %w", err)
 	}
 	return ul, uc, nil
+}
+
+func (w *WebService) EditUser(ctx context.Context, u model.EditUser, uid int) error {
+	err := utils.WithTx(ctx, w.client, func(tx *ent.Tx) error {
+		up := tx.User.UpdateOneID(uid).SetEmail(u.Email)
+		if u.Password != "" {
+			p, s := utils.Argon2ID(u.Password)
+			up = up.SetPassword(p).SetSalt(s)
+			err := tx.UserToken.Update().Where(usertoken.HasUserWith(user.ID(uid))).AddTokenID(1).Exec(ctx)
+			if err != nil {
+				return err
+			}
+		}
+		err := tx.UserProfile.Update().Where(userprofile.HasUserWith(user.ID(uid))).SetName(u.Name).Exec(ctx)
+		if err != nil {
+			return err
+		}
+
+		if u.DelTextures {
+			up, err := tx.UserProfile.Query().Where(userprofile.ID(uid)).First(ctx)
+			if err != nil {
+				return err
+			}
+			tl := []string{"skin", "cape"}
+			for _, v := range tl {
+				err := utilsService.DelTexture(ctx, up.ID, v, w.client, w.config)
+				if err != nil {
+					return err
+				}
+			}
+		}
+		state := 0
+		if u.IsAdmin {
+			state = utilsService.SetAdmin(state)
+		}
+		if u.IsDisable {
+			state = utilsService.SetDisable(state)
+		}
+
+		up = up.SetState(state)
+
+		err = up.Exec(ctx)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("EditUser: %w", err)
+	}
+	return nil
 }

@@ -87,3 +87,11 @@ func IsAdmin(state int) bool {
 func IsDisable(state int) bool {
 	return state&2 == 2
 }
+
+func SetAdmin(state int) int {
+	return state | 1
+}
+
+func SetDisable(state int) int {
+	return state | 2
+}

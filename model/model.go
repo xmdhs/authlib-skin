@@ -61,3 +61,12 @@ type Config struct {
 	Captcha         Captcha `json:"captcha"`
 	AllowChangeName bool
 }
+
+type EditUser struct {
+	Email       string `json:"email" validate:"required,email"`
+	Name        string `json:"name" validate:"required,min=3,max=16"`
+	Password    string `json:"password"`
+	IsAdmin     bool   `json:"is_admin"`
+	IsDisable   bool   `json:"is_disable"`
+	DelTextures bool   `json:"del_textures"`
+}

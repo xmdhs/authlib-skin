@@ -6,7 +6,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import useTitle from '@/hooks/useTitle';
-import { useMemoizedFn, useRequest } from 'ahooks';
+import {  useRequest } from 'ahooks';
 import { ListUser } from '@/apis/apis';
 import { useEffect, useState } from 'react';
 import { useAtomValue } from 'jotai';
@@ -113,14 +113,18 @@ interface MyDialogProp {
 }
 
 function MyDialog({ open, row, setOpen }: MyDialogProp) {
-    const handleClose = useMemoizedFn(() => {
+    const handleClose = () => {
         setOpen(false)
-    })
+    }
     const [nrow, setNrow] = useState(row)
 
     useEffect(() => {
         setNrow(row)
     }, [row])
+
+    const handleOpen = () => {
+
+    }
 
 
     return (
@@ -143,7 +147,7 @@ function MyDialog({ open, row, setOpen }: MyDialogProp) {
             </DialogContent>
             <DialogActions>
                 <Button onClick={handleClose}>取消</Button>
-                <Button onClick={handleClose}>确认</Button>
+                <Button onClick={handleOpen}>确认</Button>
             </DialogActions>
         </Dialog>
     )

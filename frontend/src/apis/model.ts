@@ -57,3 +57,10 @@ export interface UserInfo {
     reg_ip: string
     name: string
 }
+
+export interface EditUser {
+    email: string
+    name: string
+    password: string
+    is_admin: boolean
+}

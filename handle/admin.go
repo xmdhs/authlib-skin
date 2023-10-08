@@ -7,9 +7,12 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/service"
 	"github.com/xmdhs/authlib-skin/service/utils"
+
+	U "github.com/xmdhs/authlib-skin/utils"
 )
 
 type tokenValue string
@@ -79,5 +82,35 @@ func (h *Handel) ListUser() http.HandlerFunc {
 			return
 		}
 		encodeJson(w, model.API[model.List[model.UserList]]{Data: model.List[model.UserList]{List: ul, Total: uc}})
+	}
+}
+
+func (h *Handel) EditUser() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		uid := chi.URLParamFromCtx(ctx, "uid")
+		if uid == "" {
+			h.handleError(ctx, w, "uid 为空", model.ErrInput, 400, slog.LevelDebug)
+			return
+		}
+		uidi, err := strconv.Atoi(uid)
+		if err != nil {
+			h.handleError(ctx, w, err.Error(), model.ErrInput, 400, slog.LevelDebug)
+			return
+		}
+
+		a, err := U.DeCodeBody[model.EditUser](r.Body, h.validate)
+		if err != nil {
+			h.handleError(ctx, w, err.Error(), model.ErrInput, 400, slog.LevelDebug)
+			return
+		}
+		err = h.webService.EditUser(ctx, a, uidi)
+		if err != nil {
+			h.handleError(ctx, w, err.Error(), model.ErrService, 500, slog.LevelWarn)
+			return
+		}
+		encodeJson[any](w, model.API[any]{
+			Code: 0,
+		})
 	}
 }
