@@ -1,6 +1,7 @@
 package route
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 
@@ -15,7 +16,9 @@ import (
 func NewRoute(handelY *yggdrasil.Yggdrasil, handel *handle.Handel, c config.Config, sl slog.Handler) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
-	r.Use(NewStructuredLogger(sl))
+	if sl.Enabled(context.Background(), slog.LevelDebug) {
+		r.Use(NewStructuredLogger(sl))
+	}
 	r.Use(middleware.Recoverer)
 	r.Use(cors.AllowAll().Handler)
 	if c.RaelIP {

@@ -97,7 +97,7 @@ func (y *Yggdrasil) Auth(handle http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		a, err := utils.DeCodeBody[yggdrasil.ValidateToken](r.Body, y.validate)
-		if err != nil {
+		if err != nil || a.AccessToken == "" {
 			token := y.getTokenbyAuthorization(ctx, w, r)
 			if token == "" {
 				return
