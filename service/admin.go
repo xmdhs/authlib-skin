@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/xmdhs/authlib-skin/db/ent/predicate"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
+	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
 	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/model/yggdrasil"
 	utilsService "github.com/xmdhs/authlib-skin/service/utils"
@@ -32,8 +34,17 @@ func (w *WebService) IsAdmin(ctx context.Context, t *model.TokenClaims) error {
 	return nil
 }
 
-func (w *WebService) ListUser(ctx context.Context, page int) ([]model.UserList, int, error) {
-	u, err := w.client.User.Query().WithProfile().Limit(20).Offset((page - 1) * 20).All(ctx)
+func (w *WebService) ListUser(ctx context.Context, page int, email, name string) ([]model.UserList, int, error) {
+	whereL := []predicate.User{}
+	if email != "" {
+		whereL = append(whereL, user.EmailHasPrefix(email))
+	}
+	if name != "" {
+		whereL = append(whereL, user.HasProfileWith(userprofile.NameHasPrefix(name)))
+	}
+	u, err := w.client.User.Query().WithProfile().
+		Where(user.And(whereL...)).
+		Limit(20).Offset((page - 1) * 20).All(ctx)
 	if err != nil {
 		return nil, 0, fmt.Errorf("ListUser: %w", err)
 	}
@@ -55,7 +66,7 @@ func (w *WebService) ListUser(ctx context.Context, page int) ([]model.UserList, 
 		})
 	}
 
-	uc, err := w.client.User.Query().Count(ctx)
+	uc, err := w.client.User.Query().Where(user.And(whereL...)).Count(ctx)
 	if err != nil {
 		return nil, 0, fmt.Errorf("ListUser: %w", err)
 	}

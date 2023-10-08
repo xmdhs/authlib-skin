@@ -104,8 +104,12 @@ export async function changeName(name: string, token: string) {
     return await apiGet<unknown>(r)
 }
 
-export async function ListUser(page: number, token: string) {
-    const r = await fetch(import.meta.env.VITE_APIADDR + "/api/v1/admin/users?page=" + String(page), {
+export async function ListUser(page: number, token: string, email: string, name: string) {
+    const u = new URL(import.meta.env.VITE_APIADDR + "/api/v1/admin/users")
+    u.searchParams.set("page", String(page))
+    u.searchParams.set("email", email)
+    u.searchParams.set("name", name)
+    const r = await fetch(u.toString(), {
         method: "GET",
         headers: {
             "Authorization": "Bearer " + token

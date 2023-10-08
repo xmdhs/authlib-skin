@@ -70,8 +70,10 @@ func (h *Handel) ListUser() http.HandlerFunc {
 			}
 			pagei = p
 		}
+		email := r.FormValue("email")
+		name := r.FormValue("name")
 
-		ul, uc, err := h.webService.ListUser(ctx, pagei)
+		ul, uc, err := h.webService.ListUser(ctx, pagei, email, name)
 		if err != nil {
 			h.handleError(ctx, w, err.Error(), model.ErrService, 500, slog.LevelWarn)
 			return
