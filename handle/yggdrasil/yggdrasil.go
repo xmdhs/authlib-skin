@@ -3,6 +3,7 @@ package yggdrasil
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"log/slog"
 	"net"
@@ -13,6 +14,7 @@ import (
 	"github.com/samber/lo"
 	"github.com/xmdhs/authlib-skin/config"
 	"github.com/xmdhs/authlib-skin/model/yggdrasil"
+	utilsS "github.com/xmdhs/authlib-skin/service/utils"
 	yggdrasilS "github.com/xmdhs/authlib-skin/service/yggdrasil"
 	"github.com/xmdhs/authlib-skin/utils"
 )
@@ -85,4 +87,34 @@ func (y *Yggdrasil) TextureAssets() http.HandlerFunc {
 		w.Header().Set("Content-Type", "image/png")
 		http.StripPrefix("/texture/", http.FileServer(http.Dir(y.config.TexturePath))).ServeHTTP(w, r)
 	}
+}
+
+type tokenValue string
+
+const tokenKey = tokenValue("token")
+
+func (y *Yggdrasil) Auth(handle http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		a, err := utils.DeCodeBody[yggdrasil.ValidateToken](r.Body, y.validate)
+		if err != nil {
+			token := y.getTokenbyAuthorization(ctx, w, r)
+			if token == "" {
+				return
+			}
+			a.AccessToken = token
+		}
+		t, err := y.yggdrasilService.Auth(ctx, a)
+		if err != nil {
+			if errors.Is(err, utilsS.ErrTokenInvalid) {
+				y.logger.DebugContext(ctx, err.Error())
+				handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: "Invalid token.", Error: "ForbiddenOperationException"}, 403)
+				return
+			}
+			y.handleYgError(ctx, w, err)
+			return
+		}
+		r = r.WithContext(context.WithValue(ctx, tokenKey, t))
+		handle.ServeHTTP(w, r)
+	})
 }

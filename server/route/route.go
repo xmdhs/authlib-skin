@@ -34,22 +34,27 @@ func newYggdrasil(handelY *yggdrasil.Yggdrasil) http.Handler {
 	r := chi.NewRouter()
 	r.Use(warpHJSON)
 
-	r.Post("/authserver/authenticate", handelY.Authenticate())
-	r.Post("/authserver/validate", handelY.Validate())
-	r.Post("/authserver/signout", handelY.Signout())
-	r.Post("/authserver/invalidate", handelY.Invalidate())
-	r.Post("/authserver/refresh", handelY.Refresh())
+	r.Group(func(r chi.Router) {
+		r.Use(handelY.Auth)
+		r.Post("/authserver/validate", handelY.Validate())
+		r.Post("/authserver/invalidate", handelY.Invalidate())
+		r.Post("/authserver/refresh", handelY.Refresh())
 
-	r.Put("/api/user/profile/{uuid}/{textureType}", handelY.PutTexture())
-	r.Delete("/api/user/profile/{uuid}/{textureType}", handelY.DelTexture())
+		r.Put("/api/user/profile/{uuid}/{textureType}", handelY.PutTexture())
+		r.Delete("/api/user/profile/{uuid}/{textureType}", handelY.DelTexture())
+
+		r.Post("/sessionserver/session/minecraft/join", handelY.SessionJoin())
+		r.Post("/minecraftservices/player/certificates", handelY.PlayerCertificates())
+
+	})
+
+	r.Post("/authserver/authenticate", handelY.Authenticate())
+	r.Post("/authserver/signout", handelY.Signout())
 
 	r.Get("/sessionserver/session/minecraft/profile/{uuid}", handelY.GetProfile())
 	r.Post("/api/profiles/minecraft", handelY.BatchProfile())
 
-	r.Post("/sessionserver/session/minecraft/join", handelY.SessionJoin())
 	r.Get("/sessionserver/session/minecraft/hasJoined", handelY.HasJoined())
-
-	r.Post("/minecraftservices/player/certificates", handelY.PlayerCertificates())
 
 	r.Get("/", handelY.YggdrasilRoot())
 	return r

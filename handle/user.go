@@ -7,7 +7,6 @@ import (
 
 	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/service"
-	utilsService "github.com/xmdhs/authlib-skin/service/utils"
 	"github.com/xmdhs/authlib-skin/utils"
 )
 
@@ -60,10 +59,6 @@ func (h *Handel) UserInfo() http.HandlerFunc {
 		t := ctx.Value(tokenKey).(*model.TokenClaims)
 		u, err := h.webService.Info(ctx, t)
 		if err != nil {
-			if errors.Is(err, utilsService.ErrTokenInvalid) {
-				h.handleError(ctx, w, "token 无效", model.ErrAuth, 401, slog.LevelDebug)
-				return
-			}
 			h.handleError(ctx, w, err.Error(), model.ErrService, 500, slog.LevelWarn)
 			return
 		}

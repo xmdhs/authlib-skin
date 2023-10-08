@@ -2,12 +2,11 @@ package yggdrasil
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 
 	"github.com/samber/lo"
+	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/model/yggdrasil"
-	sutils "github.com/xmdhs/authlib-skin/service/utils"
 	"github.com/xmdhs/authlib-skin/utils"
 )
 
@@ -18,18 +17,15 @@ func (y *Yggdrasil) SessionJoin() http.HandlerFunc {
 		if !has {
 			return
 		}
+		t := ctx.Value(tokenKey).(*model.TokenClaims)
+
 		ip, err := utils.GetIP(r)
 		if err != nil {
 			y.handleYgError(ctx, w, err)
 			return
 		}
-		err = y.yggdrasilService.SessionJoin(ctx, a, ip)
+		err = y.yggdrasilService.SessionJoin(ctx, a, t, ip)
 		if err != nil {
-			if errors.Is(err, sutils.ErrTokenInvalid) {
-				y.logger.DebugContext(ctx, err.Error())
-				handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: "Invalid token.", Error: "ForbiddenOperationException"}, 403)
-				return
-			}
 			y.handleYgError(ctx, w, err)
 			return
 		}

@@ -15,8 +15,7 @@ import (
 	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
 	"github.com/xmdhs/authlib-skin/db/ent/usertexture"
-	"github.com/xmdhs/authlib-skin/model/yggdrasil"
-	utilsService "github.com/xmdhs/authlib-skin/service/utils"
+	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/utils"
 )
 
@@ -78,13 +77,9 @@ func (y *Yggdrasil) delTexture(ctx context.Context, userProfileID int, textureTy
 	return nil
 }
 
-func (y *Yggdrasil) DelTexture(ctx context.Context, uuid string, token string, textureType string) error {
-	t, err := utilsService.Auth(ctx, yggdrasil.ValidateToken{AccessToken: token}, y.client, y.cache, &y.prikey.PublicKey, true)
-	if err != nil {
-		return fmt.Errorf("DelTexture: %w", err)
-	}
+func (y *Yggdrasil) DelTexture(ctx context.Context, uuid string, t *model.TokenClaims, textureType string) error {
 	if uuid != t.Subject {
-		return fmt.Errorf("PutTexture: %w", errors.Join(ErrUUIDNotEq, utilsService.ErrTokenInvalid))
+		return fmt.Errorf("PutTexture: %w", ErrUUIDNotEq)
 	}
 	up, err := y.client.UserProfile.Query().Where(userprofile.HasUserWith(user.ID(t.UID))).First(ctx)
 	if err != nil {
@@ -101,13 +96,9 @@ func (y *Yggdrasil) DelTexture(ctx context.Context, uuid string, token string, t
 	return nil
 }
 
-func (y *Yggdrasil) PutTexture(ctx context.Context, token string, texturebyte []byte, model string, uuid string, textureType string) error {
-	t, err := utilsService.Auth(ctx, yggdrasil.ValidateToken{AccessToken: token}, y.client, y.cache, &y.prikey.PublicKey, true)
-	if err != nil {
-		return fmt.Errorf("PutTexture: %w", err)
-	}
+func (y *Yggdrasil) PutTexture(ctx context.Context, t *model.TokenClaims, texturebyte []byte, model string, uuid string, textureType string) error {
 	if uuid != t.Subject {
-		return fmt.Errorf("PutTexture: %w", errors.Join(ErrUUIDNotEq, utilsService.ErrTokenInvalid))
+		return fmt.Errorf("PutTexture: %w", ErrUUIDNotEq)
 	}
 
 	up, err := y.client.UserProfile.Query().Where(userprofile.HasUserWith(user.ID(t.UID))).First(ctx)

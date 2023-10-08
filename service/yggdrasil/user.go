@@ -23,6 +23,7 @@ import (
 	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
 	"github.com/xmdhs/authlib-skin/db/ent/usertoken"
+	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/model/yggdrasil"
 	sutils "github.com/xmdhs/authlib-skin/service/utils"
 	"github.com/xmdhs/authlib-skin/utils"
@@ -120,14 +121,6 @@ func (y *Yggdrasil) Authenticate(cxt context.Context, auth yggdrasil.Authenticat
 	}, nil
 }
 
-func (y *Yggdrasil) ValidateToken(ctx context.Context, t yggdrasil.ValidateToken) error {
-	_, err := sutils.Auth(ctx, t, y.client, y.cache, &y.prikey.PublicKey, true)
-	if err != nil {
-		return fmt.Errorf("ValidateToken: %w", err)
-	}
-	return nil
-}
-
 func (y *Yggdrasil) SignOut(ctx context.Context, t yggdrasil.Pass) error {
 	u, err := y.validatePass(ctx, t.Username, t.Password)
 	if err != nil {
@@ -152,12 +145,8 @@ func (y *Yggdrasil) SignOut(ctx context.Context, t yggdrasil.Pass) error {
 	return nil
 }
 
-func (y *Yggdrasil) Invalidate(ctx context.Context, accessToken string) error {
-	t, err := sutils.Auth(ctx, yggdrasil.ValidateToken{AccessToken: accessToken}, y.client, y.cache, &y.prikey.PublicKey, true)
-	if err != nil {
-		return fmt.Errorf("Invalidate: %w", err)
-	}
-	err = y.client.UserToken.Update().Where(usertoken.HasUserWith(user.ID(t.UID))).AddTokenID(1).Exec(ctx)
+func (y *Yggdrasil) Invalidate(ctx context.Context, t *model.TokenClaims) error {
+	err := y.client.UserToken.Update().Where(usertoken.HasUserWith(user.ID(t.UID))).AddTokenID(1).Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("Invalidate: %w", err)
 	}
@@ -168,11 +157,7 @@ func (y *Yggdrasil) Invalidate(ctx context.Context, accessToken string) error {
 	return nil
 }
 
-func (y *Yggdrasil) Refresh(ctx context.Context, token yggdrasil.RefreshToken) (yggdrasil.Token, error) {
-	t, err := sutils.Auth(ctx, yggdrasil.ValidateToken{AccessToken: token.AccessToken, ClientToken: token.ClientToken}, y.client, y.cache, &y.prikey.PublicKey, false)
-	if err != nil {
-		return yggdrasil.Token{}, fmt.Errorf("Refresh: %w", err)
-	}
+func (y *Yggdrasil) Refresh(ctx context.Context, t *model.TokenClaims) (yggdrasil.Token, error) {
 	jwts, err := newJwtToken(y.prikey, t.Tid, t.CID, t.Subject, t.UID)
 	if err != nil {
 		return yggdrasil.Token{}, fmt.Errorf("Refresh: %w", err)
@@ -315,11 +300,7 @@ func (y *Yggdrasil) BatchProfile(ctx context.Context, names []string) ([]yggdras
 // privateKey 为 PKCS #8， pem type 为 RSA PUBLIC KEY
 // 签名使用 rsaWIthsha1
 
-func (y *Yggdrasil) PlayerCertificates(ctx context.Context, token string) (yggdrasil.Certificates, error) {
-	t, err := sutils.Auth(ctx, yggdrasil.ValidateToken{AccessToken: token}, y.client, y.cache, &y.prikey.PublicKey, false)
-	if err != nil {
-		return yggdrasil.Certificates{}, fmt.Errorf("PlayerCertificates: %w", err)
-	}
+func (y *Yggdrasil) PlayerCertificates(ctx context.Context, t *model.TokenClaims) (yggdrasil.Certificates, error) {
 	rsa2048, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		return yggdrasil.Certificates{}, fmt.Errorf("PlayerCertificates: %w", err)

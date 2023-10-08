@@ -17,17 +17,11 @@ type sessionWithIP struct {
 	IP   string
 }
 
-func (y *Yggdrasil) SessionJoin(ctx context.Context, s yggdrasil.Session, ip string) error {
-	t, err := sutils.Auth(ctx, yggdrasil.ValidateToken{
-		AccessToken: s.AccessToken,
-	}, y.client, y.cache, &y.prikey.PublicKey, true)
-	if err != nil {
-		return fmt.Errorf("SessionJoin: %w", err)
-	}
+func (y *Yggdrasil) SessionJoin(ctx context.Context, s yggdrasil.Session, t *model.TokenClaims, ip string) error {
 	if s.SelectedProfile != t.Subject {
 		return fmt.Errorf("SessionJoin: %w", sutils.ErrTokenInvalid)
 	}
-	err = cache.CacheHelp[sessionWithIP]{Cache: y.cache}.Put([]byte("session"+s.ServerID), sessionWithIP{
+	err := cache.CacheHelp[sessionWithIP]{Cache: y.cache}.Put([]byte("session"+s.ServerID), sessionWithIP{
 		User: *t,
 		IP:   ip,
 	}, time.Now().Add(30*time.Second))

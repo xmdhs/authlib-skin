@@ -1,6 +1,7 @@
 package yggdrasil
 
 import (
+	"context"
 	"crypto/rsa"
 	"encoding/binary"
 	"fmt"
@@ -11,6 +12,8 @@ import (
 	"github.com/xmdhs/authlib-skin/db/cache"
 	"github.com/xmdhs/authlib-skin/db/ent"
 	"github.com/xmdhs/authlib-skin/model"
+	"github.com/xmdhs/authlib-skin/model/yggdrasil"
+	sutils "github.com/xmdhs/authlib-skin/service/utils"
 )
 
 type Yggdrasil struct {
@@ -81,4 +84,12 @@ func newJwtToken(jwtKey *rsa.PrivateKey, tokenID, clientToken, UUID string, user
 		return "", fmt.Errorf("newJwtToken: %w", err)
 	}
 	return jwts, nil
+}
+
+func (y *Yggdrasil) Auth(ctx context.Context, t yggdrasil.ValidateToken) (*model.TokenClaims, error) {
+	u, err := sutils.Auth(ctx, t, y.client, y.cache, &y.prikey.PublicKey, true)
+	if err != nil {
+		return nil, fmt.Errorf("ValidateToken: %w", err)
+	}
+	return u, nil
 }

@@ -7,8 +7,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/samber/lo"
+	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/model/yggdrasil"
-	sutils "github.com/xmdhs/authlib-skin/service/utils"
 	yggdrasilS "github.com/xmdhs/authlib-skin/service/yggdrasil"
 )
 
@@ -36,21 +36,6 @@ func (y *Yggdrasil) Authenticate() http.HandlerFunc {
 
 func (y *Yggdrasil) Validate() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		cxt := r.Context()
-		a, has := getAnyModel[yggdrasil.ValidateToken](cxt, w, r.Body, y.validate, y.logger)
-		if !has {
-			return
-		}
-		err := y.yggdrasilService.ValidateToken(cxt, a)
-		if err != nil {
-			if errors.Is(err, sutils.ErrTokenInvalid) {
-				y.logger.DebugContext(cxt, err.Error())
-				handleYgError(cxt, w, yggdrasil.Error{ErrorMessage: "Invalid token.", Error: "ForbiddenOperationException"}, 403)
-				return
-			}
-			y.handleYgError(cxt, w, err)
-			return
-		}
 		w.WriteHeader(204)
 	}
 }
@@ -80,16 +65,11 @@ func (y *Yggdrasil) Invalidate() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(204)
 		cxt := r.Context()
-		a, has := getAnyModel[yggdrasil.ValidateToken](cxt, w, r.Body, y.validate, y.logger)
-		if !has {
-			return
-		}
-		err := y.yggdrasilService.Invalidate(cxt, a.AccessToken)
+
+		t := cxt.Value(tokenKey).(*model.TokenClaims)
+
+		err := y.yggdrasilService.Invalidate(cxt, t)
 		if err != nil {
-			if errors.Is(err, sutils.ErrTokenInvalid) {
-				y.logger.DebugContext(cxt, err.Error())
-				return
-			}
 			y.logger.WarnContext(cxt, err.Error())
 		}
 	}
@@ -98,17 +78,9 @@ func (y *Yggdrasil) Invalidate() http.HandlerFunc {
 func (y *Yggdrasil) Refresh() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cxt := r.Context()
-		a, has := getAnyModel[yggdrasil.RefreshToken](cxt, w, r.Body, y.validate, y.logger)
-		if !has {
-			return
-		}
-		t, err := y.yggdrasilService.Refresh(cxt, a)
+		token := cxt.Value(tokenKey).(*model.TokenClaims)
+		t, err := y.yggdrasilService.Refresh(cxt, token)
 		if err != nil {
-			if errors.Is(err, sutils.ErrTokenInvalid) {
-				y.logger.DebugContext(cxt, err.Error())
-				handleYgError(cxt, w, yggdrasil.Error{ErrorMessage: "Invalid token.", Error: "ForbiddenOperationException"}, 403)
-				return
-			}
 			y.handleYgError(cxt, w, err)
 			return
 		}
@@ -176,17 +148,9 @@ func (y *Yggdrasil) BatchProfile() http.HandlerFunc {
 func (y *Yggdrasil) PlayerCertificates() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		token := y.getTokenbyAuthorization(ctx, w, r)
-		if token == "" {
-			return
-		}
-		c, err := y.yggdrasilService.PlayerCertificates(ctx, token)
+		t := ctx.Value(tokenKey).(*model.TokenClaims)
+		c, err := y.yggdrasilService.PlayerCertificates(ctx, t)
 		if err != nil {
-			if errors.Is(err, sutils.ErrTokenInvalid) {
-				y.logger.DebugContext(ctx, err.Error())
-				handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: "Invalid token.", Error: "ForbiddenOperationException"}, 403)
-				return
-			}
 			y.handleYgError(ctx, w, err)
 			return
 		}

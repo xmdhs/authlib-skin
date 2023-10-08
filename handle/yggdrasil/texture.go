@@ -12,8 +12,10 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/model/yggdrasil"
-	"github.com/xmdhs/authlib-skin/service/utils"
+
+	yggdrasilS "github.com/xmdhs/authlib-skin/service/yggdrasil"
 )
 
 func (y *Yggdrasil) getTokenbyAuthorization(ctx context.Context, w http.ResponseWriter, r *http.Request) string {
@@ -51,10 +53,7 @@ func (y *Yggdrasil) PutTexture() http.HandlerFunc {
 		if !ok {
 			return
 		}
-		token := y.getTokenbyAuthorization(ctx, w, r)
-		if token == "" {
-			return
-		}
+		t := ctx.Value(tokenKey).(*model.TokenClaims)
 
 		model := r.FormValue("model")
 
@@ -100,9 +99,9 @@ func (y *Yggdrasil) PutTexture() http.HandlerFunc {
 			return
 		}
 
-		err = y.yggdrasilService.PutTexture(ctx, token, skin, model, uuid, textureType)
+		err = y.yggdrasilService.PutTexture(ctx, t, skin, model, uuid, textureType)
 		if err != nil {
-			if errors.Is(err, utils.ErrTokenInvalid) {
+			if errors.Is(err, yggdrasilS.ErrUUIDNotEq) {
 				y.logger.DebugContext(ctx, err.Error())
 				w.WriteHeader(401)
 				return
@@ -120,7 +119,7 @@ func getUUIDbyParams(ctx context.Context, l *slog.Logger, w http.ResponseWriter)
 	textureType := chi.URLParamFromCtx(ctx, "textureType")
 	if uuid == "" {
 		l.DebugContext(ctx, "路径中缺少参数 uuid")
-		handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: "路径中缺少参数 uuid / textureType"}, 400)
+		handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: "路径中缺少参数 uuid"}, 400)
 		return "", "", false
 	}
 	if textureType != "skin" && textureType != "cape" {
@@ -139,13 +138,10 @@ func (y *Yggdrasil) DelTexture() http.HandlerFunc {
 		if !ok {
 			return
 		}
-		token := y.getTokenbyAuthorization(ctx, w, r)
-		if token == "" {
-			return
-		}
-		err := y.yggdrasilService.DelTexture(ctx, uuid, token, textureType)
+		t := ctx.Value(tokenKey).(*model.TokenClaims)
+		err := y.yggdrasilService.DelTexture(ctx, uuid, t, textureType)
 		if err != nil {
-			if errors.Is(err, utils.ErrTokenInvalid) {
+			if errors.Is(err, yggdrasilS.ErrUUIDNotEq) {
 				y.logger.DebugContext(ctx, err.Error())
 				w.WriteHeader(401)
 				return
