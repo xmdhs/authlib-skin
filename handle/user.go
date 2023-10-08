@@ -57,12 +57,8 @@ func (h *Handel) Reg() http.HandlerFunc {
 func (h *Handel) UserInfo() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		token := h.getTokenbyAuthorization(ctx, w, r)
-		if token == "" {
-			return
-		}
-
-		u, err := h.webService.Info(ctx, token)
+		t := ctx.Value(tokenKey).(*model.TokenClaims)
+		u, err := h.webService.Info(ctx, t)
 		if err != nil {
 			if errors.Is(err, utilsService.ErrTokenInvalid) {
 				h.handleError(ctx, w, "token 无效", model.ErrAuth, 401, slog.LevelDebug)
@@ -81,17 +77,14 @@ func (h *Handel) UserInfo() http.HandlerFunc {
 func (h *Handel) ChangePasswd() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		token := h.getTokenbyAuthorization(ctx, w, r)
-		if token == "" {
-			return
-		}
+		t := ctx.Value(tokenKey).(*model.TokenClaims)
 
 		c, err := utils.DeCodeBody[model.ChangePasswd](r.Body, h.validate)
 		if err != nil {
 			h.handleError(ctx, w, err.Error(), model.ErrInput, 400, slog.LevelDebug)
 			return
 		}
-		err = h.webService.ChangePasswd(ctx, c, token)
+		err = h.webService.ChangePasswd(ctx, c, t)
 		if err != nil {
 			if errors.Is(err, service.ErrPassWord) {
 				h.handleError(ctx, w, err.Error(), model.ErrPassWord, 401, slog.LevelDebug)
@@ -110,16 +103,13 @@ func (h *Handel) ChangePasswd() http.HandlerFunc {
 func (h *Handel) ChangeName() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		token := h.getTokenbyAuthorization(ctx, w, r)
-		if token == "" {
-			return
-		}
+		t := ctx.Value(tokenKey).(*model.TokenClaims)
 		c, err := utils.DeCodeBody[model.ChangeName](r.Body, h.validate)
 		if err != nil {
 			h.handleError(ctx, w, err.Error(), model.ErrInput, 400, slog.LevelDebug)
 			return
 		}
-		err = h.webService.ChangeName(ctx, c.Name, token)
+		err = h.webService.ChangeName(ctx, c.Name, t)
 		if err != nil {
 			if errors.Is(err, service.ErrExitsName) {
 				h.handleError(ctx, w, err.Error(), model.ErrExitsName, 400, slog.LevelDebug)

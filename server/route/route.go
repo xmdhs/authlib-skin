@@ -60,14 +60,18 @@ func newSkinApi(handel *handle.Handel) http.Handler {
 
 	r.Put("/user/reg", handel.Reg())
 	r.Get("/config", handel.GetConfig())
-	r.Get("/user", handel.UserInfo())
-	r.Post("/user/password", handel.ChangePasswd())
-	r.Post("/user/name", handel.ChangeName())
 
 	r.Group(func(r chi.Router) {
-		r.Use(handel.NeedAdmin)
-		r.Get("/admin/users", handel.ListUser())
+		r.Use(handel.NeedAuth)
+		r.Get("/user", handel.UserInfo())
+		r.Post("/user/password", handel.ChangePasswd())
+		r.Post("/user/name", handel.ChangeName())
 
+		r.Group(func(r chi.Router) {
+			r.Use(handel.NeedAdmin)
+			r.Get("/admin/users", handel.ListUser())
+		})
 	})
+
 	return r
 }

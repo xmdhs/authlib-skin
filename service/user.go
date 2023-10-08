@@ -13,7 +13,6 @@ import (
 	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
 	"github.com/xmdhs/authlib-skin/model"
-	"github.com/xmdhs/authlib-skin/model/yggdrasil"
 	utilsService "github.com/xmdhs/authlib-skin/service/utils"
 	"github.com/xmdhs/authlib-skin/utils"
 )
@@ -94,11 +93,7 @@ func (w *WebService) Reg(ctx context.Context, u model.User, ipPrefix, ip string)
 	return nil
 }
 
-func (w *WebService) Info(ctx context.Context, token string) (model.UserInfo, error) {
-	t, err := utilsService.Auth(ctx, yggdrasil.ValidateToken{AccessToken: token}, w.client, w.cache, &w.prikey.PublicKey, false)
-	if err != nil {
-		return model.UserInfo{}, fmt.Errorf("Info: %w", err)
-	}
+func (w *WebService) Info(ctx context.Context, t *model.TokenClaims) (model.UserInfo, error) {
 	u, err := w.client.User.Query().Where(user.ID(t.UID)).First(ctx)
 	if err != nil {
 		return model.UserInfo{}, fmt.Errorf("Info: %w", err)
@@ -111,11 +106,7 @@ func (w *WebService) Info(ctx context.Context, token string) (model.UserInfo, er
 	}, nil
 }
 
-func (w *WebService) ChangePasswd(ctx context.Context, p model.ChangePasswd, token string) error {
-	t, err := utilsService.Auth(ctx, yggdrasil.ValidateToken{AccessToken: token}, w.client, w.cache, &w.prikey.PublicKey, false)
-	if err != nil {
-		return fmt.Errorf("ChangePasswd: %w", err)
-	}
+func (w *WebService) ChangePasswd(ctx context.Context, p model.ChangePasswd, t *model.TokenClaims) error {
 	u, err := w.client.User.Query().Where(user.IDEQ(t.UID)).WithToken().First(ctx)
 	if err != nil {
 		return fmt.Errorf("ChangePasswd: %w", err)
@@ -160,12 +151,8 @@ func (w *WebService) changeName(ctx context.Context, newName string, uid int, uu
 	return err
 }
 
-func (w *WebService) ChangeName(ctx context.Context, newName string, token string) error {
-	t, err := utilsService.Auth(ctx, yggdrasil.ValidateToken{AccessToken: token}, w.client, w.cache, &w.prikey.PublicKey, false)
-	if err != nil {
-		return fmt.Errorf("ChangeName: %w", err)
-	}
-	err = w.changeName(ctx, newName, t.UID, t.Subject)
+func (w *WebService) ChangeName(ctx context.Context, newName string, t *model.TokenClaims) error {
+	err := w.changeName(ctx, newName, t.UID, t.Subject)
 	if err != nil {
 		return fmt.Errorf("ChangeName: %w", err)
 	}

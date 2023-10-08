@@ -13,11 +13,15 @@ import (
 
 var ErrNotAdmin = errors.New("无权限")
 
-func (w *WebService) IsAdmin(ctx context.Context, token string) error {
+func (w *WebService) Auth(ctx context.Context, token string) (*model.TokenClaims, error) {
 	t, err := utilsService.Auth(ctx, yggdrasil.ValidateToken{AccessToken: token}, w.client, w.cache, &w.prikey.PublicKey, false)
 	if err != nil {
-		return fmt.Errorf("IsAdmin: %w", err)
+		return nil, fmt.Errorf("Auth: %w", err)
 	}
+	return t, nil
+}
+
+func (w *WebService) IsAdmin(ctx context.Context, t *model.TokenClaims) error {
 	u, err := w.client.User.Query().Where(user.ID(t.UID)).First(ctx)
 	if err != nil {
 		return fmt.Errorf("IsAdmin: %w", err)

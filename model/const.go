@@ -12,4 +12,5 @@ const (
 	ErrAuth
 	ErrPassWord
 	ErrExitsName
+	ErrNotAdmin
 )

@@ -1,26 +1,50 @@
 package handle
 
 import (
+	"context"
 	"errors"
 	"log/slog"
 	"net/http"
 	"strconv"
 
 	"github.com/xmdhs/authlib-skin/model"
-	utilsService "github.com/xmdhs/authlib-skin/service/utils"
+	"github.com/xmdhs/authlib-skin/service"
+	"github.com/xmdhs/authlib-skin/service/utils"
 )
 
-func (h *Handel) NeedAdmin(handle http.Handler) http.Handler {
+type tokenValue string
+
+const tokenKey = tokenValue("token")
+
+func (h *Handel) NeedAuth(handle http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		token := h.getTokenbyAuthorization(ctx, w, r)
 		if token == "" {
 			return
 		}
-		err := h.webService.IsAdmin(ctx, token)
+		t, err := h.webService.Auth(ctx, token)
 		if err != nil {
-			if errors.Is(err, utilsService.ErrTokenInvalid) {
-				h.handleError(ctx, w, "token 无效", model.ErrAuth, 401, slog.LevelDebug)
+			if errors.Is(err, utils.ErrTokenInvalid) {
+				h.handleError(ctx, w, err.Error(), model.ErrAuth, 401, slog.LevelDebug)
+				return
+			}
+			h.handleError(ctx, w, err.Error(), model.ErrService, 500, slog.LevelWarn)
+			return
+		}
+		r = r.WithContext(context.WithValue(ctx, tokenKey, t))
+		handle.ServeHTTP(w, r)
+	})
+}
+
+func (h *Handel) NeedAdmin(handle http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		t := ctx.Value(tokenKey).(*model.TokenClaims)
+		err := h.webService.IsAdmin(ctx, t)
+		if err != nil {
+			if errors.Is(err, service.ErrNotAdmin) {
+				h.handleError(ctx, w, err.Error(), model.ErrNotAdmin, 401, slog.LevelDebug)
 				return
 			}
 			h.handleError(ctx, w, err.Error(), model.ErrService, 500, slog.LevelWarn)
