@@ -1,2 +1,3 @@
 cmd/testserver
 cmd/authlibskin/config.yaml
+cmd/authlibskin/skin

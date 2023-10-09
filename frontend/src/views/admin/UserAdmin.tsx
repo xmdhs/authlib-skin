@@ -158,11 +158,13 @@ function MyDialog({ open, row, setOpen, onUpdate }: MyDialogProp) {
             <DialogTitle>修改用户信息</DialogTitle>
             <DialogContent sx={{
                 display: "grid", gap: '1em', gridTemplateColumns: {
-                    md: "auto 175px",
                     xs: "1fr"
+                },
+                gridTemplateAreas: {
+                    md: "'a c' 'b b'"
                 }
             }}>
-                <Box sx={{ display: "flex", flexDirection: 'column', gap: '0.5em' }}>
+                <Box sx={{ display: "flex", flexDirection: 'column', gap: '0.5em', gridArea: "a" }}>
                     <TextField
                         margin="dense"
                         label="邮箱"
@@ -196,19 +198,21 @@ function MyDialog({ open, row, setOpen, onUpdate }: MyDialogProp) {
                             return
                         }))}
                     />
-                    <FormGroup>
-                        <FormControlLabel control={<Checkbox checked={erow?.is_admin} onChange={e => setErow(produce(v => {
-                            v.is_admin = e.target.checked
-                        }))} />} label="管理权限" />
-                        <FormControlLabel control={<Checkbox checked={erow?.is_disable} onChange={e => setErow(produce(v => {
-                            v.is_disable = e.target.checked
-                        }))} />} label="禁用" />
-                        <FormControlLabel control={<Checkbox checked={erow?.del_textures} onChange={e => setErow(produce(v => {
-                            v.del_textures = e.target.checked
-                        }))} />} label="清空材质" />
-                    </FormGroup>
                 </Box>
-                <SkinViewUUID uuid={row?.uuid ?? ""} width={175} height={175} />
+                <FormGroup row sx={{ gridArea: "b" }}>
+                    <FormControlLabel control={<Checkbox checked={erow?.is_admin} onChange={e => setErow(produce(v => {
+                        v.is_admin = e.target.checked
+                    }))} />} label="管理权限" />
+                    <FormControlLabel control={<Checkbox checked={erow?.is_disable} onChange={e => setErow(produce(v => {
+                        v.is_disable = e.target.checked
+                    }))} />} label="禁用" />
+                    <FormControlLabel control={<Checkbox checked={erow?.del_textures} onChange={e => setErow(produce(v => {
+                        v.del_textures = e.target.checked
+                    }))} />} label="清空材质" />
+                </FormGroup>
+                <Box sx={{ gridArea: "c" }}>
+                    <SkinViewUUID uuid={row?.uuid ?? ""} width={175} height={175} />
+                </Box>
             </DialogContent>
             <DialogActions>
                 <Button onClick={handleClose}>取消</Button>
