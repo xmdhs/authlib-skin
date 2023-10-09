@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/xmdhs/authlib-skin/config"
 	"github.com/xmdhs/authlib-skin/db/cache"
 	"github.com/xmdhs/authlib-skin/db/ent"
@@ -67,23 +66,7 @@ func putUint(n uint64, c cache.Cache, key []byte, d time.Duration) error {
 }
 
 func newJwtToken(jwtKey *rsa.PrivateKey, tokenID, clientToken, UUID string, userID int) (string, error) {
-	claims := model.TokenClaims{
-		Tid: tokenID,
-		CID: clientToken,
-		UID: userID,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(15 * 24 * time.Hour)),
-			Issuer:    "authlib-skin",
-			Subject:   UUID,
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-		},
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	jwts, err := token.SignedString(jwtKey)
-	if err != nil {
-		return "", fmt.Errorf("newJwtToken: %w", err)
-	}
-	return jwts, nil
+	return sutils.NewJwtToken(jwtKey, tokenID, clientToken, UUID, userID)
 }
 
 func (y *Yggdrasil) Auth(ctx context.Context, t yggdrasil.ValidateToken) (*model.TokenClaims, error) {

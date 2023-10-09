@@ -2,15 +2,12 @@ package handle
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 	"net/http"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/xmdhs/authlib-skin/model"
-	"github.com/xmdhs/authlib-skin/service"
-	"github.com/xmdhs/authlib-skin/service/utils"
 
 	U "github.com/xmdhs/authlib-skin/utils"
 )
@@ -28,11 +25,7 @@ func (h *Handel) NeedAuth(handle http.Handler) http.Handler {
 		}
 		t, err := h.webService.Auth(ctx, token)
 		if err != nil {
-			if errors.Is(err, utils.ErrTokenInvalid) {
-				h.handleError(ctx, w, err.Error(), model.ErrAuth, 401, slog.LevelDebug)
-				return
-			}
-			h.handleError(ctx, w, err.Error(), model.ErrService, 500, slog.LevelWarn)
+			h.handleErrorService(ctx, w, err)
 			return
 		}
 		r = r.WithContext(context.WithValue(ctx, tokenKey, t))
@@ -46,11 +39,7 @@ func (h *Handel) NeedAdmin(handle http.Handler) http.Handler {
 		t := ctx.Value(tokenKey).(*model.TokenClaims)
 		err := h.webService.IsAdmin(ctx, t)
 		if err != nil {
-			if errors.Is(err, service.ErrNotAdmin) {
-				h.handleError(ctx, w, err.Error(), model.ErrNotAdmin, 401, slog.LevelDebug)
-				return
-			}
-			h.handleError(ctx, w, err.Error(), model.ErrService, 500, slog.LevelWarn)
+			h.handleErrorService(ctx, w, err)
 			return
 		}
 		handle.ServeHTTP(w, r)
@@ -78,7 +67,7 @@ func (h *Handel) ListUser() http.HandlerFunc {
 
 		ul, uc, err := h.webService.ListUser(ctx, pagei, email, name)
 		if err != nil {
-			h.handleError(ctx, w, err.Error(), model.ErrService, 500, slog.LevelWarn)
+			h.handleErrorService(ctx, w, err)
 			return
 		}
 		encodeJson(w, model.API[model.List[model.UserList]]{Data: model.List[model.UserList]{List: ul, Total: uc}})
@@ -106,7 +95,7 @@ func (h *Handel) EditUser() http.HandlerFunc {
 		}
 		err = h.webService.EditUser(ctx, a, uidi)
 		if err != nil {
-			h.handleError(ctx, w, err.Error(), model.ErrService, 500, slog.LevelWarn)
+			h.handleErrorService(ctx, w, err)
 			return
 		}
 		encodeJson[any](w, model.API[any]{

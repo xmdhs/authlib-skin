@@ -15,6 +15,7 @@ require (
 	github.com/google/wire v0.5.0
 	github.com/samber/lo v1.38.1
 	golang.org/x/crypto v0.7.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (

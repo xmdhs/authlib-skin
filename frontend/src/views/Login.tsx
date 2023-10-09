@@ -18,6 +18,9 @@ import { Link as RouterLink, useNavigate } from "react-router-dom";
 import Loading from '@/components/Loading'
 import CheckInput, { refType } from '@/components/CheckInput'
 import useTitle from '@/hooks/useTitle';
+import CaptchaWidget from '@/components/CaptchaWidget';
+import type { refType as CaptchaWidgetRef } from '@/components/CaptchaWidget'
+import { ApiErr } from '@/apis/error';
 
 
 
@@ -29,6 +32,8 @@ export default function SignIn() {
     const checkList = React.useRef<Map<string, refType>>(new Map<string, refType>())
     const navigate = useNavigate();
     useTitle("登录")
+    const captchaRef = React.useRef<CaptchaWidgetRef>(null)
+    const [captchaToken, setCaptchaToken] = useState("");
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -44,17 +49,33 @@ export default function SignIn() {
 
         if (loading) return
         setLoading(true)
-        login(postData.email!, postData.password ?? "").
+        login(postData.email!, postData.password ?? "", captchaToken).
             then(v => {
                 if (!v) return
-                setToken(v.accessToken)
+                setToken(v.token)
                 setUserInfo({
-                    uuid: v.selectedProfile.id,
-                    name: v.selectedProfile.name,
+                    uuid: v.uuid,
+                    name: v.name,
                 })
                 navigate("/profile")
             }).
-            catch(v => [setErr(String(v)), console.warn(v)]).
+            catch(v => {
+                captchaRef.current?.reload()
+
+                if (v instanceof ApiErr) {
+                    switch (v.code) {
+                        case 6:
+                            setErr("错误的密码")
+                            break
+                        case 9:
+                            setErr("用户已被禁用")
+                            break
+                    }
+                    return
+                }
+                setErr(String(v))
+                console.warn(v)
+            }).
             finally(() => setLoading(false))
 
     };
@@ -104,6 +125,7 @@ export default function SignIn() {
                         id="password"
                         autoComplete="current-password"
                     />
+                    <CaptchaWidget ref={captchaRef} onSuccess={setCaptchaToken} />
                     <Button
                         type="submit"
                         fullWidth

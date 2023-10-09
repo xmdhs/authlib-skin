@@ -1,9 +1,7 @@
 export interface tokenData {
-    accessToken: string
-    selectedProfile: {
-        name: string
-        id: string
-    }
+    token: string
+    name: string
+    uuid: string
 }
 
 export interface Api<T> {

@@ -13,4 +13,6 @@ const (
 	ErrPassWord
 	ErrExitsName
 	ErrNotAdmin
+	ErrUserDisable
+	ErrCaptcha
 )

@@ -25,7 +25,7 @@ var (
 	ErrChangeName = errors.New("离线模式 uuid 不允许修改用户名")
 )
 
-func (w *WebService) Reg(ctx context.Context, u model.User, ipPrefix, ip string) error {
+func (w *WebService) Reg(ctx context.Context, u model.UserReg, ipPrefix, ip string) error {
 	var userUuid string
 	if w.config.OfflineUUID {
 		userUuid = utils.UUIDGen(u.Name)
@@ -33,11 +33,9 @@ func (w *WebService) Reg(ctx context.Context, u model.User, ipPrefix, ip string)
 		userUuid = strings.ReplaceAll(uuid.New().String(), "-", "")
 	}
 
-	if w.config.Captcha.Type == "turnstile" {
-		err := w.verifyTurnstile(ctx, u.CaptchaToken, ip)
-		if err != nil {
-			return fmt.Errorf("Reg: %w", err)
-		}
+	err := w.verifyCaptcha(ctx, u.CaptchaToken, ip)
+	if err != nil {
+		return fmt.Errorf("Reg: %w", err)
 	}
 
 	if w.config.MaxIpUser != 0 {
@@ -52,7 +50,7 @@ func (w *WebService) Reg(ctx context.Context, u model.User, ipPrefix, ip string)
 
 	p, s := utils.Argon2ID(u.Password)
 
-	err := utils.WithTx(ctx, w.client, func(tx *ent.Tx) error {
+	err = utils.WithTx(ctx, w.client, func(tx *ent.Tx) error {
 		count, err := tx.User.Query().Where(user.EmailEQ(u.Email)).ForUpdate().Count(ctx)
 		if err != nil {
 			return err
@@ -93,6 +91,30 @@ func (w *WebService) Reg(ctx context.Context, u model.User, ipPrefix, ip string)
 	return nil
 }
 
+func (w *WebService) Login(ctx context.Context, l model.Login, ip string) (model.LoginRep, error) {
+	err := w.verifyCaptcha(ctx, l.CaptchaToken, ip)
+	if err != nil {
+		return model.LoginRep{}, fmt.Errorf("Login: %w", err)
+	}
+	u, err := w.client.User.Query().Where(user.Email(l.Email)).WithProfile().Only(ctx)
+	if err != nil {
+		return model.LoginRep{}, fmt.Errorf("Login: %w", err)
+	}
+	err = w.validatePass(ctx, u, l.Password)
+	if err != nil {
+		return model.LoginRep{}, fmt.Errorf("Login: %w", err)
+	}
+	jwt, err := utilsService.CreateToken(ctx, u, w.client, w.cache, w.prikey, "web")
+	if err != nil {
+		return model.LoginRep{}, fmt.Errorf("Login: %w", err)
+	}
+	return model.LoginRep{
+		Token: jwt,
+		Name:  u.Edges.Profile.Name,
+		UUID:  u.Edges.Profile.UUID,
+	}, nil
+}
+
 func (w *WebService) Info(ctx context.Context, t *model.TokenClaims) (model.UserInfo, error) {
 	u, err := w.client.User.Query().Where(user.ID(t.UID)).First(ctx)
 	if err != nil {
@@ -111,8 +133,9 @@ func (w *WebService) ChangePasswd(ctx context.Context, p model.ChangePasswd, t *
 	if err != nil {
 		return fmt.Errorf("ChangePasswd: %w", err)
 	}
-	if !utils.Argon2Compare(p.Old, u.Password, u.Salt) {
-		return fmt.Errorf("ChangePasswd: %w", ErrPassWord)
+	err = w.validatePass(ctx, u, p.Old)
+	if err != nil {
+		return fmt.Errorf("ChangePasswd: %w", err)
 	}
 	pass, salt := utils.Argon2ID(p.New)
 	if u.Edges.Token != nil {

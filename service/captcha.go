@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -26,6 +27,8 @@ type turnstileRet struct {
 	ErrorCodes []string `json:"error-codes"`
 }
 
+var ErrCaptcha = errors.New("验证码错误")
+
 type ErrTurnstile struct {
 	ErrorCodes []string
 }
@@ -34,7 +37,10 @@ func (e ErrTurnstile) Error() string {
 	return strings.Join(e.ErrorCodes, " ")
 }
 
-func (w *WebService) verifyTurnstile(ctx context.Context, token, ip string) error {
+func (w *WebService) verifyCaptcha(ctx context.Context, token, ip string) error {
+	if w.config.Captcha.Type != "turnstile" {
+		return nil
+	}
 	bw := &bytes.Buffer{}
 	err := json.NewEncoder(bw).Encode(turnstileResponse{
 		Secret:   w.config.Captcha.Secret,
@@ -63,9 +69,9 @@ func (w *WebService) verifyTurnstile(ctx context.Context, token, ip string) erro
 	}
 
 	if !t.Success {
-		return fmt.Errorf("verifyTurnstile: %w", ErrTurnstile{
+		return fmt.Errorf("verifyTurnstile: %w", errors.Join(ErrTurnstile{
 			ErrorCodes: t.ErrorCodes,
-		})
+		}, ErrCaptcha))
 	}
 	return nil
 }

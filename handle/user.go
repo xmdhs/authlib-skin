@@ -1,12 +1,10 @@
 package handle
 
 import (
-	"errors"
 	"log/slog"
 	"net/http"
 
 	"github.com/xmdhs/authlib-skin/model"
-	"github.com/xmdhs/authlib-skin/service"
 	"github.com/xmdhs/authlib-skin/utils"
 )
 
@@ -20,7 +18,7 @@ func (h *Handel) Reg() http.HandlerFunc {
 			return
 		}
 
-		u, err := utils.DeCodeBody[model.User](r.Body, h.validate)
+		u, err := utils.DeCodeBody[model.UserReg](r.Body, h.validate)
 		if err != nil {
 			h.handleError(ctx, w, err.Error(), model.ErrInput, 400, slog.LevelDebug)
 			return
@@ -32,23 +30,38 @@ func (h *Handel) Reg() http.HandlerFunc {
 		}
 		err = h.webService.Reg(ctx, u, rip, ip)
 		if err != nil {
-			if errors.Is(err, service.ErrExistUser) {
-				h.handleError(ctx, w, err.Error(), model.ErrExistUser, 400, slog.LevelDebug)
-				return
-			}
-			if errors.Is(err, service.ErrExitsName) {
-				h.handleError(ctx, w, err.Error(), model.ErrExitsName, 400, slog.LevelDebug)
-				return
-			}
-			if errors.Is(err, service.ErrRegLimit) {
-				h.handleError(ctx, w, err.Error(), model.ErrRegLimit, 400, slog.LevelDebug)
-				return
-			}
-			h.handleError(ctx, w, err.Error(), model.ErrService, 500, slog.LevelWarn)
+			h.handleErrorService(ctx, w, err)
 			return
 		}
 		encodeJson(w, model.API[any]{
 			Code: 0,
+		})
+	}
+}
+
+func (h *Handel) Login() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		ip, err := utils.GetIP(r)
+		if err != nil {
+			h.handleError(ctx, w, err.Error(), model.ErrInput, 400, slog.LevelDebug)
+			return
+		}
+
+		l, err := utils.DeCodeBody[model.Login](r.Body, h.validate)
+		if err != nil {
+			h.handleError(ctx, w, err.Error(), model.ErrInput, 400, slog.LevelDebug)
+			return
+		}
+
+		lr, err := h.webService.Login(ctx, l, ip)
+		if err != nil {
+			h.handleErrorService(ctx, w, err)
+			return
+		}
+		encodeJson(w, model.API[model.LoginRep]{
+			Code: 0,
+			Data: lr,
 		})
 	}
 }
@@ -81,11 +94,7 @@ func (h *Handel) ChangePasswd() http.HandlerFunc {
 		}
 		err = h.webService.ChangePasswd(ctx, c, t)
 		if err != nil {
-			if errors.Is(err, service.ErrPassWord) {
-				h.handleError(ctx, w, err.Error(), model.ErrPassWord, 401, slog.LevelDebug)
-				return
-			}
-			h.handleError(ctx, w, err.Error(), model.ErrService, 500, slog.LevelWarn)
+			h.handleErrorService(ctx, w, err)
 			return
 		}
 		encodeJson(w, model.API[any]{
@@ -106,11 +115,7 @@ func (h *Handel) ChangeName() http.HandlerFunc {
 		}
 		err = h.webService.ChangeName(ctx, c.Name, t)
 		if err != nil {
-			if errors.Is(err, service.ErrExitsName) {
-				h.handleError(ctx, w, err.Error(), model.ErrExitsName, 400, slog.LevelDebug)
-				return
-			}
-			h.handleError(ctx, w, err.Error(), model.ErrService, 500, slog.LevelWarn)
+			h.handleErrorService(ctx, w, err)
 			return
 		}
 		encodeJson(w, model.API[any]{

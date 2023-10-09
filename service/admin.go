@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/xmdhs/authlib-skin/db/ent"
 	"github.com/xmdhs/authlib-skin/db/ent/predicate"
@@ -79,6 +80,7 @@ func (w *WebService) ListUser(ctx context.Context, page int, email, name string)
 
 func (w *WebService) EditUser(ctx context.Context, u model.EditUser, uid int) error {
 	uuid := ""
+	changePasswd := false
 	err := utils.WithTx(ctx, w.client, func(tx *ent.Tx) error {
 		up := tx.User.UpdateOneID(uid).SetEmail(u.Email)
 		if u.Password != "" {
@@ -88,6 +90,7 @@ func (w *WebService) EditUser(ctx context.Context, u model.EditUser, uid int) er
 			if err != nil {
 				return err
 			}
+			changePasswd = true
 		}
 		err := tx.UserProfile.Update().Where(userprofile.HasUserWith(user.ID(uid))).SetName(u.Name).Exec(ctx)
 		if err != nil {
@@ -130,6 +133,12 @@ func (w *WebService) EditUser(ctx context.Context, u model.EditUser, uid int) er
 	}
 	if uuid != "" {
 		err = w.cache.Del([]byte("Profile" + uuid))
+		if err != nil {
+			return fmt.Errorf("EditUser: %w", err)
+		}
+	}
+	if changePasswd {
+		err = w.cache.Del([]byte("auth" + strconv.Itoa(uid)))
 		if err != nil {
 			return fmt.Errorf("EditUser: %w", err)
 		}

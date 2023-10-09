@@ -15,10 +15,12 @@ import (
 	"github.com/xmdhs/authlib-skin/db/ent/usertoken"
 	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/model/yggdrasil"
+	"github.com/xmdhs/authlib-skin/utils"
 )
 
 var (
 	ErrTokenInvalid = errors.New("token 无效")
+	ErrUserDisable  = errors.New("用户被禁用")
 )
 
 func Auth(ctx context.Context, t yggdrasil.ValidateToken, client *ent.Client, c cache.Cache, pubkey *rsa.PublicKey, tmpInvalid bool) (*model.TokenClaims, error) {
@@ -78,6 +80,63 @@ func Auth(ctx context.Context, t yggdrasil.ValidateToken, client *ent.Client, c 
 		return nil, fmt.Errorf("Auth: %w", ErrTokenInvalid)
 	}
 	return claims, nil
+}
+
+func CreateToken(ctx context.Context, u *ent.User, client *ent.Client, cache cache.Cache, jwtKey *rsa.PrivateKey, clientToken string) (string, error) {
+	if IsDisable(u.State) {
+		return "", fmt.Errorf("CreateToken: %w", ErrUserDisable)
+	}
+	var utoken *ent.UserToken
+	err := utils.WithTx(ctx, client, func(tx *ent.Tx) error {
+		var err error
+		utoken, err = tx.User.QueryToken(u).ForUpdate().First(ctx)
+		if err != nil {
+			var nf *ent.NotFoundError
+			if !errors.As(err, &nf) {
+				return err
+			}
+		}
+		if utoken == nil {
+			ut, err := tx.UserToken.Create().SetTokenID(1).SetUser(u).Save(ctx)
+			if err != nil {
+				return err
+			}
+			utoken = ut
+		}
+		return nil
+	})
+	if err != nil {
+		return "", fmt.Errorf("CreateToken: %w", err)
+	}
+	err = cache.Del([]byte("auth" + strconv.Itoa(u.ID)))
+	if err != nil {
+		return "", fmt.Errorf("CreateToken: %w", err)
+	}
+	t, err := NewJwtToken(jwtKey, strconv.FormatUint(utoken.TokenID, 10), clientToken, u.Edges.Profile.UUID, u.ID)
+	if err != nil {
+		return "", fmt.Errorf("CreateToken: %w", err)
+	}
+	return t, nil
+}
+
+func NewJwtToken(jwtKey *rsa.PrivateKey, tokenID, clientToken, UUID string, userID int) (string, error) {
+	claims := model.TokenClaims{
+		Tid: tokenID,
+		CID: clientToken,
+		UID: userID,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(15 * 24 * time.Hour)),
+			Issuer:    "authlib-skin",
+			Subject:   UUID,
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	jwts, err := token.SignedString(jwtKey)
+	if err != nil {
+		return "", fmt.Errorf("newJwtToken: %w", err)
+	}
+	return jwts, nil
 }
 
 func IsAdmin(state int) bool {

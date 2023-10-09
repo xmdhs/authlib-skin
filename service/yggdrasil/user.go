@@ -62,49 +62,19 @@ func (y *Yggdrasil) Authenticate(cxt context.Context, auth yggdrasil.Authenticat
 		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", err)
 	}
 
-	if sutils.IsDisable(u.State) {
-		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", ErrUserDisable)
-	}
-
 	clientToken := auth.ClientToken
 	if clientToken == "" {
 		clientToken = strings.ReplaceAll(uuid.New().String(), "-", "")
 	}
 
-	var utoken *ent.UserToken
-	err = utils.WithTx(cxt, y.client, func(tx *ent.Tx) error {
-		utoken, err = tx.User.QueryToken(u).ForUpdate().First(cxt)
-		if err != nil {
-			var nf *ent.NotFoundError
-			if !errors.As(err, &nf) {
-				return err
-			}
-		}
-		if utoken == nil {
-			ut, err := tx.UserToken.Create().SetTokenID(1).SetUser(u).Save(cxt)
-			if err != nil {
-				return err
-			}
-			utoken = ut
-		}
-		return nil
-	})
+	jwts, err := sutils.CreateToken(cxt, u, y.client, y.cache, y.prikey, clientToken)
 	if err != nil {
 		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", err)
 	}
-	err = y.cache.Del([]byte("auth" + strconv.Itoa(u.ID)))
-	if err != nil {
-		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", err)
-	}
+
 	if u.Edges.Profile == nil {
 		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", ErrUserDisable)
 	}
-
-	jwts, err := newJwtToken(y.prikey, strconv.FormatUint(utoken.TokenID, 10), clientToken, u.Edges.Profile.UUID, u.ID)
-	if err != nil {
-		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", err)
-	}
-
 	p := yggdrasil.UserInfo{
 		ID:   u.Edges.Profile.UUID,
 		Name: u.Edges.Profile.Name,

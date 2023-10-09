@@ -66,7 +66,8 @@ func newYggdrasil(handelY *yggdrasil.Yggdrasil) http.Handler {
 func newSkinApi(handel *handle.Handel) http.Handler {
 	r := chi.NewRouter()
 
-	r.Put("/user/reg", handel.Reg())
+	r.Post("/user/reg", handel.Reg())
+	r.Post("/user/login", handel.Login())
 	r.Get("/config", handel.GetConfig())
 
 	r.Group(func(r chi.Router) {

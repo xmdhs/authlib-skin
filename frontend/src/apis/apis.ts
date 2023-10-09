@@ -1,24 +1,21 @@
 import type { tokenData, ApiUser, ApiServerInfo, YggProfile, ApiConfig, List, UserInfo, EditUser } from '@/apis/model'
 import { apiGet } from '@/apis/utils'
 
-export async function login(username: string, password: string) {
-    const v = await fetch(import.meta.env.VITE_APIADDR + "/api/yggdrasil/authserver/authenticate", {
+export async function login(email: string, password: string, captchaToken: string) {
+    const v = await fetch(import.meta.env.VITE_APIADDR + "/api/v1/user/login", {
         method: "POST",
         body: JSON.stringify({
-            "username": username,
+            "email": email,
             "password": password,
+            "CaptchaToken": captchaToken
         })
     })
-    const data = await v.json()
-    if (!v.ok) {
-        throw new Error(data?.errorMessage)
-    }
-    return data as tokenData
+    return await apiGet<tokenData>(v)
 }
 
 export async function register(email: string, username: string, password: string, captchaToken: string) {
     const v = await fetch(import.meta.env.VITE_APIADDR + "/api/v1/user/reg", {
-        method: "PUT",
+        method: "POST",
         body: JSON.stringify({
             "Email": email,
             "Password": password,
@@ -119,7 +116,7 @@ export async function ListUser(page: number, token: string, email: string, name:
 }
 
 export async function editUser(u: EditUser, token: string, uid: string) {
-    const r = await fetch(import.meta.env.VITE_APIADDR + "/api/v1/admin/user/" + uid,{
+    const r = await fetch(import.meta.env.VITE_APIADDR + "/api/v1/admin/user/" + uid, {
         method: "POST",
         headers: {
             "Authorization": "Bearer " + token

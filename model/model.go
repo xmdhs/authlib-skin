@@ -13,7 +13,7 @@ type List[T any] struct {
 	List  []T `json:"list"`
 }
 
-type User struct {
+type UserReg struct {
 	Email        string `validate:"required,email"`
 	Password     string `validate:"required,min=6,max=50"`
 	Name         string `validate:"required,min=3,max=16"`
@@ -70,4 +70,16 @@ type EditUser struct {
 	IsAdmin     bool   `json:"is_admin"`
 	IsDisable   bool   `json:"is_disable"`
 	DelTextures bool   `json:"del_textures"`
+}
+
+type Login struct {
+	Email        string `json:"email" validate:"required,email"`
+	Password     string `json:"password"`
+	CaptchaToken string
+}
+
+type LoginRep struct {
+	Token string `json:"token"`
+	Name  string `json:"name"`
+	UUID  string `json:"uuid"`
 }
