@@ -5,9 +5,9 @@ offlineUUID: true
 port: "0.0.0.0:8080"
 
 Log:
-  Level: "debug"
+  level: "debug"
   # json 格式输出
-  Json: false
+  json: false
 
 sql:
   mysqlDsn: ""

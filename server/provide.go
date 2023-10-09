@@ -32,6 +32,8 @@ func ProvideSlog(c config.Config) slog.Handler {
 		level = slog.LevelWarn
 	case "error":
 		level = slog.LevelError
+	default:
+		level = slog.LevelDebug
 	}
 	o := &slog.HandlerOptions{Level: level}
 
