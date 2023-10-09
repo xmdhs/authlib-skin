@@ -21,7 +21,7 @@ var (
 	ErrExistUser  = errors.New("邮箱已存在")
 	ErrExitsName  = errors.New("用户名已存在")
 	ErrRegLimit   = errors.New("超过注册 ip 限制")
-	ErrPassWord   = errors.New("错误的密码")
+	ErrPassWord   = errors.New("错误的密码或用户名")
 	ErrChangeName = errors.New("离线模式 uuid 不允许修改用户名")
 )
 
@@ -98,6 +98,10 @@ func (w *WebService) Login(ctx context.Context, l model.Login, ip string) (model
 	}
 	u, err := w.client.User.Query().Where(user.Email(l.Email)).WithProfile().Only(ctx)
 	if err != nil {
+		var ne *ent.NotFoundError
+		if errors.As(err, &ne) {
+			return model.LoginRep{}, fmt.Errorf("Login: %w", ErrPassWord)
+		}
 		return model.LoginRep{}, fmt.Errorf("Login: %w", err)
 	}
 	err = w.validatePass(ctx, u, l.Password)

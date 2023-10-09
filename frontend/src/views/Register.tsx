@@ -55,17 +55,15 @@ export default function SignUp() {
             catch(v => {
                 captchaRef.current?.reload()
                 console.warn(v)
-
                 if (v instanceof ApiErr) {
                     switch (v.code) {
                         case 3:
                             setRegErr("邮箱已存在")
-                            break
+                            return
                         case 7:
                             setRegErr("用户名已存在")
-                            break
+                            return
                     }
-                    return
                 }
                 setRegErr(String(v))
             }).

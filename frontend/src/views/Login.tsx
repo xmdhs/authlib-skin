@@ -61,20 +61,18 @@ export default function SignIn() {
             }).
             catch(v => {
                 captchaRef.current?.reload()
-
+                console.warn(v)
                 if (v instanceof ApiErr) {
                     switch (v.code) {
                         case 6:
-                            setErr("错误的密码")
-                            break
+                            setErr("密码或用户名错误")
+                            return
                         case 9:
                             setErr("用户已被禁用")
-                            break
+                            return
                     }
-                    return
                 }
                 setErr(String(v))
-                console.warn(v)
             }).
             finally(() => setLoading(false))
 
