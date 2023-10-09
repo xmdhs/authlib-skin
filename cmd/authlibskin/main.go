@@ -30,7 +30,7 @@ func main() {
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			lo.Must0(os.WriteFile("config.yaml", configTempLate, 0600))
-			fmt.Println("已写入模板配置文件")
+			fmt.Println("未找到配置文件，已写入模板配置文件")
 			return
 		}
 		panic(err)

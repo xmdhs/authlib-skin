@@ -12,5 +12,6 @@ func YamlDeCode(b []byte) (Config, error) {
 	if err != nil {
 		return c, fmt.Errorf("YamlDeCode: %w", err)
 	}
+	fmt.Println(c)
 	return c, nil
 }

@@ -2,7 +2,7 @@
 # 已有用户数据的情况下勿更改此项
 offlineUUID: true
 
-port: "0.0.0.0:8080"
+port: "127.0.0.1:8080"
 
 Log:
   Level: "debug"
@@ -10,7 +10,7 @@ Log:
   Json: false
 
 sql:
-  mysqlDsn: ""
+  mysqlDsn: "123"
 
 # 输出每条执行的 sql 语句
 debug: false
