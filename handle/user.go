@@ -72,7 +72,7 @@ func (h *Handel) UserInfo() http.HandlerFunc {
 		t := ctx.Value(tokenKey).(*model.TokenClaims)
 		u, err := h.webService.Info(ctx, t)
 		if err != nil {
-			h.handleError(ctx, w, err.Error(), model.ErrService, 500, slog.LevelWarn)
+			h.handleErrorService(ctx, w, err)
 			return
 		}
 		encodeJson(w, model.API[model.UserInfo]{
