@@ -93,7 +93,7 @@ function ChangePasswd() {
                     required
                     error={oldPassErr}
                     helperText={oldPassErr ? "旧密码错误" : ""}
-                    onChange={p => setPass(produce(v => { v.old = p.target.value; return v }))}
+                    onChange={p => setPass(produce(v => { v.old = p.target.value }))}
                     autoComplete="current-password"
                 />
                 <TextField
@@ -102,7 +102,7 @@ function ChangePasswd() {
                     label="新密码"
                     type="password"
                     required
-                    onChange={p => setPass(produce(v => { v.pass1 = p.target.value; return v }))}
+                    onChange={p => setPass(produce(v => { v.pass1 = p.target.value }))}
                     autoComplete="new-password"
                 />
                 <TextField
@@ -113,7 +113,7 @@ function ChangePasswd() {
                     required
                     error={err != ""}
                     helperText={err}
-                    onChange={p => setPass(produce(v => { v.pass2 = p.target.value; return v }))}
+                    onChange={p => setPass(produce(v => { v.pass2 = p.target.value }))}
                     autoComplete="new-password"
                 />
                 <Button sx={{ marginTop: "1em" }} onClick={handelClick} variant='contained'>提交</Button>

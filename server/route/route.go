@@ -82,7 +82,7 @@ func newSkinApi(handel *handle.Handel) http.Handler {
 		r.Use(handel.NeedAuth)
 		r.Use(handel.NeedAdmin)
 		r.Get("/admin/users", handel.ListUser())
-		r.Post("/admin/user/{uid}", handel.EditUser())
+		r.Patch("/admin/user/{uid}", handel.EditUser())
 	})
 
 	return r

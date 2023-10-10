@@ -117,7 +117,7 @@ export async function ListUser(page: number, token: string, email: string, name:
 
 export async function editUser(u: EditUser, token: string, uid: string) {
     const r = await fetch(import.meta.env.VITE_APIADDR + "/api/v1/admin/user/" + uid, {
-        method: "POST",
+        method: "PATCH",
         headers: {
             "Authorization": "Bearer " + token
         },

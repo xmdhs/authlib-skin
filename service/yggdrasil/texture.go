@@ -26,10 +26,7 @@ func (y *Yggdrasil) delTexture(ctx context.Context, userProfileID int, textureTy
 	return utilsService.DelTexture(ctx, userProfileID, textureType, y.client, y.config)
 }
 
-func (y *Yggdrasil) DelTexture(ctx context.Context, uuid string, t *model.TokenClaims, textureType string) error {
-	if uuid != t.Subject {
-		return fmt.Errorf("PutTexture: %w", ErrUUIDNotEq)
-	}
+func (y *Yggdrasil) DelTexture(ctx context.Context, t *model.TokenClaims, textureType string) error {
 	up, err := y.client.UserProfile.Query().Where(userprofile.HasUserWith(user.ID(t.UID))).First(ctx)
 	if err != nil {
 		return fmt.Errorf("DelTexture: %w", err)
@@ -38,18 +35,14 @@ func (y *Yggdrasil) DelTexture(ctx context.Context, uuid string, t *model.TokenC
 	if err != nil {
 		return fmt.Errorf("DelTexture: %w", err)
 	}
-	err = y.cache.Del([]byte("Profile" + uuid))
+	err = y.cache.Del([]byte("Profile" + t.Subject))
 	if err != nil {
 		return fmt.Errorf("DelTexture: %w", err)
 	}
 	return nil
 }
 
-func (y *Yggdrasil) PutTexture(ctx context.Context, t *model.TokenClaims, texturebyte []byte, model string, uuid string, textureType string) error {
-	if uuid != t.Subject {
-		return fmt.Errorf("PutTexture: %w", ErrUUIDNotEq)
-	}
-
+func (y *Yggdrasil) PutTexture(ctx context.Context, t *model.TokenClaims, texturebyte []byte, model string, textureType string) error {
 	up, err := y.client.UserProfile.Query().Where(userprofile.HasUserWith(user.ID(t.UID))).First(ctx)
 	if err != nil {
 		return fmt.Errorf("PutTexture: %w", err)
@@ -96,7 +89,7 @@ func (y *Yggdrasil) PutTexture(ctx context.Context, t *model.TokenClaims, textur
 	if err != nil {
 		return fmt.Errorf("PutTexture: %w", err)
 	}
-	err = y.cache.Del([]byte("Profile" + uuid))
+	err = y.cache.Del([]byte("Profile" + t.Subject))
 	if err != nil {
 		return fmt.Errorf("PutTexture: %w", err)
 	}

@@ -147,10 +147,16 @@ func IsDisable(state int) bool {
 	return state&2 == 2
 }
 
-func SetAdmin(state int) int {
-	return state | 1
+func SetAdmin(state int, is bool) int {
+	if is {
+		return state | 1
+	}
+	return state & (state ^ 1)
 }
 
-func SetDisable(state int) int {
-	return state | 2
+func SetDisable(state int, is bool) int {
+	if is {
+		return state | 2
+	}
+	return state & (state ^ 2)
 }

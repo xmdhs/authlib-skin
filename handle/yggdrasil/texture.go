@@ -55,6 +55,12 @@ func (y *Yggdrasil) PutTexture() http.HandlerFunc {
 		}
 		t := ctx.Value(tokenKey).(*model.TokenClaims)
 
+		if uuid != t.Subject {
+			y.logger.DebugContext(ctx, "uuid 不相同")
+			w.WriteHeader(401)
+			return
+		}
+
 		model := r.FormValue("model")
 
 		skin, err := func() ([]byte, error) {
@@ -99,14 +105,8 @@ func (y *Yggdrasil) PutTexture() http.HandlerFunc {
 			return
 		}
 
-		err = y.yggdrasilService.PutTexture(ctx, t, skin, model, uuid, textureType)
+		err = y.yggdrasilService.PutTexture(ctx, t, skin, model, textureType)
 		if err != nil {
-			if errors.Is(err, yggdrasilS.ErrUUIDNotEq) {
-				y.logger.DebugContext(ctx, err.Error())
-				w.WriteHeader(401)
-				return
-			}
-
 			y.handleYgError(ctx, w, err)
 			return
 		}
@@ -139,7 +139,14 @@ func (y *Yggdrasil) DelTexture() http.HandlerFunc {
 			return
 		}
 		t := ctx.Value(tokenKey).(*model.TokenClaims)
-		err := y.yggdrasilService.DelTexture(ctx, uuid, t, textureType)
+
+		if uuid != t.Subject {
+			y.logger.DebugContext(ctx, "uuid 不相同")
+			w.WriteHeader(401)
+			return
+		}
+
+		err := y.yggdrasilService.DelTexture(ctx, t, textureType)
 		if err != nil {
 			if errors.Is(err, yggdrasilS.ErrUUIDNotEq) {
 				y.logger.DebugContext(ctx, err.Error())

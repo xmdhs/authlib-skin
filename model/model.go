@@ -64,11 +64,11 @@ type Config struct {
 }
 
 type EditUser struct {
-	Email       string `json:"email" validate:"required,email"`
-	Name        string `json:"name" validate:"required,min=3,max=16"`
+	Email       string `json:"email" validate:"omitempty,email"`
+	Name        string `json:"name" validate:"omitempty,min=3,max=16"`
 	Password    string `json:"password"`
-	IsAdmin     bool   `json:"is_admin"`
-	IsDisable   bool   `json:"is_disable"`
+	IsAdmin     *bool  `json:"is_admin"`
+	IsDisable   *bool  `json:"is_disable"`
 	DelTextures bool   `json:"del_textures"`
 }
 

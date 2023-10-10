@@ -10,7 +10,6 @@ import (
 	"github.com/xmdhs/authlib-skin/db/ent/predicate"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
-	"github.com/xmdhs/authlib-skin/db/ent/usertoken"
 	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/model/yggdrasil"
 	utilsService "github.com/xmdhs/authlib-skin/service/utils"
@@ -82,19 +81,32 @@ func (w *WebService) EditUser(ctx context.Context, u model.EditUser, uid int) er
 	uuid := ""
 	changePasswd := false
 	err := utils.WithTx(ctx, w.client, func(tx *ent.Tx) error {
-		up := tx.User.UpdateOneID(uid).SetEmail(u.Email)
-		if u.Password != "" {
-			p, s := utils.Argon2ID(u.Password)
-			up = up.SetPassword(p).SetSalt(s)
-			err := tx.UserToken.Update().Where(usertoken.HasUserWith(user.ID(uid))).AddTokenID(1).Exec(ctx)
+		if u.Email != "" {
+			c, err := tx.User.Query().Where(user.Email(u.Email)).Count(ctx)
 			if err != nil {
 				return err
 			}
-			changePasswd = true
+			if c != 0 {
+				return ErrExistUser
+			}
+			err = tx.User.UpdateOneID(uid).SetEmail(u.Email).Exec(ctx)
+			if err != nil {
+				return err
+			}
 		}
-		err := tx.UserProfile.Update().Where(userprofile.HasUserWith(user.ID(uid))).SetName(u.Name).Exec(ctx)
-		if err != nil {
-			return err
+
+		if u.Name != "" {
+			c, err := tx.UserProfile.Query().Where(userprofile.Name(u.Name)).Count(ctx)
+			if err != nil {
+				return err
+			}
+			if c != 0 {
+				return ErrExitsName
+			}
+			err = tx.UserProfile.Update().Where(userprofile.HasUserWith(user.ID(uid))).SetName(u.Name).Exec(ctx)
+			if err != nil {
+				return err
+			}
 		}
 
 		if u.DelTextures {
@@ -111,21 +123,25 @@ func (w *WebService) EditUser(ctx context.Context, u model.EditUser, uid int) er
 				}
 			}
 		}
-		state := 0
-		if u.IsAdmin {
-			state = utilsService.SetAdmin(state)
-		}
-		if u.IsDisable {
-			state = utilsService.SetDisable(state)
-		}
 
-		up = up.SetState(state)
-
-		err = up.Exec(ctx)
+		aUser, err := tx.User.Get(ctx, uid)
 		if err != nil {
 			return err
 		}
 
+		state := aUser.State
+		if u.IsAdmin != nil {
+			state = utilsService.SetAdmin(state, *u.IsAdmin)
+		}
+		if u.IsDisable != nil {
+			state = utilsService.SetDisable(state, *u.IsDisable)
+		}
+		if state != aUser.State {
+			err := tx.User.UpdateOneID(uid).SetState(state).Exec(ctx)
+			if err != nil {
+				return err
+			}
+		}
 		return nil
 	})
 	if err != nil {

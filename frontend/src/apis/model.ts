@@ -58,10 +58,10 @@ export interface UserInfo {
 }
 
 export interface EditUser {
-    email: string
-    name: string
-    password: string
-    is_admin: boolean
-    is_disable: boolean
-    del_textures: boolean
+    email?: string
+    name?: string
+    password?: string
+    is_admin?: boolean
+    is_disable?: boolean
+    del_textures?: boolean
 }

@@ -8,7 +8,7 @@ import Paper from '@mui/material/Paper';
 import useTitle from '@/hooks/useTitle';
 import { useRequest } from 'ahooks';
 import { ListUser, editUser } from '@/apis/apis';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAtomValue } from 'jotai';
 import { token } from '@/store/store';
 import TablePagination from '@mui/material/TablePagination';
@@ -133,23 +133,48 @@ function MyDialog({ open, row, setOpen, onUpdate }: MyDialogProp) {
     const [load, setLoad] = useState(false)
     const nowToken = useAtomValue(token)
     const [err, setErr] = useState("")
+    const editValue = useRef<EditUser>({});
 
     useEffect(() => {
+        if (!row) return
         setErow({
-            email: row?.email ?? "",
-            name: row?.name ?? "",
+            email: row.email,
+            name: row.name,
             password: "",
-            is_admin: row?.is_admin ?? false,
-            is_disable: row?.is_disable ?? false,
+            is_admin: row.is_admin,
+            is_disable: row.is_disable,
             del_textures: false,
         })
-    }, [row])
+        editValue.current = {}
+    }, [row, open])
 
     const handleOpen = () => {
         if (load) return
         setLoad(true)
-        editUser(erow, nowToken, String(row?.uid)).then(() => [setOpen(false), onUpdate()]).finally(() => setLoad(false)).
+        editUser(editValue.current, nowToken, String(row?.uid)).then(() => [setOpen(false), onUpdate(), editValue.current = {}]).finally(() => setLoad(false)).
             catch(e => setErr(String(e)))
+    }
+
+    type StringKeys<T> = {
+        [K in keyof T]: T[K] extends string ? K : never;
+    }[keyof T];
+
+    function handleSetValue(key: StringKeys<Required<EditUser>>, value: string) {
+        setErow(produce(v => {
+            v[key] = value
+            editValue.current[key] = value
+        }))
+    }
+
+    type BoolKeys<T> = {
+        [K in keyof T]: T[K] extends boolean ? K : never;
+    }[keyof T];
+
+    function handleSetChecked(key: BoolKeys<Required<EditUser>>, value: boolean) {
+        setErow(produce(v => {
+            v[key] = value
+            editValue.current[key] = value
+        }))
     }
 
 
@@ -171,10 +196,7 @@ function MyDialog({ open, row, setOpen, onUpdate }: MyDialogProp) {
                         type="email"
                         variant="standard"
                         value={erow?.email}
-                        onChange={e => setErow(produce(v => {
-                            v.email = e.target.value
-                            return
-                        }))}
+                        onChange={e => handleSetValue('email', e.target.value)}
                     />
                     <TextField
                         margin="dense"
@@ -182,33 +204,22 @@ function MyDialog({ open, row, setOpen, onUpdate }: MyDialogProp) {
                         type="text"
                         variant="standard"
                         value={erow?.name}
-                        onChange={e => setErow(produce(v => {
-                            v.name = e.target.value
-                            return
-                        }))}
+                        onChange={e => handleSetValue('name', e.target.value)}
                     />
                     <TextField
                         margin="dense"
                         label="密码"
                         type="text"
+                        placeholder='（未更改）'
                         variant="standard"
                         value={erow?.password}
-                        onChange={e => setErow(produce(v => {
-                            v.password = e.target.value
-                            return
-                        }))}
+                        onChange={e => handleSetValue('password', e.target.value)}
                     />
                 </Box>
                 <FormGroup row sx={{ gridArea: "b" }}>
-                    <FormControlLabel control={<Checkbox checked={erow?.is_admin} onChange={e => setErow(produce(v => {
-                        v.is_admin = e.target.checked
-                    }))} />} label="管理权限" />
-                    <FormControlLabel control={<Checkbox checked={erow?.is_disable} onChange={e => setErow(produce(v => {
-                        v.is_disable = e.target.checked
-                    }))} />} label="禁用" />
-                    <FormControlLabel control={<Checkbox checked={erow?.del_textures} onChange={e => setErow(produce(v => {
-                        v.del_textures = e.target.checked
-                    }))} />} label="清空材质" />
+                    <FormControlLabel control={<Checkbox checked={erow?.is_admin} onChange={e => handleSetChecked('is_admin', e.target.checked)} />} label="管理权限" />
+                    <FormControlLabel control={<Checkbox checked={erow?.is_disable} onChange={e => handleSetChecked('is_disable', e.target.checked)} />} label="禁用" />
+                    <FormControlLabel control={<Checkbox checked={erow?.del_textures} onChange={e => handleSetChecked('del_textures', e.target.checked)} />} label="清空材质" />
                 </FormGroup>
                 <Box sx={{ gridArea: "c" }}>
                     <SkinViewUUID uuid={row?.uuid ?? ""} width={175} height={175} />
