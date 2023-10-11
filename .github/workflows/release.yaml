@@ -1,36 +1,46 @@
-on:
-  release:
-    types: [created]
+name: Build And Publish Releases
 
+# https://github.com/softprops/action-gh-release/issues/236#issuecomment-1150530128
 permissions:
   contents: write
-  packages: write
+
+on:
+  # Allow mannual trigger
+  workflow_dispatch:
+  # Trigger on push new tag
+  push:
+    tags:
+      - "v*.*.*"
 
 jobs:
-  releases-matrix:
-    name: Release Go Binary
+  build-and-publish:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        # build and publish in parallel: linux/386, linux/amd64, linux/arm64, windows/386, windows/amd64, darwin/amd64, darwin/arm64
-        goos: [linux, windows, darwin]
-        goarch: ["386", amd64, arm64, "arm"]
-        exclude:
-          - goarch: "386"
-            goos: darwin
-          - goarch: arm
-            goos: windows
     steps:
-      - uses: actions/checkout@v3
-      - uses: wangyoucao577/go-release-action@v1
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build Frontend
+        run: |
+          bash build_frontend.sh
+      - name: Compile
+        uses: crazy-max/ghaction-xgo@v3
         with:
-          pre_command: bash build_frontend.sh
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          goos: ${{ matrix.goos }}
-          goarch: ${{ matrix.goarch }}
-          project_path: "./cmd/authlibskin"
-          binary_name: "authlibskin"
-          extra_files: LICENSE README.md
-          executable_compression: upx
-          build_flags: -tags="redis,sqlite"
-          ldflags: -w -s
+          xgo_version: latest
+          go_version: latest
+          dest: dist
+          prefix: authlibskin
+          targets: windows/386,windows/amd64,linux/386,linux/amd64,linux/arm,linux/arm64,darwin/arm64,darwin/amd64
+          # Show less information
+          v: false
+          x: false
+          race: false
+          ldflags: -s -w
+          buildmode: default
+          trimpath: true
+
+      - name: Publish GitHub Releases
+        uses: softprops/action-gh-release@v1
+        with:
+          name: "authlibskin ${{ github.ref_name }}"
+          files: |
+            ./dist/*
+          token: ${{ secrets.GITHUB_TOKEN }}
