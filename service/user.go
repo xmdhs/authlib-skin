@@ -83,6 +83,12 @@ func (w *WebService) Reg(ctx context.Context, u model.UserReg, ipPrefix, ip stri
 		if err != nil {
 			return err
 		}
+		if du.ID == 1 {
+			err := tx.User.UpdateOne(du).SetState(utilsService.SetAdmin(0, true)).Exec(ctx)
+			if err != nil {
+				return err
+			}
+		}
 		return nil
 	})
 	if err != nil {
