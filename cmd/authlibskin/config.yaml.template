@@ -26,6 +26,10 @@ cache:
   type: ""
   # 内存缓存使用大小，单位 b
   ram: 10000000
+  # redis 服务端地址，如 127.0.0.1:6379
+  addr: ""
+  # redis 密码
+  password: ""
 
 # 位于反向代理后启用，用于记录真实 ip
 raelIP: false

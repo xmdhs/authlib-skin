@@ -15,6 +15,7 @@ import (
 	"github.com/xmdhs/authlib-skin/config"
 	"github.com/xmdhs/authlib-skin/server"
 	"github.com/xmdhs/authlib-skin/utils/sign"
+	"gopkg.in/yaml.v3"
 )
 
 var configPath string
@@ -44,7 +45,7 @@ func main() {
 		rsa2048 := lo.Must(rsa.GenerateKey(rand.Reader, 4096))
 		as := sign.NewAuthlibSignWithKey(rsa2048)
 		config.RsaPriKey = lo.Must(as.GetPriKey())
-		lo.Must0(os.WriteFile(configPath, []byte(config.RsaPriKey), 0600))
+		lo.Must0(os.WriteFile(configPath, lo.Must(yaml.Marshal(config)), 0600))
 	}
 
 	s, cancel := lo.Must2(server.InitializeRoute(ctx, config))
