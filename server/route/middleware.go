@@ -73,3 +73,10 @@ func (l *StructuredLoggerEntry) Panic(v interface{}, stack []byte) {
 		slog.String("panic", fmt.Sprintf("%+v", v)),
 	)
 }
+
+func APILocationIndication(handle http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Authlib-Injector-API-Location", "/api/yggdrasil/")
+		handle.ServeHTTP(w, r)
+	})
+}

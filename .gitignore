@@ -2,3 +2,4 @@ cmd/testserver
 cmd/authlibskin/config.yaml
 cmd/authlibskin/skin
 cmd/authlibskin/authlibskin.exe
+server/static/files

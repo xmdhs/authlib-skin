@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import useTitle from '@/hooks/useTitle';
 import SkinViewUUID from '@/components/SkinViewUUID';
+import root from '@/utils/root';
 
 const Profile = function Profile() {
     const navigate = useNavigate();
@@ -61,7 +62,7 @@ const Profile = function Profile() {
 }
 
 function getYggRoot() {
-    const u = new URL((import.meta.env.VITE_APIADDR ?? location.origin) + "/api/yggdrasil")
+    const u = new URL(root() + "/api/yggdrasil")
     return u.toString()
 }
 

@@ -11,6 +11,7 @@ import (
 	"github.com/xmdhs/authlib-skin/config"
 	"github.com/xmdhs/authlib-skin/handle"
 	"github.com/xmdhs/authlib-skin/handle/yggdrasil"
+	"github.com/xmdhs/authlib-skin/server/static"
 )
 
 func NewRoute(handelY *yggdrasil.Yggdrasil, handel *handle.Handel, c config.Config, sl slog.Handler) http.Handler {
@@ -24,7 +25,9 @@ func NewRoute(handelY *yggdrasil.Yggdrasil, handel *handle.Handel, c config.Conf
 	if c.RaelIP {
 		r.Use(middleware.RealIP)
 	}
+	r.Use(APILocationIndication)
 
+	r.Mount("/", static.StaticServer())
 	r.Mount("/api/v1", newSkinApi(handel))
 	r.Mount("/api/yggdrasil", newYggdrasil(handelY))
 
