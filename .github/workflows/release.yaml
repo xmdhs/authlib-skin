@@ -25,7 +25,7 @@ jobs:
         uses: crazy-max/ghaction-xgo@v3
         with:
           xgo_version: latest
-          go_version: latest
+          go_version: 1.21.x
           dest: dist
           prefix: authlibskin
           targets: windows/386,windows/amd64,linux/386,linux/amd64,linux/arm,linux/arm64,darwin/arm64,darwin/amd64
@@ -34,6 +34,7 @@ jobs:
           x: false
           race: false
           ldflags: -s -w
+          working_dir: cmd/authlibskin
           buildmode: default
           trimpath: true
 
