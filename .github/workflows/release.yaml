@@ -34,7 +34,8 @@ jobs:
           x: false
           race: false
           ldflags: -s -w
-          working_dir: cmd/authlibskin
+          tags: redis,sqlite
+          pkg: cmd/authlibskin
           buildmode: default
           trimpath: true
 
