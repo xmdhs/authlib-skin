@@ -50,7 +50,7 @@ textureBaseUrl: ""
 webBaseUrl: ""
 
 # 皮肤站名字，用于在多个地方展示
-serverName: ""
+serverName: "没有设置名字"
 
 captcha:
   # 验证码类型，目前只支持 cloudflare turnstile

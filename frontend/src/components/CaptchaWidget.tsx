@@ -48,6 +48,10 @@ const CaptchaWidget = forwardRef<refType, prop>(({ onSuccess }, ref) => {
         return <Skeleton variant="rectangular" width={300} height={65} />
     }
 
+    if (data?.captcha.type == "") {
+        return <></>
+    }
+
     return (
         <>
             <Turnstile siteKey={data?.captcha?.siteKey ?? ""} key={key} onSuccess={onSuccess} ref={Turnstileref} scriptOptions={{ async: true }} />
