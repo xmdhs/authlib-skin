@@ -46,7 +46,6 @@ func newYggdrasil(handelY *yggdrasil.Yggdrasil) http.Handler {
 		r.Post("/authserver/invalidate", handelY.Invalidate())
 		r.Post("/authserver/refresh", handelY.Refresh())
 
-		r.Put("/api/user/profile/{uuid}/{textureType}", handelY.PutTexture())
 		r.Delete("/api/user/profile/{uuid}/{textureType}", handelY.DelTexture())
 
 		r.Post("/sessionserver/session/minecraft/join", handelY.SessionJoin())
@@ -78,7 +77,7 @@ func newSkinApi(handel *handle.Handel) http.Handler {
 		r.Get("/user", handel.UserInfo())
 		r.Post("/user/password", handel.ChangePasswd())
 		r.Post("/user/name", handel.ChangeName())
-
+		r.Put("/user/skin/{textureType}", handel.PutTexture())
 	})
 
 	r.Group(func(r chi.Router) {

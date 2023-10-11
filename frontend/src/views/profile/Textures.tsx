@@ -14,7 +14,7 @@ import Box from "@mui/material/Box";
 import ReactSkinview3d from '@/components/Skinview3d'
 import { useUnmount } from "ahooks";
 import { useAtomValue, useSetAtom } from "jotai";
-import { LayoutAlertErr, token, user } from "@/store/store";
+import { LayoutAlertErr, token } from "@/store/store";
 import { upTextures } from "@/apis/apis";
 import Loading from "@/components/Loading";
 import Snackbar from "@mui/material/Snackbar";
@@ -25,7 +25,6 @@ const Textures = function Textures() {
     const [file, setFile] = useState<File | null>(null)
     const setErr = useSetAtom(LayoutAlertErr)
     const [loading, setLoading] = useState(false)
-    const userinfo = useAtomValue(user)
     const nowToken = useAtomValue(token)
     const [ok, setOk] = useState(false)
     const [skinInfo, setSkinInfo] = useState({
@@ -73,8 +72,8 @@ const Textures = function Textures() {
         setLoading(true)
         const textureType = redioValue == "cape" ? "cape" : "skin"
         const model = redioValue == "slim" ? "slim" : ""
-        upTextures(userinfo.uuid, nowToken, textureType, model, file).catch(e => [setErr(String(e)), console.warn(e)]).
-            finally(() => setLoading(false)).then(() => setOk(true))
+        upTextures(nowToken, textureType, model, file).then(() => setOk(true)).catch(e => [setErr(String(e)), console.warn(e)]).
+            finally(() => setLoading(false))
     }
 
 

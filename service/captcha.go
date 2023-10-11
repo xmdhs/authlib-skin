@@ -15,8 +15,9 @@ import (
 func (w *WebService) GetConfig(ctx context.Context) model.Config {
 	return model.Config{
 		Captcha: model.Captcha{
-			Type:    w.config.Captcha.Type,
-			SiteKey: w.config.Captcha.SiteKey,
+			Type:       w.config.Captcha.Type,
+			SiteKey:    w.config.Captcha.SiteKey,
+			ServerName: w.config.ServerName,
 		},
 		AllowChangeName: !w.config.OfflineUUID,
 	}

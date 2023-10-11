@@ -117,7 +117,7 @@ func (w *WebService) EditUser(ctx context.Context, u model.EditUser, uid int) er
 			uuid = userProfile.UUID
 			tl := []string{"skin", "cape"}
 			for _, v := range tl {
-				err := utilsService.DelTexture(ctx, userProfile.ID, v, w.client, w.config)
+				err := utilsService.DelTexture(ctx, userProfile.ID, v, w.client, w.config.TexturePath)
 				if err != nil {
 					return err
 				}

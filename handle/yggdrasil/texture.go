@@ -1,12 +1,8 @@
 package yggdrasil
 
 import (
-	"bytes"
 	"context"
 	"errors"
-	"fmt"
-	"image/png"
-	"io"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -44,74 +40,6 @@ func (y *Yggdrasil) validTextureType(ctx context.Context, w http.ResponseWriter,
 		return false
 	}
 	return true
-}
-
-func (y *Yggdrasil) PutTexture() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		uuid, textureType, ok := getUUIDbyParams(ctx, y.logger, w)
-		if !ok {
-			return
-		}
-		t := ctx.Value(tokenKey).(*model.TokenClaims)
-
-		if uuid != t.Subject {
-			y.logger.DebugContext(ctx, "uuid 不相同")
-			w.WriteHeader(401)
-			return
-		}
-
-		model := r.FormValue("model")
-
-		skin, err := func() ([]byte, error) {
-			f, _, err := r.FormFile("file")
-			if err != nil {
-				return nil, err
-			}
-			b, err := io.ReadAll(io.LimitReader(f, 50*1000))
-			if err != nil {
-				return nil, err
-			}
-			pc, err := png.DecodeConfig(bytes.NewReader(b))
-			if err != nil {
-				return nil, err
-			}
-			if pc.Height > 200 || pc.Width > 200 {
-				return nil, fmt.Errorf("材质大小超过限制")
-			}
-			p, err := png.Decode(bytes.NewReader(b))
-			if err != nil {
-				return nil, err
-			}
-			bw := bytes.NewBuffer(nil)
-			err = png.Encode(bw, p)
-			return bw.Bytes(), err
-		}()
-		if err != nil {
-			y.logger.DebugContext(ctx, err.Error())
-			handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: err.Error()}, 400)
-			return
-		}
-		if !y.validTextureType(ctx, w, textureType) {
-			return
-		}
-
-		switch model {
-		case "slim":
-		case "":
-		default:
-			y.logger.DebugContext(ctx, "错误的皮肤的材质模型")
-			handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: "错误的皮肤的材质模型"}, 400)
-			return
-		}
-
-		err = y.yggdrasilService.PutTexture(ctx, t, skin, model, textureType)
-		if err != nil {
-			y.handleYgError(ctx, w, err)
-			return
-		}
-		w.WriteHeader(204)
-	}
 }
 
 func getUUIDbyParams(ctx context.Context, l *slog.Logger, w http.ResponseWriter) (string, string, bool) {

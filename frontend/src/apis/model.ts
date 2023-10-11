@@ -28,12 +28,6 @@ export interface ApiUser {
     is_admin: boolean
 }
 
-export interface ApiServerInfo {
-    meta: {
-        serverName: string
-    }
-}
-
 export interface YggProfile {
     name: string
     properties: {
@@ -45,6 +39,7 @@ export interface YggProfile {
 export interface ApiConfig {
     captcha: captcha
     AllowChangeName: boolean
+    serverName: string
 }
 
 export interface UserInfo {

@@ -42,6 +42,7 @@ texturePath: "skin"
 # 材质静态文件提供基础地址
 # 如果静态文件位于 oss 上，比如 https://s3.amazonaws.com/example/1.png
 # 则填写 https://s3.amazonaws.com/example
+# 若不需要可不填写
 textureBaseUrl: ""
 
 # 用于在支持的启动器中展示本站的注册地址

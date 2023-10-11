@@ -1,4 +1,4 @@
-import type { tokenData, ApiUser, ApiServerInfo, YggProfile, ApiConfig, List, UserInfo, EditUser } from '@/apis/model'
+import type { tokenData, ApiUser, YggProfile, ApiConfig, List, UserInfo, EditUser } from '@/apis/model'
 import { apiGet } from '@/apis/utils'
 import root from '@/utils/root'
 
@@ -37,12 +37,6 @@ export async function userInfo(token: string) {
     return await apiGet<ApiUser>(v)
 }
 
-
-export async function serverInfo() {
-    const v = await fetch(root() + "/api/yggdrasil")
-    return await v.json() as ApiServerInfo
-}
-
 export async function yggProfile(uuid: string) {
     if (uuid == "") return
     const v = await fetch(root() + "/api/yggdrasil/sessionserver/session/minecraft/profile/" + uuid)
@@ -53,21 +47,19 @@ export async function yggProfile(uuid: string) {
     return data as YggProfile
 }
 
-export async function upTextures(uuid: string, token: string, textureType: 'skin' | 'cape', model: 'slim' | '', file: File) {
+export async function upTextures(token: string, textureType: 'skin' | 'cape', model: 'slim' | '', file: File) {
     const f = new FormData()
     f.set("file", file)
     f.set("model", model)
 
-    const r = await fetch(root() + "/api/yggdrasil/api/user/profile/" + uuid + "/" + textureType, {
+    const r = await fetch(root() + "/api/v1/user/skin/" + textureType, {
         method: "PUT",
         body: f,
         headers: {
             "Authorization": "Bearer " + token
         }
     })
-    if (r.status != 204) {
-        throw new Error("上传失败 " + String(r.status))
-    }
+    return await apiGet<unknown>(r)
 }
 
 export async function changePasswd(old: string, newpa: string, token: string) {

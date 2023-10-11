@@ -23,7 +23,7 @@ import { atom, useAtom, useAtomValue, useSetAtom } from 'jotai';
 import Button from '@mui/material/Button';
 import { useNavigate } from "react-router-dom";
 import { useRequest, useMemoizedFn } from 'ahooks';
-import { serverInfo, userInfo } from '@/apis/apis'
+import { getConfig, userInfo } from '@/apis/apis'
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import { memo } from 'react';
@@ -94,8 +94,8 @@ const MyToolbar = memo(function MyToolbar() {
     const setErr = useSetAtom(LayoutAlertErr)
     const setOpen = useSetAtom(DrawerOpen)
 
-    const server = useRequest(serverInfo, {
-        cacheKey: "/api/yggdrasil",
+    const server = useRequest(getConfig, {
+        cacheKey: "/api/v1/config",
         staleTime: 60000,
         onError: e => {
             console.warn(e)
@@ -131,7 +131,7 @@ const MyToolbar = memo(function MyToolbar() {
                 }
                 <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
                     <Link to="/" style={{ color: "unset", textDecoration: "unset" }}>
-                        {server.data?.meta.serverName ?? "皮肤站"}
+                        {server.data?.serverName ?? "皮肤站"}
                     </Link>
                 </Typography>
                 {nowUser.name != "" && (

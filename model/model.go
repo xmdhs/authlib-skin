@@ -31,8 +31,9 @@ type TokenClaims struct {
 }
 
 type Captcha struct {
-	Type    string `json:"type"`
-	SiteKey string `json:"siteKey"`
+	Type       string `json:"type"`
+	SiteKey    string `json:"siteKey"`
+	ServerName string `json:"serverName"`
 }
 
 type UserInfo struct {

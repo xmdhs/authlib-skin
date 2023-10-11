@@ -8,13 +8,12 @@ import (
 	"path/filepath"
 
 	"github.com/samber/lo"
-	"github.com/xmdhs/authlib-skin/config"
 	"github.com/xmdhs/authlib-skin/db/ent"
 	"github.com/xmdhs/authlib-skin/db/ent/texture"
 	"github.com/xmdhs/authlib-skin/db/ent/usertexture"
 )
 
-func DelTexture(ctx context.Context, userProfileID int, textureType string, client *ent.Client, config config.Config) error {
+func DelTexture(ctx context.Context, userProfileID int, textureType string, client *ent.Client, texturePath string) error {
 	// 查找此用户该类型下是否已经存在皮肤
 	tl, err := client.UserTexture.Query().Where(usertexture.And(
 		usertexture.UserProfileID(userProfileID),
@@ -42,7 +41,7 @@ func DelTexture(ctx context.Context, userProfileID int, textureType string, clie
 				}
 				return fmt.Errorf("DelTexture: %w", err)
 			}
-			path := filepath.Join(config.TexturePath, t.TextureHash[:2], t.TextureHash[2:4], t.TextureHash)
+			path := filepath.Join(texturePath, t.TextureHash[:2], t.TextureHash[2:4], t.TextureHash)
 			err = os.Remove(path)
 			if err != nil && !errors.Is(err, os.ErrNotExist) {
 				return fmt.Errorf("DelTexture: %w", err)
