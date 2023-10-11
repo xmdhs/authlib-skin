@@ -89,7 +89,7 @@ func CreateToken(ctx context.Context, u *ent.User, client *ent.Client, cache cac
 	var utoken *ent.UserToken
 	err := utils.WithTx(ctx, client, func(tx *ent.Tx) error {
 		var err error
-		utoken, err = tx.User.QueryToken(u).ForUpdate().First(ctx)
+		utoken, err = tx.User.QueryToken(u).ForUpdateA().First(ctx)
 		if err != nil {
 			var nf *ent.NotFoundError
 			if !errors.As(err, &nf) {

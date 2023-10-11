@@ -739,6 +739,26 @@ func (tq *TextureQuery) ForShare(opts ...sql.LockOption) *TextureQuery {
 	return tq
 }
 
+// ForUpdate locks the selected rows against concurrent updates, and prevent them from being
+// updated, deleted or "selected ... for update" by other sessions, until the transaction is
+// either committed or rolled-back.
+func (tq *TextureQuery) ForUpdateA(opts ...sql.LockOption) *TextureQuery {
+	if tq.driver.Dialect() == dialect.SQLite {
+		return tq
+	}
+	return tq.ForUpdate(opts...)
+}
+
+// ForShare behaves similarly to ForUpdate, except that it acquires a shared mode lock
+// on any rows that are read. Other sessions can read the rows, but cannot modify them
+// until your transaction commits.
+func (tq *TextureQuery) ForShareA(opts ...sql.LockOption) *TextureQuery {
+	if tq.driver.Dialect() == dialect.SQLite {
+		return tq
+	}
+	return tq.ForShare(opts...)
+}
+
 // TextureGroupBy is the group-by builder for Texture entities.
 type TextureGroupBy struct {
 	selector

@@ -51,14 +51,14 @@ func (w *WebService) Reg(ctx context.Context, u model.UserReg, ipPrefix, ip stri
 	p, s := utils.Argon2ID(u.Password)
 
 	err = utils.WithTx(ctx, w.client, func(tx *ent.Tx) error {
-		count, err := tx.User.Query().Where(user.EmailEQ(u.Email)).ForUpdate().Count(ctx)
+		count, err := tx.User.Query().Where(user.EmailEQ(u.Email)).ForUpdateA().Count(ctx)
 		if err != nil {
 			return err
 		}
 		if count != 0 {
 			return ErrExistUser
 		}
-		nameCount, err := tx.UserProfile.Query().Where(userprofile.NameEQ(u.Name)).ForUpdate().Count(ctx)
+		nameCount, err := tx.UserProfile.Query().Where(userprofile.NameEQ(u.Name)).ForUpdateA().Count(ctx)
 		if err != nil {
 			return err
 		}

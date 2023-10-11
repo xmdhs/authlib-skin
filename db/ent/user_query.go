@@ -694,6 +694,26 @@ func (uq *UserQuery) ForShare(opts ...sql.LockOption) *UserQuery {
 	return uq
 }
 
+// ForUpdate locks the selected rows against concurrent updates, and prevent them from being
+// updated, deleted or "selected ... for update" by other sessions, until the transaction is
+// either committed or rolled-back.
+func (uq *UserQuery) ForUpdateA(opts ...sql.LockOption) *UserQuery {
+	if uq.driver.Dialect() == dialect.SQLite {
+		return uq
+	}
+	return uq.ForUpdate(opts...)
+}
+
+// ForShare behaves similarly to ForUpdate, except that it acquires a shared mode lock
+// on any rows that are read. Other sessions can read the rows, but cannot modify them
+// until your transaction commits.
+func (uq *UserQuery) ForShareA(opts ...sql.LockOption) *UserQuery {
+	if uq.driver.Dialect() == dialect.SQLite {
+		return uq
+	}
+	return uq.ForShare(opts...)
+}
+
 // UserGroupBy is the group-by builder for User entities.
 type UserGroupBy struct {
 	selector

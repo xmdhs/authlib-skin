@@ -37,5 +37,5 @@ type Cache struct {
 type Captcha struct {
 	Type    string `yaml:"type"`
 	SiteKey string `yaml:"siteKey"`
-	Secret  string `yaml:"ecret"`
+	Secret  string `yaml:"secret"`
 }

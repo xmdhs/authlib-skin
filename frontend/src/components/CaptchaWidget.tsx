@@ -44,7 +44,7 @@ const CaptchaWidget = forwardRef<refType, prop>(({ onSuccess }, ref) => {
         console.warn(error)
         return <Alert severity="warning">{String(error)}</Alert>
     }
-    if (loading) {
+    if (!data && loading) {
         return <Skeleton variant="rectangular" width={300} height={65} />
     }
 

@@ -739,6 +739,26 @@ func (upq *UserProfileQuery) ForShare(opts ...sql.LockOption) *UserProfileQuery 
 	return upq
 }
 
+// ForUpdate locks the selected rows against concurrent updates, and prevent them from being
+// updated, deleted or "selected ... for update" by other sessions, until the transaction is
+// either committed or rolled-back.
+func (upq *UserProfileQuery) ForUpdateA(opts ...sql.LockOption) *UserProfileQuery {
+	if upq.driver.Dialect() == dialect.SQLite {
+		return upq
+	}
+	return upq.ForUpdate(opts...)
+}
+
+// ForShare behaves similarly to ForUpdate, except that it acquires a shared mode lock
+// on any rows that are read. Other sessions can read the rows, but cannot modify them
+// until your transaction commits.
+func (upq *UserProfileQuery) ForShareA(opts ...sql.LockOption) *UserProfileQuery {
+	if upq.driver.Dialect() == dialect.SQLite {
+		return upq
+	}
+	return upq.ForShare(opts...)
+}
+
 // UserProfileGroupBy is the group-by builder for UserProfile entities.
 type UserProfileGroupBy struct {
 	selector

@@ -559,6 +559,26 @@ func (utq *UserTokenQuery) ForShare(opts ...sql.LockOption) *UserTokenQuery {
 	return utq
 }
 
+// ForUpdate locks the selected rows against concurrent updates, and prevent them from being
+// updated, deleted or "selected ... for update" by other sessions, until the transaction is
+// either committed or rolled-back.
+func (utq *UserTokenQuery) ForUpdateA(opts ...sql.LockOption) *UserTokenQuery {
+	if utq.driver.Dialect() == dialect.SQLite {
+		return utq
+	}
+	return utq.ForUpdate(opts...)
+}
+
+// ForShare behaves similarly to ForUpdate, except that it acquires a shared mode lock
+// on any rows that are read. Other sessions can read the rows, but cannot modify them
+// until your transaction commits.
+func (utq *UserTokenQuery) ForShareA(opts ...sql.LockOption) *UserTokenQuery {
+	if utq.driver.Dialect() == dialect.SQLite {
+		return utq
+	}
+	return utq.ForShare(opts...)
+}
+
 // UserTokenGroupBy is the group-by builder for UserToken entities.
 type UserTokenGroupBy struct {
 	selector

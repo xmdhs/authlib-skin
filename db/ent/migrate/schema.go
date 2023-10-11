@@ -89,6 +89,16 @@ var (
 				Unique:  false,
 				Columns: []*schema.Column{UserProfilesColumns[3]},
 			},
+			{
+				Name:    "userprofile_name",
+				Unique:  false,
+				Columns: []*schema.Column{UserProfilesColumns[1]},
+			},
+			{
+				Name:    "userprofile_uuid",
+				Unique:  false,
+				Columns: []*schema.Column{UserProfilesColumns[2]},
+			},
 		},
 	}
 	// UserTexturesColumns holds the columns for the "user_textures" table.
