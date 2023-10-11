@@ -21,7 +21,7 @@ var ErrNotAdmin = errors.New("无权限")
 func (w *WebService) Auth(ctx context.Context, token string) (*model.TokenClaims, error) {
 	t, err := utilsService.Auth(ctx, yggdrasil.ValidateToken{AccessToken: token}, w.client, w.cache, &w.prikey.PublicKey, false)
 	if err != nil {
-		return nil, fmt.Errorf("Auth: %w", err)
+		return nil, fmt.Errorf("WebService.Auth: %w", err)
 	}
 	return t, nil
 }

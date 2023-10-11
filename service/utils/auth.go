@@ -67,7 +67,7 @@ func Auth(ctx context.Context, t yggdrasil.ValidateToken, client *ent.Client, c 
 		if err != nil {
 			var ne *ent.NotFoundError
 			if errors.As(err, &ne) {
-				return 0, errors.Join(err, ErrTokenInvalid)
+				return 0, ErrTokenInvalid
 			}
 			return 0, err
 		}
