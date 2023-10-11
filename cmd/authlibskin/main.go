@@ -11,20 +11,17 @@ import (
 
 	_ "embed"
 
+	"github.com/pelletier/go-toml/v2"
 	"github.com/samber/lo"
 	"github.com/xmdhs/authlib-skin/config"
 	"github.com/xmdhs/authlib-skin/server"
 	"github.com/xmdhs/authlib-skin/utils/sign"
-	"gopkg.in/yaml.v3"
 )
 
 var configPath string
 
-//go:embed config.yaml.template
-var configTempLate []byte
-
 func init() {
-	flag.StringVar(&configPath, "c", "config.yaml", "")
+	flag.StringVar(&configPath, "c", "config.toml", "")
 	flag.Parse()
 }
 
@@ -33,21 +30,20 @@ func main() {
 	b, err := os.ReadFile(configPath)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			lo.Must0(os.WriteFile(configPath, configTempLate, 0600))
+			rsa2048 := lo.Must(rsa.GenerateKey(rand.Reader, 4096))
+			as := sign.NewAuthlibSignWithKey(rsa2048)
+
+			c := config.Default()
+			c.RsaPriKey = lo.Must(as.GetPriKey())
+
+			lo.Must0(os.WriteFile(configPath, lo.Must(toml.Marshal(c)), 0600))
 			fmt.Println("未找到配置文件，已写入模板配置文件")
 			return
 		}
 		panic(err)
 	}
-	config := lo.Must(config.YamlDeCode(b))
-
-	if config.RsaPriKey == "" {
-		rsa2048 := lo.Must(rsa.GenerateKey(rand.Reader, 4096))
-		as := sign.NewAuthlibSignWithKey(rsa2048)
-		config.RsaPriKey = lo.Must(as.GetPriKey())
-		lo.Must0(os.WriteFile(configPath, lo.Must(yaml.Marshal(config)), 0600))
-	}
-
+	var config config.Config
+	lo.Must0(toml.Unmarshal(b, &config))
 	s, cancel := lo.Must2(server.InitializeRoute(ctx, config))
 	defer cancel()
 	panic(s.ListenAndServe())
