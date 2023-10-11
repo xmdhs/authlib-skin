@@ -14,7 +14,7 @@ func TestYamlDeCode(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if c.Sql.MysqlDsn != "123" {
+	if c.Sql.Dsn != "123" {
 		t.FailNow()
 	}
 }

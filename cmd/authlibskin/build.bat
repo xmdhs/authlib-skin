@@ -1,2 +1,2 @@
-SET CGO_ENABLED=0
-go build -trimpath -ldflags "-w -s" 
+SET CGO_ENABLED=1
+go build -trimpath -ldflags "-w -s" -tags="redis,sqlite"

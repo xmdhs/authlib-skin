@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
 
 	entsql "entgo.io/ent/dialect/sql"
 	"github.com/go-playground/validator/v10"
@@ -48,17 +49,17 @@ func ProvideSlog(c config.Config) slog.Handler {
 }
 
 func ProvideDB(c config.Config) (*sql.DB, func(), error) {
-	db, err := sql.Open("mysql", c.Sql.MysqlDsn)
+	db, err := sql.Open(c.Sql.DriverName, c.Sql.Dsn)
 	if err != nil {
 		return nil, nil, fmt.Errorf("ProvideDB: %w", err)
 	}
-	db.SetMaxOpenConns(20)
 	db.SetMaxIdleConns(10)
+	db.SetConnMaxIdleTime(2 * time.Minute)
 	return db, func() { db.Close() }, nil
 }
 
 func ProvideEnt(ctx context.Context, db *sql.DB, c config.Config, sl *slog.Logger) (*ent.Client, func(), error) {
-	drv := entsql.OpenDB("mysql", db)
+	drv := entsql.OpenDB(c.Sql.DriverName, db)
 	opts := []ent.Option{ent.Driver(drv), ent.Log(
 		func(a ...any) {
 			sl.Debug(fmt.Sprint(a))
@@ -80,6 +81,9 @@ func ProvideValidate() *validator.Validate {
 }
 
 func ProvideCache(c config.Config) cache.Cache {
+	if c.Cache.Type == "redis" {
+		return cache.NewRedis(c.Cache.Addr, c.Cache.Password)
+	}
 	return cache.NewFastCache(c.Cache.Ram)
 }
 

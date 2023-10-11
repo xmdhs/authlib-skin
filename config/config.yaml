@@ -10,7 +10,7 @@ Log:
   Json: false
 
 sql:
-  mysqlDsn: "123"
+  dsn: "123"
 
 # 输出每条执行的 sql 语句
 debug: false

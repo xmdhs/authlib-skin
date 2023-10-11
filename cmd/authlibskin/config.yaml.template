@@ -10,13 +10,19 @@ Log:
   json: false
 
 sql:
-  mysqlDsn: ""
+  # 可填 mysql 或 sqlite3
+  driverName: "sqlite3"
+  # 填写见 mysql https://github.com/go-sql-driver/mysql#dsn-data-source-name
+  # sqlite https://github.com/mattn/go-sqlite3
+  # 例如 mysql  `用户名:密码@tcp(mysqlIP:端口)/数据库名`
+  # sqlite `data.db?_txlock=IMMEDIATE&_journal_mode=WAL&_fk=true``
+  dsn: "data.db?_txlock=IMMEDIATE&_journal_mode=WAL&_fk=true"
 
 # 输出每条执行的 sql 语句
 debug: false
 
 cache:
-  # 默认使用内存缓存，若需要集群部署，请更换 redis
+  # 默认使用内存缓存，若需要集群部署，请填写 redis
   type: ""
   # 内存缓存使用大小，单位 b
   ram: 10000000
