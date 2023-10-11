@@ -31,9 +31,8 @@ type TokenClaims struct {
 }
 
 type Captcha struct {
-	Type       string `json:"type"`
-	SiteKey    string `json:"siteKey"`
-	ServerName string `json:"serverName"`
+	Type    string `json:"type"`
+	SiteKey string `json:"siteKey"`
 }
 
 type UserInfo struct {
@@ -62,6 +61,7 @@ type ChangeName struct {
 type Config struct {
 	Captcha         Captcha `json:"captcha"`
 	AllowChangeName bool
+	ServerName      string `json:"serverName"`
 }
 
 type EditUser struct {

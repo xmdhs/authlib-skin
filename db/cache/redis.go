@@ -4,6 +4,7 @@ package cache
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -35,6 +36,9 @@ func (r *RedisCache) Del(k []byte) error {
 func (r *RedisCache) Get(k []byte) ([]byte, error) {
 	value, err := r.c.Get(context.Background(), string(k)).Bytes()
 	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("RedisCache.Get: %w", err)
 	}
 	return value, nil
