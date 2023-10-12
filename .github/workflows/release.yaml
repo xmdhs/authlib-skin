@@ -38,7 +38,9 @@ jobs:
           pkg: cmd/authlibskin
           buildmode: default
           trimpath: true
-
+      - name: upx
+        run: |
+          upx ./dist/*
       - name: Publish GitHub Releases
         uses: softprops/action-gh-release@v1
         with:
