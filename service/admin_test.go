@@ -64,7 +64,7 @@ func TestWebService_Auth(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if _, err := tt.w.Auth(tt.args.ctx, tt.args.token); (err != nil) != tt.wantErr {
-				t.Errorf("WebService.Reg() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("WebService.Auth() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
