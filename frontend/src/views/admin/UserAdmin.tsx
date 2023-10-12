@@ -182,11 +182,10 @@ function MyDialog({ open, row, setOpen, onUpdate }: MyDialogProp) {
         <Dialog open={open}>
             <DialogTitle>修改用户信息</DialogTitle>
             <DialogContent sx={{
-                display: "grid", gap: '1em', gridTemplateColumns: {
-                    xs: "1fr"
-                },
+                display: "grid", gap: '1em',
                 gridTemplateAreas: {
-                    md: "'a c' 'b b'"
+                    md: "'a c' 'b b'",
+                    xs: "'a' 'c' 'b'"
                 }
             }}>
                 <Box sx={{ display: "flex", flexDirection: 'column', gap: '0.5em', gridArea: "a" }}>

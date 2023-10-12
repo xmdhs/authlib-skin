@@ -3,3 +3,4 @@ cmd/authlibskin/config.yaml
 cmd/authlibskin/skin
 cmd/authlibskin/authlibskin.exe
 server/static/files
+cmd/authlibskin/config.toml
