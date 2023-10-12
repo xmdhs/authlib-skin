@@ -11,7 +11,7 @@ type Config struct {
 	MaxIpUser      int     `toml:"maxIpUser" comment:"ip 段最大注册用户，ipv4 为 /24 ipv6 为 /48"`
 	RsaPriKey      string  `toml:"rsaPriKey,multiline" comment:"运行后勿修改，若为集群需设置为一致"`
 	TexturePath    string  `toml:"texturePath" comment:"材质文件保存路径，如果需要对象存储可以把对象储存挂载到本地目录上"`
-	TextureBaseUrl string  `toml:"textureBaseUrl" comment:"材质静态文件提供基础地址\n如果静态文件位于 oss 上，比如 https://s3.amazonaws.com/example/1.png\n则填写 https://s3.amazonaws.com/example \n 若通过反向代理提供服务并启用了 https，请在在此处填写带有 https 的基础路径，否则游戏内无法加载皮肤"`
+	TextureBaseUrl string  `toml:"textureBaseUrl" comment:"材质静态文件提供基础地址\n如果静态文件位于 oss 上，比如 https://s3.amazonaws.com/example/1.png\n则填写 https://s3.amazonaws.com/example \n若通过反向代理提供服务并启用了 https，请在在此处填写带有 https 的基础路径，否则游戏内无法加载皮肤"`
 	WebBaseUrl     string  `toml:"webBaseUrl" comment:"用于在支持的启动器中展示本站的注册地址\n填写类似 https://example.com"`
 	ServerName     string  `toml:"serverName" comment:"皮肤站名字，用于在多个地方展示"`
 	Captcha        Captcha `toml:"captcha"`
