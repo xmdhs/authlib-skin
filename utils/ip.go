@@ -9,7 +9,7 @@ import (
 func GetIP(r *http.Request) (string, error) {
 	ip, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
-		return "", err
+		ip = r.RemoteAddr
 	}
 	netIP := net.ParseIP(ip)
 	if netIP != nil {

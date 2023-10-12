@@ -22,7 +22,7 @@ function Root() {
         <>
             <Routes>
                 <Route path="/" element={<Layout />}>
-                    <Route index element={<p>123</p>} />
+                    <Route index />
                     <Route path="/*" element={<p>404</p>} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
