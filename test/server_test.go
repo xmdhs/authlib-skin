@@ -18,5 +18,9 @@ func TestMain(m *testing.M) {
 	lo.Must0(toml.Unmarshal(b, &config))
 	s, cancel := lo.Must2(server.InitializeRoute(ctx, config))
 	defer cancel()
-	s.ListenAndServe()
+	go func() {
+		s.ListenAndServe()
+	}()
+
+	os.Exit(m.Run())
 }
