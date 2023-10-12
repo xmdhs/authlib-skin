@@ -88,7 +88,7 @@ driverName = 'mysql'
 # sqlite https://github.com/mattn/go-sqlite3
 # 例如 mysql 用户名:密码@tcp(mysqlIP:端口)/数据库名
 # sqlite data.db?_txlock=IMMEDIATE&_journal_mode=WAL&_fk=true
-dsn = 'root@root@tcp(127.0.0.1)/test'
+dsn = 'root:root@tcp(127.0.0.1)/test'
 
 [cache]
 # 默认使用内存缓存，若需要集群部署，填写 redis
