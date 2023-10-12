@@ -152,38 +152,13 @@ func (y *Yggdrasil) Refresh(ctx context.Context, t *model.TokenClaims) (yggdrasi
 }
 
 func (y *Yggdrasil) GetProfile(ctx context.Context, uuid string, unsigned bool, host string) (yggdrasil.UserInfo, error) {
-	baseURl := func() string {
-		if y.config.TextureBaseUrl == "" {
-			u := &url.URL{}
-			u.Host = host
-			u.Scheme = "http"
-			u.Path = "texture"
-			return u.String()
-		}
-		return y.config.TextureBaseUrl
-	}()
-
 	c := cache.CacheHelp[yggdrasil.UserTextures]{Cache: y.cache}
 	key := []byte("Profile" + uuid)
 	ut, err := c.Get(key)
 	if err != nil {
 		return yggdrasil.UserInfo{}, fmt.Errorf("GetProfile: %w", err)
 	}
-	if ut.ProfileName != "" {
-		for k, v := range ut.Textures {
-			u, err := url.Parse(v.Url)
-			if err != nil {
-				return yggdrasil.UserInfo{}, fmt.Errorf("GetProfile: %w", err)
-			}
-			baseu, err := url.Parse(baseURl)
-			if err != nil {
-				return yggdrasil.UserInfo{}, fmt.Errorf("GetProfile: %w", err)
-			}
-			u.Host = baseu.Host
-			v.Url = u.String()
-			ut.Textures[k] = v
-		}
-	} else {
+	if ut.ProfileName == "" {
 		up, err := y.client.UserProfile.Query().Where(userprofile.UUID(uuid)).WithUsertexture().Only(ctx)
 		if err != nil {
 			var nf *ent.NotFoundError
@@ -199,6 +174,17 @@ func (y *Yggdrasil) GetProfile(ctx context.Context, uuid string, unsigned bool, 
 			Textures:    map[string]yggdrasil.Textures{},
 			Timestamp:   time.Now().UnixMilli(),
 		}
+
+		baseURl := func() string {
+			if y.config.TextureBaseUrl == "" {
+				u := &url.URL{}
+				u.Host = host
+				u.Scheme = "http"
+				u.Path = "texture"
+				return u.String()
+			}
+			return y.config.TextureBaseUrl
+		}()
 
 		for _, v := range up.Edges.Usertexture {
 			dt, err := y.client.Texture.Query().Where(texture.ID(v.TextureID)).Only(ctx)
@@ -223,15 +209,10 @@ func (y *Yggdrasil) GetProfile(ctx context.Context, uuid string, unsigned bool, 
 
 	texturesBase64 := ut.Base64()
 
-	pl := []yggdrasil.UserProperties{}
-	pl = append(pl, yggdrasil.UserProperties{
+	pl := []yggdrasil.UserProperties{{
 		Name:  "textures",
 		Value: texturesBase64,
-	})
-	pl = append(pl, yggdrasil.UserProperties{
-		Name:  "uploadableTextures",
-		Value: "skin,cape",
-	})
+	}}
 
 	if !unsigned {
 		s := sign.NewAuthlibSignWithKey(y.prikey)
