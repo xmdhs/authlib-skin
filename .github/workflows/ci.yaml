@@ -24,8 +24,12 @@ jobs:
         run: |
           bash build.sh
 
+      - name: start mysql
+        run: |
+          sudo systemctl start mysql.service
+
       - name: Test
-        run: go test -race -v ./...
+        run: go test -tags="redis,sqlite" -race -v ./...
 
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v2
