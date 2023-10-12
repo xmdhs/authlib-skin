@@ -18,7 +18,6 @@ require (
 	github.com/redis/go-redis/v9 v9.2.1
 	github.com/samber/lo v1.38.1
 	github.com/stretchr/testify v1.8.4
-	go.uber.org/goleak v1.2.1
 	golang.org/x/crypto v0.14.0
 )
 

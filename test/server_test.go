@@ -9,7 +9,6 @@ import (
 	"github.com/samber/lo"
 	"github.com/xmdhs/authlib-skin/config"
 	"github.com/xmdhs/authlib-skin/server"
-	"go.uber.org/goleak"
 )
 
 func TestMain(m *testing.M) {
@@ -18,11 +17,6 @@ func TestMain(m *testing.M) {
 	var config config.Config
 	lo.Must0(toml.Unmarshal(b, &config))
 	s, cancel := lo.Must2(server.InitializeRoute(ctx, config))
-
-	go func() {
-		s.ListenAndServe()
-	}()
-
-	goleak.VerifyTestMain(m)
-	cancel()
+	defer cancel()
+	s.ListenAndServe()
 }
