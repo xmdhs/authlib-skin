@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/go-chi/chi/v5/middleware"
@@ -77,11 +76,7 @@ func (l *StructuredLoggerEntry) Panic(v interface{}, stack []byte) {
 
 func APILocationIndication(handle http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		u := &url.URL{}
-		u.Host = r.Host
-		u.Scheme = r.URL.Scheme
-		u.Path = "/api/yggdrasil/"
-		w.Header().Set("X-Authlib-Injector-API-Location", u.String())
+		w.Header().Set("X-Authlib-Injector-API-Location", "/api/yggdrasil/")
 		handle.ServeHTTP(w, r)
 	})
 }
