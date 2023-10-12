@@ -24,9 +24,11 @@ jobs:
         run: |
           bash build.sh
 
-      - name: start mysql
+      - name: start mysql / redis
         run: |
           sudo systemctl start mysql.service
+          apt update
+          apt install redis
 
       - name: Test
         run: go test -tags="redis,sqlite" -race -v ./...
