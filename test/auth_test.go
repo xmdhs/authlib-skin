@@ -31,5 +31,5 @@ func TestAuthMiddleware(t *testing.T) {
 	var api model.API[any]
 	require.Nil(t, json.NewDecoder(rep1.Body).Decode(&api))
 
-	assert.Equal(t, api.Code, 5)
+	assert.Equal(t, int(api.Code), int(5))
 }

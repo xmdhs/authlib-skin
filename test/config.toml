@@ -3,7 +3,7 @@
 offlineUUID = true
 port = '127.0.0.1:8080'
 # 输出每条执行的 sql 语句
-debug = false
+debug = true
 # 位于反向代理后启用，用于记录真实 ip
 # 若直接提供服务，请勿打开，否则会被伪造 ip
 raelIP = false
