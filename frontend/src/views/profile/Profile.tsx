@@ -52,7 +52,7 @@ const Profile = function Profile() {
                     <CardHeader title="启动器设置" />
                     <CardContent>
                         <Typography>本站 Yggdrasil API 地址</Typography>
-                        <code>{getYggRoot()}</code>
+                        <code style={{ wordBreak: "break-all" }}>{getYggRoot()}</code>
                     </CardContent>
                 </Card>
                 <Box sx={{ gridArea: "d" }}></Box>
