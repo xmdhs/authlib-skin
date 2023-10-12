@@ -1,0 +1,107 @@
+# 为 true 则 uuid 生成方式于离线模式相同，若从离线模式切换不会丢失数据。
+# 已有用户数据的情况下勿更改此项
+offlineUUID = true
+port = '127.0.0.1:8080'
+# 输出每条执行的 sql 语句
+debug = false
+# 位于反向代理后启用，用于记录真实 ip
+# 若直接提供服务，请勿打开，否则会被伪造 ip
+raelIP = false
+# ip 段最大注册用户，ipv4 为 /24 ipv6 为 /48
+maxIpUser = 0
+# 运行后勿修改，若为集群需设置为一致
+rsaPriKey = """
+-----BEGIN RSA PRIVATE KEY-----
+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
++8b+PJNm4PG8urf5zbAdX5vKR8qiSg==
+-----END RSA PRIVATE KEY-----
+"""
+# 材质文件保存路径，如果需要对象存储可以把对象储存挂载到本地目录上
+texturePath = ''
+# 材质静态文件提供基础地址
+# 如果静态文件位于 oss 上，比如 https://s3.amazonaws.com/example/1.png
+# 则填写 https://s3.amazonaws.com/example
+textureBaseUrl = ''
+# 用于在支持的启动器中展示本站的注册地址
+# 填写类似 https://example.com
+webBaseUrl = ''
+# 皮肤站名字，用于在多个地方展示
+serverName = '没有设置名字'
+
+[log]
+level = 'debug'
+# json 格式输出
+json = false
+
+[sql]
+# 可填 mysql 或 sqlite3
+driverName = 'mysql'
+# 填写见 mysql https://github.com/go-sql-driver/mysql#dsn-data-source-name
+# sqlite https://github.com/mattn/go-sqlite3
+# 例如 mysql 用户名:密码@tcp(mysqlIP:端口)/数据库名
+# sqlite data.db?_txlock=IMMEDIATE&_journal_mode=WAL&_fk=true
+dsn = 'root@root@tcp(127.0.0.1)/test'
+
+[cache]
+# 默认使用内存缓存，若需要集群部署，填写 redis
+type = 'redis'
+# 内存缓存使用大小，单位 b
+ram = 10000000
+# redis 服务端地址，如 127.0.0.1:6379
+addr = '127.0.0.1:6379'
+# redis 密码
+password = ''
+
+[captcha]
+# 验证码类型，目前只支持 cloudflare turnstile，若需要填写 turnstile
+type = ''
+siteKey = ''
+secret = ''
