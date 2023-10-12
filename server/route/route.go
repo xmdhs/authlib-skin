@@ -17,14 +17,14 @@ import (
 func NewRoute(handelY *yggdrasil.Yggdrasil, handel *handle.Handel, c config.Config, sl slog.Handler) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
+	if c.RaelIP {
+		r.Use(middleware.RealIP)
+	}
 	if sl.Enabled(context.Background(), slog.LevelDebug) {
 		r.Use(NewStructuredLogger(sl))
 	}
 	r.Use(middleware.Recoverer)
 	r.Use(cors.AllowAll().Handler)
-	if c.RaelIP {
-		r.Use(middleware.RealIP)
-	}
 	r.Use(APILocationIndication)
 
 	r.Mount("/", static.StaticServer())
