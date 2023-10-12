@@ -27,8 +27,8 @@ jobs:
       - name: start mysql / redis
         run: |
           sudo systemctl start mysql.service
-          apt update
-          apt install redis
+          sudo apt update
+          sudo apt install redis
 
       - name: Test
         run: go test -tags="redis,sqlite" -race -v ./...
