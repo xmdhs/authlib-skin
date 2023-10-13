@@ -10,6 +10,7 @@ import (
 	"github.com/xmdhs/authlib-skin/db/ent/predicate"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
+	"github.com/xmdhs/authlib-skin/db/ent/usertoken"
 	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/model/yggdrasil"
 	utilsService "github.com/xmdhs/authlib-skin/service/utils"
@@ -81,6 +82,8 @@ func (w *WebService) EditUser(ctx context.Context, u model.EditUser, uid int) er
 	uuid := ""
 	changePasswd := false
 	err := utils.WithTx(ctx, w.client, func(tx *ent.Tx) error {
+		upUser := tx.User.UpdateOneID(uid)
+
 		if u.Email != "" {
 			c, err := tx.User.Query().Where(user.Email(u.Email)).Count(ctx)
 			if err != nil {
@@ -89,10 +92,7 @@ func (w *WebService) EditUser(ctx context.Context, u model.EditUser, uid int) er
 			if c != 0 {
 				return ErrExistUser
 			}
-			err = tx.User.UpdateOneID(uid).SetEmail(u.Email).Exec(ctx)
-			if err != nil {
-				return err
-			}
+			upUser = upUser.SetEmail(u.Email)
 		}
 
 		if u.Name != "" {
@@ -117,7 +117,7 @@ func (w *WebService) EditUser(ctx context.Context, u model.EditUser, uid int) er
 			uuid = userProfile.UUID
 			tl := []string{"skin", "cape"}
 			for _, v := range tl {
-				err := utilsService.DelTexture(ctx, userProfile.ID, v, w.client, w.config.TexturePath)
+				err := utilsService.DelTexture(ctx, userProfile.ID, v, tx.Client(), w.config.TexturePath)
 				if err != nil {
 					return err
 				}
@@ -134,14 +134,32 @@ func (w *WebService) EditUser(ctx context.Context, u model.EditUser, uid int) er
 			state = utilsService.SetAdmin(state, *u.IsAdmin)
 		}
 		if u.IsDisable != nil {
+			if *u.IsDisable {
+				changePasswd = true
+			}
 			state = utilsService.SetDisable(state, *u.IsDisable)
 		}
 		if state != aUser.State {
-			err := tx.User.UpdateOneID(uid).SetState(state).Exec(ctx)
+			upUser = upUser.SetState(state)
+		}
+		if u.Password != "" {
+			pass, salt := utils.Argon2ID(u.Password)
+			upUser = upUser.SetPassword(pass).SetSalt(salt)
+			changePasswd = true
+		}
+
+		err = upUser.Exec(ctx)
+		if err != nil {
+			return err
+		}
+
+		if changePasswd {
+			err = tx.UserToken.Update().Where(usertoken.HasUserWith(user.ID(uid))).AddTokenID(1).Exec(ctx)
 			if err != nil {
 				return err
 			}
 		}
+
 		return nil
 	})
 	if err != nil {
