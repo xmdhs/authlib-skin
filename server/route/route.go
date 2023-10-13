@@ -31,6 +31,10 @@ func NewRoute(handelY *yggdrasil.Yggdrasil, handel *handle.Handel, c config.Conf
 	r.Mount("/api/v1", newSkinApi(handel))
 	r.Mount("/api/yggdrasil", newYggdrasil(handelY))
 
+	if c.Debug {
+		r.Mount("/debug", middleware.Profiler())
+	}
+
 	r.Get("/texture/*", handelY.TextureAssets())
 
 	return r
