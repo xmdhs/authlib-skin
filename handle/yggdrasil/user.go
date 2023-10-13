@@ -157,3 +157,9 @@ func (y *Yggdrasil) PlayerCertificates() http.HandlerFunc {
 		w.Write(lo.Must(json.Marshal(c)))
 	}
 }
+
+func (y *Yggdrasil) PlayerAttributes() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`{"privileges":{"onlineChat":{"enabled":true},"multiplayerServer":{"enabled":true},"multiplayerRealms":{"enabled":true},"telemetry":{"enabled":true},"optionalTelemetry":{"enabled":true}},"profanityFilterPreferences":{"profanityFilterOn":true},"banStatus":{"bannedScopes":{}}}`))
+	}
+}
