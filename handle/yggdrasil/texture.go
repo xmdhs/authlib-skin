@@ -30,18 +30,6 @@ func (y *Yggdrasil) getTokenbyAuthorization(ctx context.Context, w http.Response
 	return al[1]
 }
 
-func (y *Yggdrasil) validTextureType(ctx context.Context, w http.ResponseWriter, textureType string) bool {
-	switch textureType {
-	case "skin":
-	case "cape":
-	default:
-		y.logger.DebugContext(ctx, "错误的材质类型")
-		handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: "错误的材质类型"}, 400)
-		return false
-	}
-	return true
-}
-
 func getUUIDbyParams(ctx context.Context, l *slog.Logger, w http.ResponseWriter) (string, string, bool) {
 	uuid := chi.URLParamFromCtx(ctx, "uuid")
 	textureType := chi.URLParamFromCtx(ctx, "textureType")

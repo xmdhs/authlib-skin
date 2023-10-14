@@ -1,6 +1,7 @@
 package yggdrasil
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -95,7 +96,9 @@ const tokenKey = tokenValue("token")
 func (y *Yggdrasil) Auth(handle http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		a, err := utils.DeCodeBody[yggdrasil.ValidateToken](r.Body, y.validate)
+		bw := bytes.NewBuffer(nil)
+		tr := io.TeeReader(r.Body, bw)
+		a, err := utils.DeCodeBody[yggdrasil.ValidateToken](tr, y.validate)
 		if err != nil || a.AccessToken == "" {
 			token := y.getTokenbyAuthorization(ctx, w, r)
 			if token == "" {
@@ -103,6 +106,8 @@ func (y *Yggdrasil) Auth(handle http.Handler) http.Handler {
 			}
 			a.AccessToken = token
 		}
+		r.Body = readerClose{r: io.MultiReader(bw, r.Body), close: r.Body}
+
 		t, err := y.yggdrasilService.Auth(ctx, a)
 		if err != nil {
 			if errors.Is(err, utilsS.ErrTokenInvalid) {
@@ -116,4 +121,17 @@ func (y *Yggdrasil) Auth(handle http.Handler) http.Handler {
 		r = r.WithContext(context.WithValue(ctx, tokenKey, t))
 		handle.ServeHTTP(w, r)
 	})
+}
+
+type readerClose struct {
+	r     io.Reader
+	close io.Closer
+}
+
+func (r readerClose) Read(p []byte) (n int, err error) {
+	return r.r.Read(p)
+}
+
+func (r readerClose) Close() error {
+	return r.close.Close()
 }
