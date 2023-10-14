@@ -67,6 +67,7 @@ func newYggdrasil(handelY *yggdrasil.Yggdrasil) http.Handler {
 
 	r.Get("/minecraftservices/player/attributes", handelY.PlayerAttributes())
 	r.Post("/minecraftservices/player/attributes", handelY.PlayerAttributes())
+	r.Post("/minecraftservices/player/report", handelY.PlayerReport())
 
 	r.Get("/", handelY.YggdrasilRoot())
 	return r

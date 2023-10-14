@@ -163,3 +163,10 @@ func (y *Yggdrasil) PlayerAttributes() http.HandlerFunc {
 		w.Write([]byte(`{"privileges":{"onlineChat":{"enabled":true},"multiplayerServer":{"enabled":true},"multiplayerRealms":{"enabled":true},"telemetry":{"enabled":true},"optionalTelemetry":{"enabled":true}},"profanityFilterPreferences":{"profanityFilterOn":true},"banStatus":{"bannedScopes":{}}}`))
 	}
 }
+
+func (y *Yggdrasil) PlayerReport() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: "不准举报"}, 403)
+	}
+}
