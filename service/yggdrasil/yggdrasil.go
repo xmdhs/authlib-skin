@@ -25,6 +25,8 @@ type Yggdrasil struct {
 	cache  cache.Cache
 	config config.Config
 	prikey *rsa.PrivateKey
+
+	pubStr func() string
 }
 
 func NewYggdrasil(client *ent.Client, cache cache.Cache, c config.Config, prikey *rsa.PrivateKey) *Yggdrasil {
@@ -33,6 +35,10 @@ func NewYggdrasil(client *ent.Client, cache cache.Cache, c config.Config, prikey
 		cache:  cache,
 		config: c,
 		prikey: prikey,
+		pubStr: sync.OnceValue[string](func() string {
+			derBytes := lo.Must(x509.MarshalPKIXPublicKey(&prikey.PublicKey))
+			return base64.StdEncoding.EncodeToString(derBytes)
+		}),
 	}
 }
 
@@ -93,8 +99,7 @@ var mojangPubKeyStr = sync.OnceValue(func() string {
 
 func (y *Yggdrasil) PublicKeys(ctx context.Context) yggdrasil.PublicKeys {
 	mojangPub := mojangPubKeyStr()
-	derBytes := lo.Must(x509.MarshalPKIXPublicKey(y.prikey.PublicKey))
-	myPub := base64.StdEncoding.EncodeToString(derBytes)
+	myPub := y.pubStr()
 
 	pl := []yggdrasil.PublicKeyList{{PublicKey: mojangPub}, {PublicKey: myPub}}
 
