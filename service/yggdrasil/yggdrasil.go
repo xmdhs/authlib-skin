@@ -3,10 +3,15 @@ package yggdrasil
 import (
 	"context"
 	"crypto/rsa"
+	"crypto/x509"
+	_ "embed"
+	"encoding/base64"
 	"encoding/binary"
 	"fmt"
+	"sync"
 	"time"
 
+	"github.com/samber/lo"
 	"github.com/xmdhs/authlib-skin/config"
 	"github.com/xmdhs/authlib-skin/db/cache"
 	"github.com/xmdhs/authlib-skin/db/ent"
@@ -75,4 +80,26 @@ func (y *Yggdrasil) Auth(ctx context.Context, t yggdrasil.ValidateToken) (*model
 		return nil, fmt.Errorf("ValidateToken: %w", err)
 	}
 	return u, nil
+}
+
+//go:embed yggdrasil_session_pubkey.der
+var mojangPubKey []byte
+
+var mojangPubKeyStr = sync.OnceValue(func() string {
+	pub := lo.Must(x509.ParsePKIXPublicKey(mojangPubKey)).(*rsa.PublicKey)
+	derBytes := lo.Must(x509.MarshalPKIXPublicKey(pub))
+	return base64.StdEncoding.EncodeToString(derBytes)
+})
+
+func (y *Yggdrasil) PublicKeys(ctx context.Context) yggdrasil.PublicKeys {
+	mojangPub := mojangPubKeyStr()
+	derBytes := lo.Must(x509.MarshalPKIXPublicKey(y.prikey.PublicKey))
+	myPub := base64.StdEncoding.EncodeToString(derBytes)
+
+	pl := []yggdrasil.PublicKeyList{{PublicKey: mojangPub}, {PublicKey: myPub}}
+
+	return yggdrasil.PublicKeys{
+		PlayerCertificateKeys: pl,
+		ProfilePropertyKeys:   pl,
+	}
 }

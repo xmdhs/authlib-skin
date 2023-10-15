@@ -92,3 +92,12 @@ type CertificatesKeyPair struct {
 	PrivateKey string `json:"privateKey"`
 	PublicKey  string `json:"publicKey"`
 }
+
+type PublicKeys struct {
+	PlayerCertificateKeys []PublicKeyList `json:"playerCertificateKeys"`
+	ProfilePropertyKeys   []PublicKeyList `json:"profilePropertyKeys"`
+}
+
+type PublicKeyList struct {
+	PublicKey string `json:"publicKey"`
+}

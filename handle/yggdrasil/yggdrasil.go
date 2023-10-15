@@ -136,3 +136,11 @@ func (r readerClose) Read(p []byte) (n int, err error) {
 func (r readerClose) Close() error {
 	return r.close.Close()
 }
+
+func (y *Yggdrasil) PublicKeys() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		p := y.yggdrasilService.PublicKeys(ctx)
+		json.NewEncoder(w).Encode(p)
+	}
+}
