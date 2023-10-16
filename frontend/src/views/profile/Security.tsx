@@ -71,13 +71,15 @@ function ChangePasswd() {
         if (pass.pass1 != pass.pass2) return
         if (load) return
         setLoad(true)
-        changePasswd(pass.old, pass.pass1, nowToken).catch(e => {
+        changePasswd(pass.old, pass.pass1, nowToken)
+        .then(() => [navigate("/login"), setToken(""), setUser({ name: "", uuid: "" })])
+        .catch(e => {
             if (e instanceof ApiErr && e.code == 6) {
                 setOldPassErr(true)
                 return
             }
             setLayoutErr(String(e))
-        }).finally(() => setLoad(false)).then(() => [navigate("/login"), setToken(""), setUser({ name: "", uuid: "" })])
+        }).finally(() => setLoad(false))
     }
 
 
