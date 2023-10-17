@@ -43,8 +43,8 @@ jobs:
           upx ./dist/*
       - name: Print sha256
         run : |
-          sha256 ./dist/*
-          sha256 ./dist/* > ./dist/sha256
+          sha256sum ./dist/*
+          sha256sum ./dist/* > ./dist/sha256
       - name: Publish GitHub Releases
         uses: softprops/action-gh-release@v1
         with:
