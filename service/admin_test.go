@@ -11,25 +11,19 @@ import (
 
 func TestWebService_Auth(t *testing.T) {
 	ctx := context.Background()
-	err := webService.Reg(ctx, model.UserReg{
+	lr, err := webService.Reg(ctx, model.UserReg{
 		Email:        "TestWebService_Auth@xmdhs.com",
 		Password:     "TestWebService_Auth",
 		Name:         "TestWebService_Auth",
 		CaptchaToken: "",
 	}, "127.0.1.0/24", "127.0.1.0")
 	require.Nil(t, err)
+	require.Equal(t, lr.Name, "TestWebService_Auth")
 
-	l, err := webService.Login(ctx, model.Login{
-		Email:        "TestWebService_Auth@xmdhs.com",
-		Password:     "TestWebService_Auth",
-		CaptchaToken: "",
-	}, "0.0.0.0")
+	token, err := webService.Auth(ctx, lr.Token)
 	require.Nil(t, err)
 
-	token, err := webService.Auth(ctx, l.Token)
-	require.Nil(t, err)
-
-	assert.Equal(t, token.Subject, l.UUID)
+	assert.Equal(t, token.Subject, lr.UUID)
 	assert.Equal(t, token.Tid, "1")
 
 	type args struct {

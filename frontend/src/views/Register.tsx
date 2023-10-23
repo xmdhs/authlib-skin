@@ -20,6 +20,8 @@ import CaptchaWidget from '@/components/CaptchaWidget';
 import type { refType as CaptchaWidgetRef } from '@/components/CaptchaWidget'
 import useTitle from '@/hooks/useTitle';
 import { ApiErr } from '@/apis/error';
+import { useSetAtom } from 'jotai';
+import { token, user } from '@/store/store';
 
 export default function SignUp() {
     const [regErr, setRegErr] = useState("");
@@ -28,6 +30,8 @@ export default function SignUp() {
     const captchaRef = useRef<CaptchaWidgetRef>(null)
     const [loading, setLoading] = useState(false);
     useTitle("注册")
+    const setToken = useSetAtom(token)
+    const setUserInfo = useSetAtom(user)
 
 
     const checkList = React.useRef<Map<string, refType>>(new Map<string, refType>())
@@ -51,7 +55,15 @@ export default function SignUp() {
         }
         setLoading(true)
         register(d.email ?? "", d.username ?? "", d.password ?? "", captchaToken).
-            then(() => navigate("/login")).
+            then(v => {
+                if (!v) return
+                setToken(v.token)
+                setUserInfo({
+                    uuid: v.uuid,
+                    name: v.name,
+                })
+                navigate("/profile")
+            }).
             catch(v => {
                 captchaRef.current?.reload()
                 console.warn(v)

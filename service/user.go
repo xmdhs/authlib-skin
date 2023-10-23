@@ -25,7 +25,7 @@ var (
 	ErrChangeName = errors.New("离线模式 uuid 不允许修改用户名")
 )
 
-func (w *WebService) Reg(ctx context.Context, u model.UserReg, ipPrefix, ip string) error {
+func (w *WebService) Reg(ctx context.Context, u model.UserReg, ipPrefix, ip string) (model.LoginRep, error) {
 	var userUuid string
 	if w.config.OfflineUUID {
 		userUuid = utils.UUIDGen(u.Name)
@@ -35,20 +35,22 @@ func (w *WebService) Reg(ctx context.Context, u model.UserReg, ipPrefix, ip stri
 
 	err := w.verifyCaptcha(ctx, u.CaptchaToken, ip)
 	if err != nil {
-		return fmt.Errorf("Reg: %w", err)
+		return model.LoginRep{}, fmt.Errorf("Reg: %w", err)
 	}
 
 	if w.config.MaxIpUser != 0 {
 		c, err := w.client.User.Query().Where(user.RegIPEQ(ipPrefix)).Count(ctx)
 		if err != nil {
-			return fmt.Errorf("Reg: %w", err)
+			return model.LoginRep{}, fmt.Errorf("Reg: %w", err)
 		}
 		if c >= w.config.MaxIpUser {
-			return fmt.Errorf("Reg: %w", ErrRegLimit)
+			return model.LoginRep{}, fmt.Errorf("Reg: %w", ErrRegLimit)
 		}
 	}
 
 	p, s := utils.Argon2ID(u.Password)
+
+	var du *ent.User
 
 	err = utils.WithTx(ctx, w.client, func(tx *ent.Tx) error {
 		count, err := tx.User.Query().Where(user.EmailEQ(u.Email)).ForUpdateA().Count(ctx)
@@ -65,7 +67,7 @@ func (w *WebService) Reg(ctx context.Context, u model.UserReg, ipPrefix, ip stri
 		if nameCount != 0 {
 			return ErrExitsName
 		}
-		du, err := tx.User.Create().
+		du, err = tx.User.Create().
 			SetEmail(u.Email).
 			SetPassword(p).
 			SetSalt(s).
@@ -92,9 +94,18 @@ func (w *WebService) Reg(ctx context.Context, u model.UserReg, ipPrefix, ip stri
 		return nil
 	})
 	if err != nil {
-		return fmt.Errorf("Reg: %w", err)
+		return model.LoginRep{}, fmt.Errorf("Reg: %w", err)
 	}
-	return nil
+	jwt, err := utilsService.CreateToken(ctx, du, w.client, w.cache, w.prikey, "web")
+	if err != nil {
+		return model.LoginRep{}, fmt.Errorf("Login: %w", err)
+	}
+
+	return model.LoginRep{
+		Token: jwt,
+		Name:  u.Name,
+		UUID:  userUuid,
+	}, nil
 }
 
 func (w *WebService) Login(ctx context.Context, l model.Login, ip string) (model.LoginRep, error) {

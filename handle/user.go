@@ -33,13 +33,14 @@ func (h *Handel) Reg() http.HandlerFunc {
 			h.handleError(ctx, w, err.Error(), model.ErrUnknown, 500, slog.LevelWarn)
 			return
 		}
-		err = h.webService.Reg(ctx, u, rip, ip)
+		lr, err := h.webService.Reg(ctx, u, rip, ip)
 		if err != nil {
 			h.handleErrorService(ctx, w, err)
 			return
 		}
-		encodeJson(w, model.API[any]{
+		encodeJson(w, model.API[model.LoginRep]{
 			Code: 0,
+			Data: lr,
 		})
 	}
 }

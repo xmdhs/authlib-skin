@@ -24,7 +24,7 @@ export async function register(email: string, username: string, password: string
             "CaptchaToken": captchaToken
         })
     })
-    return await apiGet(v)
+    return await apiGet<tokenData>(v)
 }
 
 export async function userInfo(token: string) {

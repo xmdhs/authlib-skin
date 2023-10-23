@@ -143,7 +143,7 @@ func TestWebService_Reg(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.w.Reg(tt.args.ctx, tt.args.u, tt.args.ipPrefix, tt.args.ip); (err != nil) != tt.wantErr {
+			if _, err := tt.w.Reg(tt.args.ctx, tt.args.u, tt.args.ipPrefix, tt.args.ip); (err != nil) != tt.wantErr {
 				t.Errorf("WebService.Reg() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
