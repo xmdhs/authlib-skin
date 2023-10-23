@@ -8,7 +8,6 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
-	"fmt"
 	"os"
 	"testing"
 
@@ -23,27 +22,20 @@ func TestAuthlibSign(t *testing.T) {
 	}
 	as := NewAuthlibSignWithKey(rsa2048)
 	pri, err := as.GetPriKey()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.Nil(t, err)
+	require.NotEmpty(t, pri)
 	pub, err := as.GetPKIXPubKey()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.Nil(t, err)
+	require.NotEmpty(t, pub)
+
 	sign, err := as.Sign([]byte("xmdhs"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	fmt.Println(pri)
-	fmt.Println(pub)
-	fmt.Println(sign)
+	require.Nil(t, err)
 
 	hashed := sha1.Sum([]byte("xmdhs"))
 
 	err = rsa.VerifyPKCS1v15(&as.key.PublicKey, crypto.SHA1, hashed[:], lo.Must(base64.StdEncoding.DecodeString(sign)))
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.Nil(t, err)
+
 }
 
 func TestLittleskinSign(t *testing.T) {

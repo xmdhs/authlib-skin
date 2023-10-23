@@ -67,7 +67,7 @@ func (y *Yggdrasil) Authenticate(cxt context.Context, auth yggdrasil.Authenticat
 		clientToken = strings.ReplaceAll(uuid.New().String(), "-", "")
 	}
 
-	jwts, err := sutils.CreateToken(cxt, u, y.client, y.cache, y.prikey, clientToken)
+	jwts, err := sutils.CreateToken(cxt, u, y.client, y.cache, y.prikey, clientToken, u.Edges.Profile.UUID)
 	if err != nil {
 		return yggdrasil.Token{}, fmt.Errorf("Authenticate: %w", err)
 	}

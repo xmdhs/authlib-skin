@@ -96,7 +96,7 @@ func (w *WebService) Reg(ctx context.Context, u model.UserReg, ipPrefix, ip stri
 	if err != nil {
 		return model.LoginRep{}, fmt.Errorf("Reg: %w", err)
 	}
-	jwt, err := utilsService.CreateToken(ctx, du, w.client, w.cache, w.prikey, "web")
+	jwt, err := utilsService.CreateToken(ctx, du, w.client, w.cache, w.prikey, "web", userUuid)
 	if err != nil {
 		return model.LoginRep{}, fmt.Errorf("Login: %w", err)
 	}
@@ -125,7 +125,7 @@ func (w *WebService) Login(ctx context.Context, l model.Login, ip string) (model
 	if err != nil {
 		return model.LoginRep{}, fmt.Errorf("Login: %w", err)
 	}
-	jwt, err := utilsService.CreateToken(ctx, u, w.client, w.cache, w.prikey, "web")
+	jwt, err := utilsService.CreateToken(ctx, u, w.client, w.cache, w.prikey, "web", u.Edges.Profile.UUID)
 	if err != nil {
 		return model.LoginRep{}, fmt.Errorf("Login: %w", err)
 	}

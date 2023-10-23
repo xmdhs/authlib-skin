@@ -82,7 +82,7 @@ func Auth(ctx context.Context, t yggdrasil.ValidateToken, client *ent.Client, c 
 	return claims, nil
 }
 
-func CreateToken(ctx context.Context, u *ent.User, client *ent.Client, cache cache.Cache, jwtKey *rsa.PrivateKey, clientToken string) (string, error) {
+func CreateToken(ctx context.Context, u *ent.User, client *ent.Client, cache cache.Cache, jwtKey *rsa.PrivateKey, clientToken string, uuid string) (string, error) {
 	if IsDisable(u.State) {
 		return "", fmt.Errorf("CreateToken: %w", ErrUserDisable)
 	}
@@ -112,7 +112,7 @@ func CreateToken(ctx context.Context, u *ent.User, client *ent.Client, cache cac
 	if err != nil {
 		return "", fmt.Errorf("CreateToken: %w", err)
 	}
-	t, err := NewJwtToken(jwtKey, strconv.FormatUint(utoken.TokenID, 10), clientToken, u.Edges.Profile.UUID, u.ID)
+	t, err := NewJwtToken(jwtKey, strconv.FormatUint(utoken.TokenID, 10), clientToken, uuid, u.ID)
 	if err != nil {
 		return "", fmt.Errorf("CreateToken: %w", err)
 	}
