@@ -15,21 +15,25 @@ import (
 	"github.com/xmdhs/authlib-skin/config"
 	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/service"
+	"github.com/xmdhs/authlib-skin/service/email"
 )
 
 type Handel struct {
-	webService *service.WebService
-	validate   *validator.Validate
-	config     config.Config
-	logger     *slog.Logger
+	webService   *service.WebService
+	validate     *validator.Validate
+	emailService *email.Email
+	config       config.Config
+	logger       *slog.Logger
 }
 
-func NewHandel(webService *service.WebService, validate *validator.Validate, config config.Config, logger *slog.Logger) *Handel {
+func NewHandel(webService *service.WebService, validate *validator.Validate,
+	config config.Config, logger *slog.Logger, email *email.Email) *Handel {
 	return &Handel{
-		webService: webService,
-		validate:   validate,
-		config:     config,
-		logger:     logger,
+		webService:   webService,
+		validate:     validate,
+		config:       config,
+		logger:       logger,
+		emailService: email,
 	}
 }
 

@@ -38,6 +38,7 @@ require (
 	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/mitchellh/go-wordwrap v0.0.0-20150314170334-ad45545899c7 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/wneessen/go-mail v0.4.0 // indirect
 	github.com/zclconf/go-cty v1.8.0 // indirect
 	golang.org/x/exp v0.0.0-20220303212507-bbda1eaf7a17 // indirect
 	golang.org/x/mod v0.10.0 // indirect

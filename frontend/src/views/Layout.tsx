@@ -35,6 +35,7 @@ import SecurityIcon from '@mui/icons-material/Security';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { Link } from "react-router-dom";
 import GroupIcon from '@mui/icons-material/Group';
+import { ApiErr } from '@/apis/error';
 
 const drawerWidth = 240;
 const DrawerOpen = atom(false)
@@ -211,12 +212,16 @@ const MyDrawer = function MyDrawer() {
     const theme = useTheme();
     const isLg = useMediaQuery(theme.breakpoints.up('lg'))
     const [open, setOpen] = useAtom(DrawerOpen)
+    const navigate = useNavigate();
 
     const userinfo = useRequest(() => userInfo(nowToken), {
         refreshDeps: [nowToken],
         cacheKey: "/api/v1/user" + nowToken,
         staleTime: 60000,
         onError: e => {
+            if (e instanceof ApiErr && e.code == 5) {
+                navigate("/login")
+            }
             console.warn(e)
             setErr(String(e))
         },
