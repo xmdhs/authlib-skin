@@ -13,13 +13,13 @@ import (
 func TestAuthMiddleware(t *testing.T) {
 	t.Parallel()
 
-	rep, err := http.Get("http://127.0.0.1:8080/api/v1/user")
+	rep, err := http.Get("http://127.0.0.1:8081/api/v1/user")
 	require.Nil(t, err)
 	defer rep.Body.Close()
 
 	require.Equal(t, rep.StatusCode, 401)
 
-	reqs, err := http.NewRequest("GET", "http://127.0.0.1:8080/api/v1/user", nil)
+	reqs, err := http.NewRequest("GET", "http://127.0.0.1:8081/api/v1/user", nil)
 	require.Nil(t, err)
 	reqs.Header.Add("Authorization", "Bearer aaaaaaaaaaa")
 	rep1, err := http.DefaultClient.Do(reqs)
