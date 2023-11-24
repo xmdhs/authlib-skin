@@ -19,12 +19,15 @@ import (
 	"github.com/xmdhs/authlib-skin/service/captcha"
 )
 
-var webService *WebService
+var (
+	userSerice  *UserSerice
+	adminSerice *AdminService
+)
 
 func TestMain(m *testing.M) {
 	ctx := context.Background()
 
-	clean := initWebService(ctx)
+	clean := initSerice(ctx)
 	code := m.Run()
 
 	clean()
@@ -32,12 +35,16 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func initWebService(ctx context.Context) func() {
+func initSerice(ctx context.Context) func() {
 	c := lo.Must(ent.Open("mysql", "root:root@tcp(127.0.0.1)/test"))
 	lo.Must0(c.Schema.Create(context.Background(), migrate.WithForeignKeys(false), migrate.WithDropIndex(true), migrate.WithDropColumn(true)))
 	rsa4 := lo.Must(rsa.GenerateKey(rand.Reader, 4096))
 	cache := cache.NewFastCache(100000)
-	webService = NewWebService(config.Default(), c, &http.Client{}, cache, rsa4, auth.NewAuthService(c, cache, &rsa4.PublicKey, rsa4), captcha.NewCaptchaService(config.Default(), &http.Client{}))
+	config := config.Default()
+	authService := auth.NewAuthService(c, cache, &rsa4.PublicKey, rsa4)
+
+	userSerice = NewUserSerice(config, c, captcha.NewCaptchaService(config, &http.Client{}), authService, cache)
+	adminSerice = NewAdminService(authService, c, config, cache)
 
 	return func() {
 		c.User.Delete().Exec(ctx)
@@ -48,9 +55,9 @@ func initWebService(ctx context.Context) func() {
 	}
 }
 
-func TestWebService_Reg(t *testing.T) {
+func TestUserSerice_Reg(t *testing.T) {
 	ctx := context.Background()
-	webService.config.MaxIpUser = 1
+	userSerice.config.MaxIpUser = 1
 	type args struct {
 		ctx      context.Context
 		u        model.UserReg
@@ -59,13 +66,13 @@ func TestWebService_Reg(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		w       *WebService
+		w       *UserSerice
 		args    args
 		wantErr bool
 	}{
 		{
 			name: "1",
-			w:    webService,
+			w:    userSerice,
 			args: args{
 				ctx: ctx,
 				u: model.UserReg{
@@ -81,7 +88,7 @@ func TestWebService_Reg(t *testing.T) {
 		},
 		{
 			name: "email duplicate",
-			w:    webService,
+			w:    userSerice,
 			args: args{
 				ctx: ctx,
 				u: model.UserReg{
@@ -97,7 +104,7 @@ func TestWebService_Reg(t *testing.T) {
 		},
 		{
 			name: "name duplicate",
-			w:    webService,
+			w:    userSerice,
 			args: args{
 				ctx: ctx,
 				u: model.UserReg{
@@ -113,7 +120,7 @@ func TestWebService_Reg(t *testing.T) {
 		},
 		{
 			name: "MaxIpUser",
-			w:    webService,
+			w:    userSerice,
 			args: args{
 				ctx: ctx,
 				u: model.UserReg{
@@ -129,7 +136,7 @@ func TestWebService_Reg(t *testing.T) {
 		},
 		{
 			name: "MaxIpUser",
-			w:    webService,
+			w:    userSerice,
 			args: args{
 				ctx: ctx,
 				u: model.UserReg{
@@ -151,5 +158,5 @@ func TestWebService_Reg(t *testing.T) {
 			}
 		})
 	}
-	webService.config.MaxIpUser = 0
+	userSerice.config.MaxIpUser = 0
 }

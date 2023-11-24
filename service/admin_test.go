@@ -9,9 +9,9 @@ import (
 	"github.com/xmdhs/authlib-skin/model"
 )
 
-func TestWebService_Auth(t *testing.T) {
+func TestAdminSerice_Auth(t *testing.T) {
 	ctx := context.Background()
-	lr, err := webService.Reg(ctx, model.UserReg{
+	lr, err := userSerice.Reg(ctx, model.UserReg{
 		Email:        "TestWebService_Auth@xmdhs.com",
 		Password:     "TestWebService_Auth",
 		Name:         "TestWebService_Auth",
@@ -20,7 +20,7 @@ func TestWebService_Auth(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, lr.Name, "TestWebService_Auth")
 
-	token, err := webService.Auth(ctx, lr.Token)
+	token, err := adminSerice.Auth(ctx, lr.Token)
 	require.Nil(t, err)
 
 	assert.Equal(t, token.Subject, lr.UUID)
@@ -32,13 +32,13 @@ func TestWebService_Auth(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		w       *WebService
+		w       *AdminService
 		args    args
 		wantErr bool
 	}{
 		{
 			name: "some string",
-			w:    webService,
+			w:    adminSerice,
 			args: args{
 				ctx:   ctx,
 				token: "123213",
@@ -47,7 +47,7 @@ func TestWebService_Auth(t *testing.T) {
 		},
 		{
 			name: "valid jwt",
-			w:    webService,
+			w:    adminSerice,
 			args: args{
 				ctx:   ctx,
 				token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjpbeyJ0b29sdHQiOiJodHRwczovL3Rvb2x0dC5jb20ifV0sImlhdCI6MTY5NzEwMjMzOCwiZXhwIjoxNjk3MTI2Mzk5LCJhdWQiOiIiLCJpc3MiOiIiLCJzdWIiOiIifQ.JTQWl1PEX8u7PhVc4dTtv1DRS6e1PbMDZNWOAFJmVqE",

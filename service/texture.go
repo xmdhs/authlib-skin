@@ -9,6 +9,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/xmdhs/authlib-skin/config"
+	"github.com/xmdhs/authlib-skin/db/cache"
 	"github.com/xmdhs/authlib-skin/db/ent"
 	"github.com/xmdhs/authlib-skin/db/ent/texture"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
@@ -18,7 +20,21 @@ import (
 	"github.com/xmdhs/authlib-skin/utils"
 )
 
-func (w *WebService) PutTexture(ctx context.Context, t *model.TokenClaims, texturebyte []byte, model string, textureType string) error {
+type TextureService struct {
+	client *ent.Client
+	config config.Config
+	cache  cache.Cache
+}
+
+func NewTextureService(client *ent.Client, config config.Config, cache cache.Cache) *TextureService {
+	return &TextureService{
+		client: client,
+		config: config,
+		cache:  cache,
+	}
+}
+
+func (w *TextureService) PutTexture(ctx context.Context, t *model.TokenClaims, texturebyte []byte, model string, textureType string) error {
 	up, err := w.client.UserProfile.Query().Where(userprofile.HasUserWith(user.ID(t.UID))).First(ctx)
 	if err != nil {
 		return fmt.Errorf("PutTexture: %w", err)

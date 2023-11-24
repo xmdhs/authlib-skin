@@ -8,12 +8,15 @@ package server
 
 import (
 	"context"
+	"github.com/google/wire"
 	"github.com/xmdhs/authlib-skin/config"
 	"github.com/xmdhs/authlib-skin/handle"
+	"github.com/xmdhs/authlib-skin/handle/handelerror"
 	yggdrasil2 "github.com/xmdhs/authlib-skin/handle/yggdrasil"
 	"github.com/xmdhs/authlib-skin/server/route"
 	"github.com/xmdhs/authlib-skin/service"
 	"github.com/xmdhs/authlib-skin/service/auth"
+	"github.com/xmdhs/authlib-skin/service/captcha"
 	"github.com/xmdhs/authlib-skin/service/email"
 	"github.com/xmdhs/authlib-skin/service/yggdrasil"
 	"net/http"
@@ -55,16 +58,17 @@ func InitializeRoute(ctx context.Context, c config.Config) (*http.Server, func()
 		return nil, nil, err
 	}
 	yggdrasil3 := yggdrasil2.NewYggdrasil(logger, validate, yggdrasilYggdrasil, c, pubRsaKey)
+	webService := service.NewWebService(c)
+	handel := handle.NewHandel(webService)
+	handleError := handelerror.NewHandleError(logger)
 	httpClient := ProvideHttpClient()
-	webService := service.NewWebService(c, client, httpClient, cache, privateKey, authService)
-	emailEmail, err := email.NewEmail(privateKey, c, cache)
-	if err != nil {
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	handel := handle.NewHandel(webService, validate, c, logger, emailEmail)
-	httpHandler := route.NewRoute(yggdrasil3, handel, c, handler)
+	captchaService := captcha.NewCaptchaService(c, httpClient)
+	userSerice := service.NewUserSerice(c, client, captchaService, authService, cache)
+	textureService := service.NewTextureService(client, c, cache)
+	userHandel := handle.NewUserHandel(handleError, validate, userSerice, logger, textureService)
+	adminService := service.NewAdminService(authService, client, c, cache)
+	adminHandel := handle.NewAdminHandel(handleError, adminService, validate)
+	httpHandler := route.NewRoute(yggdrasil3, handel, c, handler, userHandel, adminHandel)
 	server, cleanup3 := NewServer(c, httpHandler)
 	return server, func() {
 		cleanup3()
@@ -72,3 +76,9 @@ func InitializeRoute(ctx context.Context, c config.Config) (*http.Server, func()
 		cleanup()
 	}, nil
 }
+
+// wire.go:
+
+var serviceSet = wire.NewSet(service.Service, yggdrasil.NewYggdrasil, email.NewEmail, auth.NewAuthService, captcha.NewCaptchaService)
+
+var handleSet = wire.NewSet(handelerror.NewHandleError, handle.HandelSet, yggdrasil2.NewYggdrasil)

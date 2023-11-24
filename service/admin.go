@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/xmdhs/authlib-skin/config"
+	"github.com/xmdhs/authlib-skin/db/cache"
 	"github.com/xmdhs/authlib-skin/db/ent"
 	"github.com/xmdhs/authlib-skin/db/ent/predicate"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
@@ -18,9 +20,26 @@ import (
 	"github.com/xmdhs/authlib-skin/utils"
 )
 
+type AdminService struct {
+	authService *auth.AuthService
+	client      *ent.Client
+	config      config.Config
+	cache       cache.Cache
+}
+
+func NewAdminService(authService *auth.AuthService, client *ent.Client,
+	config config.Config, cache cache.Cache) *AdminService {
+	return &AdminService{
+		authService: authService,
+		client:      client,
+		config:      config,
+		cache:       cache,
+	}
+}
+
 var ErrNotAdmin = errors.New("无权限")
 
-func (w *WebService) Auth(ctx context.Context, token string) (*model.TokenClaims, error) {
+func (w *AdminService) Auth(ctx context.Context, token string) (*model.TokenClaims, error) {
 	t, err := w.authService.Auth(ctx, yggdrasil.ValidateToken{AccessToken: token}, false)
 	if err != nil {
 		return nil, fmt.Errorf("WebService.Auth: %w", err)
@@ -28,7 +47,7 @@ func (w *WebService) Auth(ctx context.Context, token string) (*model.TokenClaims
 	return t, nil
 }
 
-func (w *WebService) IsAdmin(ctx context.Context, t *model.TokenClaims) error {
+func (w *AdminService) IsAdmin(ctx context.Context, t *model.TokenClaims) error {
 	u, err := w.client.User.Query().Where(user.ID(t.UID)).First(ctx)
 	if err != nil {
 		return fmt.Errorf("IsAdmin: %w", err)
@@ -39,7 +58,7 @@ func (w *WebService) IsAdmin(ctx context.Context, t *model.TokenClaims) error {
 	return nil
 }
 
-func (w *WebService) ListUser(ctx context.Context, page int, email, name string) ([]model.UserList, int, error) {
+func (w *AdminService) ListUser(ctx context.Context, page int, email, name string) ([]model.UserList, int, error) {
 	whereL := []predicate.User{}
 	if email != "" {
 		whereL = append(whereL, user.EmailHasPrefix(email))
@@ -79,7 +98,7 @@ func (w *WebService) ListUser(ctx context.Context, page int, email, name string)
 	return ul, uc, nil
 }
 
-func (w *WebService) EditUser(ctx context.Context, u model.EditUser, uid int) error {
+func (w *AdminService) EditUser(ctx context.Context, u model.EditUser, uid int) error {
 	uuid := ""
 	changePasswd := false
 	err := utils.WithTx(ctx, w.client, func(tx *ent.Tx) error {

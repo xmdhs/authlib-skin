@@ -9,11 +9,14 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/xmdhs/authlib-skin/config"
+	"github.com/xmdhs/authlib-skin/db/cache"
 	"github.com/xmdhs/authlib-skin/db/ent"
 	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
 	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/service/auth"
+	"github.com/xmdhs/authlib-skin/service/captcha"
 	"github.com/xmdhs/authlib-skin/utils"
 )
 
@@ -25,7 +28,26 @@ var (
 	ErrChangeName = errors.New("离线模式 uuid 不允许修改用户名")
 )
 
-func (w *WebService) Reg(ctx context.Context, u model.UserReg, ipPrefix, ip string) (model.LoginRep, error) {
+type UserSerice struct {
+	config         config.Config
+	client         *ent.Client
+	captchaService *captcha.CaptchaService
+	authService    *auth.AuthService
+	cache          cache.Cache
+}
+
+func NewUserSerice(config config.Config, client *ent.Client, captchaService *captcha.CaptchaService,
+	authService *auth.AuthService, cache cache.Cache) *UserSerice {
+	return &UserSerice{
+		config:         config,
+		client:         client,
+		captchaService: captchaService,
+		authService:    authService,
+		cache:          cache,
+	}
+}
+
+func (w *UserSerice) Reg(ctx context.Context, u model.UserReg, ipPrefix, ip string) (model.LoginRep, error) {
 	var userUuid string
 	if w.config.OfflineUUID {
 		userUuid = utils.UUIDGen(u.Name)
@@ -108,7 +130,7 @@ func (w *WebService) Reg(ctx context.Context, u model.UserReg, ipPrefix, ip stri
 	}, nil
 }
 
-func (w *WebService) Login(ctx context.Context, l model.Login, ip string) (model.LoginRep, error) {
+func (w *UserSerice) Login(ctx context.Context, l model.Login, ip string) (model.LoginRep, error) {
 	err := w.captchaService.VerifyCaptcha(ctx, l.CaptchaToken, ip)
 	if err != nil {
 		return model.LoginRep{}, fmt.Errorf("Login: %w", err)
@@ -121,7 +143,7 @@ func (w *WebService) Login(ctx context.Context, l model.Login, ip string) (model
 		}
 		return model.LoginRep{}, fmt.Errorf("Login: %w", err)
 	}
-	err = w.validatePass(ctx, u, l.Password)
+	err = validatePass(ctx, u, l.Password)
 	if err != nil {
 		return model.LoginRep{}, fmt.Errorf("Login: %w", err)
 	}
@@ -136,7 +158,7 @@ func (w *WebService) Login(ctx context.Context, l model.Login, ip string) (model
 	}, nil
 }
 
-func (w *WebService) Info(ctx context.Context, t *model.TokenClaims) (model.UserInfo, error) {
+func (w *UserSerice) Info(ctx context.Context, t *model.TokenClaims) (model.UserInfo, error) {
 	u, err := w.client.User.Query().Where(user.ID(t.UID)).First(ctx)
 	if err != nil {
 		return model.UserInfo{}, fmt.Errorf("Info: %w", err)
@@ -149,12 +171,12 @@ func (w *WebService) Info(ctx context.Context, t *model.TokenClaims) (model.User
 	}, nil
 }
 
-func (w *WebService) ChangePasswd(ctx context.Context, p model.ChangePasswd, t *model.TokenClaims) error {
+func (w *UserSerice) ChangePasswd(ctx context.Context, p model.ChangePasswd, t *model.TokenClaims) error {
 	u, err := w.client.User.Query().Where(user.IDEQ(t.UID)).WithToken().First(ctx)
 	if err != nil {
 		return fmt.Errorf("ChangePasswd: %w", err)
 	}
-	err = w.validatePass(ctx, u, p.Old)
+	err = validatePass(ctx, u, p.Old)
 	if err != nil {
 		return fmt.Errorf("ChangePasswd: %w", err)
 	}
@@ -176,7 +198,7 @@ func (w *WebService) ChangePasswd(ctx context.Context, p model.ChangePasswd, t *
 	return nil
 }
 
-func (w *WebService) changeName(ctx context.Context, newName string, uid int, uuid string) error {
+func (w *UserSerice) changeName(ctx context.Context, newName string, uid int, uuid string) error {
 	if w.config.OfflineUUID {
 		return fmt.Errorf("changeName: %w", ErrChangeName)
 	}
@@ -195,7 +217,7 @@ func (w *WebService) changeName(ctx context.Context, newName string, uid int, uu
 	return err
 }
 
-func (w *WebService) ChangeName(ctx context.Context, newName string, t *model.TokenClaims) error {
+func (w *UserSerice) ChangeName(ctx context.Context, newName string, t *model.TokenClaims) error {
 	err := w.changeName(ctx, newName, t.UID, t.Subject)
 	if err != nil {
 		return fmt.Errorf("ChangeName: %w", err)

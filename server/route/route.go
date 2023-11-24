@@ -14,7 +14,8 @@ import (
 	"github.com/xmdhs/authlib-skin/server/static"
 )
 
-func NewRoute(handelY *yggdrasil.Yggdrasil, handel *handle.Handel, c config.Config, sl slog.Handler) http.Handler {
+func NewRoute(handelY *yggdrasil.Yggdrasil, handel *handle.Handel, c config.Config, sl slog.Handler,
+	userHandel *handle.UserHandel, adminHandel *handle.AdminHandel) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	if c.RaelIP {
@@ -28,7 +29,7 @@ func NewRoute(handelY *yggdrasil.Yggdrasil, handel *handle.Handel, c config.Conf
 	r.Use(APILocationIndication)
 
 	r.Mount("/", static.StaticServer())
-	r.Mount("/api/v1", newSkinApi(handel))
+	r.Mount("/api/v1", newSkinApi(handel, userHandel, adminHandel))
 	r.Mount("/api/yggdrasil", newYggdrasil(handelY))
 
 	if c.Debug {
@@ -74,26 +75,26 @@ func newYggdrasil(handelY *yggdrasil.Yggdrasil) http.Handler {
 	return r
 }
 
-func newSkinApi(handel *handle.Handel) http.Handler {
+func newSkinApi(handel *handle.Handel, userHandel *handle.UserHandel, adminHandel *handle.AdminHandel) http.Handler {
 	r := chi.NewRouter()
 
-	r.Post("/user/reg", handel.Reg())
-	r.Post("/user/login", handel.Login())
+	r.Post("/user/reg", userHandel.Reg())
+	r.Post("/user/login", userHandel.Login())
 	r.Get("/config", handel.GetConfig())
 
 	r.Group(func(r chi.Router) {
-		r.Use(handel.NeedAuth)
-		r.Get("/user", handel.UserInfo())
-		r.Post("/user/password", handel.ChangePasswd())
-		r.Post("/user/name", handel.ChangeName())
-		r.Put("/user/skin/{textureType}", handel.PutTexture())
+		r.Use(adminHandel.NeedAuth)
+		r.Get("/user", userHandel.UserInfo())
+		r.Post("/user/password", userHandel.ChangePasswd())
+		r.Post("/user/name", userHandel.ChangeName())
+		r.Put("/user/skin/{textureType}", userHandel.PutTexture())
 	})
 
 	r.Group(func(r chi.Router) {
-		r.Use(handel.NeedAuth)
-		r.Use(handel.NeedAdmin)
-		r.Get("/admin/users", handel.ListUser())
-		r.Patch("/admin/user/{uid}", handel.EditUser())
+		r.Use(adminHandel.NeedAuth)
+		r.Use(adminHandel.NeedAdmin)
+		r.Get("/admin/users", adminHandel.ListUser())
+		r.Patch("/admin/user/{uid}", adminHandel.EditUser())
 	})
 
 	return r
