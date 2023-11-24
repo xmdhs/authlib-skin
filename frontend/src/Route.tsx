@@ -9,6 +9,7 @@ import Layout from '@/views/Layout'
 import UserAdmin from "@/views/admin/UserAdmin";
 import NeedLogin from "@/components/NeedLogin";
 import Index from "@/views/Index";
+import SignUpEmail from "@/views/SignUpEmail";
 
 const router = createBrowserRouter([
     { path: "*", Component: Root },
@@ -23,6 +24,7 @@ function Root() {
                     <Route path="/*" element={<p>404</p>} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
+                    <Route path="/register_email" element={<SignUpEmail />} />
 
                     <Route element={<NeedLogin><Outlet /></NeedLogin>}>
                         <Route path="/profile" element={<Profile />} />

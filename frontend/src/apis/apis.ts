@@ -118,3 +118,14 @@ export async function editUser(u: EditUser, token: string, uid: string) {
     })
     return await apiGet<unknown>(r)
 }
+
+export async function sendRegEmail(email: string, captchaToken: string) {
+    const r = await fetch(root() + "/api/v1/user/reg_email", {
+        method: "POST",
+        body: JSON.stringify({
+            "email": email,
+            "captchaToken": captchaToken
+        })
+    })
+    return await apiGet<unknown>(r)
+}

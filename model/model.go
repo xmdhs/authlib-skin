@@ -63,6 +63,8 @@ type Config struct {
 	Captcha         Captcha `json:"captcha"`
 	AllowChangeName bool
 	ServerName      string `json:"serverName"`
+	NeedEmail       bool
+	AllowDomain     []string
 }
 
 type EditUser struct {

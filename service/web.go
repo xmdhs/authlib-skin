@@ -35,5 +35,7 @@ func (w *WebService) GetConfig(ctx context.Context) model.Config {
 		},
 		ServerName:      w.config.ServerName,
 		AllowChangeName: !w.config.OfflineUUID,
+		NeedEmail:       w.config.Email.Enable,
+		AllowDomain:     w.config.Email.AllowDomain,
 	}
 }

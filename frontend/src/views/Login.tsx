@@ -64,6 +64,9 @@ export default function SignIn() {
                 console.warn(v)
                 if (v instanceof ApiErr) {
                     switch (v.code) {
+                        case 10:
+                            setErr("验证码错误")
+                            return    
                         case 6:
                             setErr("密码或用户名错误")
                             return

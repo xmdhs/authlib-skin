@@ -63,9 +63,15 @@ func InitializeRoute(ctx context.Context, c config.Config) (*http.Server, func()
 	handleError := handelerror.NewHandleError(logger)
 	httpClient := ProvideHttpClient()
 	captchaService := captcha.NewCaptchaService(c, httpClient)
-	userSerice := service.NewUserSerice(c, client, captchaService, authService, cache)
+	emailService, err := email.NewEmail(privateKey, c, cache)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	userService := service.NewUserSerice(c, client, captchaService, authService, cache, emailService)
 	textureService := service.NewTextureService(client, c, cache)
-	userHandel := handle.NewUserHandel(handleError, validate, userSerice, logger, textureService)
+	userHandel := handle.NewUserHandel(handleError, validate, userService, logger, textureService)
 	adminService := service.NewAdminService(authService, client, c, cache)
 	adminHandel := handle.NewAdminHandel(handleError, adminService, validate)
 	httpHandler := route.NewRoute(yggdrasil3, handel, c, handler, userHandel, adminHandel)

@@ -40,6 +40,8 @@ export interface ApiConfig {
     captcha: captcha
     AllowChangeName: boolean
     serverName: string
+    NeedEmail: boolean
+    AllowDomain: string[]
 }
 
 export interface UserInfo {

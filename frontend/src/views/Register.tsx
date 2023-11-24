@@ -69,6 +69,9 @@ export default function SignUp() {
                 console.warn(v)
                 if (v instanceof ApiErr) {
                     switch (v.code) {
+                        case 10:
+                            setRegErr("验证码错误")
+                            return    
                         case 3:
                             setRegErr("邮箱已存在")
                             return

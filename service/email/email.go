@@ -52,16 +52,23 @@ func NewEmail(pri *rsa.PrivateKey, c config.Config, cache cache.Cache) (*EmailSe
 	}, nil
 }
 
-func (e EmailService) getRandEmailUser() EmailConfig {
+func (e EmailService) getRandEmailUser() (EmailConfig, error) {
+	if len(e.emailConfig) == 0 {
+		return EmailConfig{}, fmt.Errorf("没有可用的邮箱账号")
+	}
+
 	i := rand.Intn(len(e.emailConfig))
-	return e.emailConfig[i]
+	return e.emailConfig[i], nil
 }
 
 func (e EmailService) SendEmail(ctx context.Context, to string, subject, body string) error {
-	u := e.getRandEmailUser()
+	u, err := e.getRandEmailUser()
+	if err != nil {
+		return fmt.Errorf("SendRegVerify: %w", err)
+	}
 	m := mail.NewMsg()
 
-	err := m.From(u.Name)
+	err = m.From(u.Name)
 	if err != nil {
 		return fmt.Errorf("SendRegVerify: %w", err)
 	}
@@ -114,7 +121,7 @@ func (e EmailService) SendVerifyUrl(ctx context.Context, email string, interval 
 	u := url.URL{
 		Host:   host,
 		Scheme: "http",
-		Path:   "/test?" + code,
+		Path:   "/register?code=" + url.QueryEscape(code),
 	}
 
 	if e.config.WebBaseUrl != "" {

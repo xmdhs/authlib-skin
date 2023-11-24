@@ -258,7 +258,7 @@ func (w *UserService) SendRegEmail(ctx context.Context, email, CaptchaToken, hos
 
 	err = w.emailService.SendVerifyUrl(ctx, email, 60, host)
 	if err != nil {
-		return fmt.Errorf("SendRegEmail: %w", ErrNotAllowDomain)
+		return fmt.Errorf("SendRegEmail: %w", err)
 	}
 	return nil
 }
