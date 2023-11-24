@@ -118,11 +118,16 @@ func (e EmailService) SendVerifyUrl(ctx context.Context, email string, interval 
 		return fmt.Errorf("SendVerifyUrl: %w", err)
 	}
 
+	q := url.Values{}
+	q.Set("code", code)
+	q.Set("email", email)
+
 	u := url.URL{
 		Host:   host,
 		Scheme: "http",
-		Path:   "/register?code=" + url.QueryEscape(code),
+		Path:   "/register",
 	}
+	u.RawQuery = q.Encode()
 
 	if e.config.WebBaseUrl != "" {
 		webBase, err := url.Parse(e.config.WebBaseUrl)
@@ -156,7 +161,7 @@ var (
 
 func (e EmailService) VerifyJwt(email, jwtStr string) error {
 	token, err := jwt.ParseWithClaims(jwtStr, &jwt.RegisteredClaims{}, func(t *jwt.Token) (interface{}, error) {
-		return e.pri.PublicKey, nil
+		return &e.pri.PublicKey, nil
 	})
 	if err != nil {
 		return fmt.Errorf("VerifyJwt: %w", err)

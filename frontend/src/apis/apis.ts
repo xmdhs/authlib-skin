@@ -14,14 +14,15 @@ export async function login(email: string, password: string, captchaToken: strin
     return await apiGet<tokenData>(v)
 }
 
-export async function register(email: string, username: string, password: string, captchaToken: string) {
+export async function register(email: string, username: string, password: string, captchaToken: string, code: string) {
     const v = await fetch(root() + "/api/v1/user/reg", {
         method: "POST",
         body: JSON.stringify({
             "Email": email,
             "Password": password,
             "Name": username,
-            "CaptchaToken": captchaToken
+            "CaptchaToken": captchaToken,
+            "EmailJwt": code,
         })
     })
     return await apiGet<tokenData>(v)

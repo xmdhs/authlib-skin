@@ -9,7 +9,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { Link as RouterLink } from "react-router-dom";
-import { register } from '@/apis/apis'
+import { getConfig, register } from '@/apis/apis'
 import CheckInput, { refType } from '@/components/CheckInput'
 import { useRef, useState } from 'react';
 import Alert from '@mui/material/Alert';
@@ -22,6 +22,7 @@ import useTitle from '@/hooks/useTitle';
 import { ApiErr } from '@/apis/error';
 import { useSetAtom } from 'jotai';
 import { token, user } from '@/store/store';
+import { useRequest } from 'ahooks';
 
 export default function SignUp() {
     const [regErr, setRegErr] = useState("");
@@ -32,6 +33,38 @@ export default function SignUp() {
     useTitle("注册")
     const setToken = useSetAtom(token)
     const setUserInfo = useSetAtom(user)
+    const [code, setCode] = useState("")
+    const [email, setEmail] = useState("")
+    const [disableEmail, setDisableEmail] = useState(false)
+
+    const u = new URL(location.href)
+
+    React.useEffect(() => {
+        const e = u.searchParams.get("email")
+        if (!e || e == "") return
+        setEmail(e)
+        setDisableEmail(true)
+    }, [u.searchParams])
+
+    useRequest(getConfig, {
+        cacheKey: "/api/v1/config",
+        staleTime: 60000,
+        onError: e => {
+            console.warn(e)
+            setRegErr(String(e))
+        },
+        onSuccess: v => {
+            if (!v.NeedEmail) return
+
+            const code = u.searchParams.get("code")
+            if (!code || code == "") {
+                navigate("/register_email")
+                return
+            }
+            setCode(code)
+        }
+    })
+
 
 
     const checkList = React.useRef<Map<string, refType>>(new Map<string, refType>())
@@ -42,7 +75,6 @@ export default function SignUp() {
         if (loading) return
         const data = new FormData(event.currentTarget);
         const d = {
-            email: data.get('email')?.toString(),
             password: data.get('password')?.toString(),
             username: data.get("username")?.toString()
         }
@@ -54,7 +86,7 @@ export default function SignUp() {
             return
         }
         setLoading(true)
-        register(d.email ?? "", d.username ?? "", d.password ?? "", captchaToken).
+        register(email ?? "", d.username ?? "", d.password ?? "", captchaToken, code).
             then(v => {
                 if (!v) return
                 setToken(v.token)
@@ -71,7 +103,7 @@ export default function SignUp() {
                     switch (v.code) {
                         case 10:
                             setRegErr("验证码错误")
-                            return    
+                            return
                         case 3:
                             setRegErr("邮箱已存在")
                             return
@@ -116,6 +148,9 @@ export default function SignUp() {
                                 fullWidth
                                 name="email"
                                 label="邮箱"
+                                value={email}
+                                disabled={disableEmail}
+                                onChange={v => setEmail(v.target.value)}
                                 autoComplete="email"
                                 ref={(dom) => {
                                     dom && checkList.current.set("1", dom)

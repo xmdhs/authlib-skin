@@ -1,6 +1,7 @@
 import TextField from '@mui/material/TextField';
 import { useState, useImperativeHandle, forwardRef } from 'react';
 import type { TextFieldProps } from '@mui/material/TextField';
+import { useControllableValue } from 'ahooks';
 
 export type refType = {
     verify: () => boolean
@@ -15,7 +16,8 @@ type prop = {
 
 export const CheckInput = forwardRef<refType, prop>(({ required, checkList, ...textFied }, ref) => {
     const [err, setErr] = useState("");
-    const [value, setValue] = useState("");
+    const [value, setValue] = useControllableValue<string>(textFied);
+
 
     const check = (value: string) => {
         if (required && (!value || value == "")) {
