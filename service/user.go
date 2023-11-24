@@ -17,6 +17,7 @@ import (
 	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/service/auth"
 	"github.com/xmdhs/authlib-skin/service/captcha"
+	"github.com/xmdhs/authlib-skin/service/email"
 	"github.com/xmdhs/authlib-skin/utils"
 )
 
@@ -28,31 +29,40 @@ var (
 	ErrChangeName = errors.New("离线模式 uuid 不允许修改用户名")
 )
 
-type UserSerice struct {
+type UserService struct {
 	config         config.Config
 	client         *ent.Client
 	captchaService *captcha.CaptchaService
 	authService    *auth.AuthService
 	cache          cache.Cache
+	emailService   *email.EmailService
 }
 
 func NewUserSerice(config config.Config, client *ent.Client, captchaService *captcha.CaptchaService,
-	authService *auth.AuthService, cache cache.Cache) *UserSerice {
-	return &UserSerice{
+	authService *auth.AuthService, cache cache.Cache, emailService *email.EmailService) *UserService {
+	return &UserService{
 		config:         config,
 		client:         client,
 		captchaService: captchaService,
 		authService:    authService,
 		cache:          cache,
+		emailService:   emailService,
 	}
 }
 
-func (w *UserSerice) Reg(ctx context.Context, u model.UserReg, ipPrefix, ip string) (model.LoginRep, error) {
+func (w *UserService) Reg(ctx context.Context, u model.UserReg, ipPrefix, ip string) (model.LoginRep, error) {
 	var userUuid string
 	if w.config.OfflineUUID {
 		userUuid = utils.UUIDGen(u.Name)
 	} else {
 		userUuid = strings.ReplaceAll(uuid.New().String(), "-", "")
+	}
+
+	if w.config.Email.Enable {
+		err := w.emailService.VerifyJwt(u.Email, u.EmailJwt)
+		if err != nil {
+			return model.LoginRep{}, fmt.Errorf("Reg: %w", err)
+		}
 	}
 
 	err := w.captchaService.VerifyCaptcha(ctx, u.CaptchaToken, ip)
@@ -130,7 +140,7 @@ func (w *UserSerice) Reg(ctx context.Context, u model.UserReg, ipPrefix, ip stri
 	}, nil
 }
 
-func (w *UserSerice) Login(ctx context.Context, l model.Login, ip string) (model.LoginRep, error) {
+func (w *UserService) Login(ctx context.Context, l model.Login, ip string) (model.LoginRep, error) {
 	err := w.captchaService.VerifyCaptcha(ctx, l.CaptchaToken, ip)
 	if err != nil {
 		return model.LoginRep{}, fmt.Errorf("Login: %w", err)
@@ -158,7 +168,7 @@ func (w *UserSerice) Login(ctx context.Context, l model.Login, ip string) (model
 	}, nil
 }
 
-func (w *UserSerice) Info(ctx context.Context, t *model.TokenClaims) (model.UserInfo, error) {
+func (w *UserService) Info(ctx context.Context, t *model.TokenClaims) (model.UserInfo, error) {
 	u, err := w.client.User.Query().Where(user.ID(t.UID)).First(ctx)
 	if err != nil {
 		return model.UserInfo{}, fmt.Errorf("Info: %w", err)
@@ -171,7 +181,7 @@ func (w *UserSerice) Info(ctx context.Context, t *model.TokenClaims) (model.User
 	}, nil
 }
 
-func (w *UserSerice) ChangePasswd(ctx context.Context, p model.ChangePasswd, t *model.TokenClaims) error {
+func (w *UserService) ChangePasswd(ctx context.Context, p model.ChangePasswd, t *model.TokenClaims) error {
 	u, err := w.client.User.Query().Where(user.IDEQ(t.UID)).WithToken().First(ctx)
 	if err != nil {
 		return fmt.Errorf("ChangePasswd: %w", err)
@@ -198,7 +208,7 @@ func (w *UserSerice) ChangePasswd(ctx context.Context, p model.ChangePasswd, t *
 	return nil
 }
 
-func (w *UserSerice) changeName(ctx context.Context, newName string, uid int, uuid string) error {
+func (w *UserService) changeName(ctx context.Context, newName string, uid int, uuid string) error {
 	if w.config.OfflineUUID {
 		return fmt.Errorf("changeName: %w", ErrChangeName)
 	}
@@ -217,10 +227,38 @@ func (w *UserSerice) changeName(ctx context.Context, newName string, uid int, uu
 	return err
 }
 
-func (w *UserSerice) ChangeName(ctx context.Context, newName string, t *model.TokenClaims) error {
+func (w *UserService) ChangeName(ctx context.Context, newName string, t *model.TokenClaims) error {
 	err := w.changeName(ctx, newName, t.UID, t.Subject)
 	if err != nil {
 		return fmt.Errorf("ChangeName: %w", err)
+	}
+	return nil
+}
+
+var ErrNotAllowDomain = errors.New("不在允许域名列表内")
+
+func (w *UserService) SendRegEmail(ctx context.Context, email, CaptchaToken, host, ip string) error {
+	if len(w.config.Email.AllowDomain) != 0 {
+		allow := false
+		for _, v := range w.config.Email.AllowDomain {
+			if strings.HasSuffix(email, v) {
+				allow = true
+				break
+			}
+		}
+		if !allow {
+			return fmt.Errorf("SendRegEmail: %w", ErrNotAllowDomain)
+		}
+	}
+
+	err := w.captchaService.VerifyCaptcha(ctx, CaptchaToken, ip)
+	if err != nil {
+		return fmt.Errorf("SendRegEmail: %w", err)
+	}
+
+	err = w.emailService.SendVerifyUrl(ctx, email, 60, host)
+	if err != nil {
+		return fmt.Errorf("SendRegEmail: %w", ErrNotAllowDomain)
 	}
 	return nil
 }

@@ -42,8 +42,9 @@ type Captcha struct {
 }
 
 type EmailConfig struct {
-	Enable bool       `toml:"enable" comment:"注册验证邮件，且允许使用邮箱找回账号"`
-	Smtp   []SmtpUser `toml:"smtp"`
+	Enable      bool       `toml:"enable" comment:"注册验证邮件，且允许使用邮箱找回账号"`
+	Smtp        []SmtpUser `toml:"smtp"`
+	AllowDomain []string   `toml:"allow_domain" comment:"允许用于注册的邮箱域名，留空则允许全部"`
 }
 
 type SmtpUser struct {

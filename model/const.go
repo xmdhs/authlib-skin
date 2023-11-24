@@ -15,4 +15,5 @@ const (
 	ErrNotAdmin
 	ErrUserDisable
 	ErrCaptcha
+	ErrEmailSend
 )

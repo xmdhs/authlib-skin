@@ -11,6 +11,7 @@ import (
 	"github.com/xmdhs/authlib-skin/service"
 	"github.com/xmdhs/authlib-skin/service/auth"
 	"github.com/xmdhs/authlib-skin/service/captcha"
+	"github.com/xmdhs/authlib-skin/service/email"
 )
 
 type HandleError struct {
@@ -23,38 +24,32 @@ func NewHandleError(logger *slog.Logger) *HandleError {
 	}
 }
 
+type errorHandler struct {
+	ErrorType  error
+	ModelError model.APIStatus
+	StatusCode int
+	LogLevel   slog.Level
+}
+
+var errorHandlers = []errorHandler{
+	{service.ErrExistUser, model.ErrExistUser, 400, slog.LevelDebug},
+	{service.ErrExitsName, model.ErrExitsName, 400, slog.LevelDebug},
+	{service.ErrRegLimit, model.ErrRegLimit, 400, slog.LevelInfo},
+	{captcha.ErrCaptcha, model.ErrCaptcha, 400, slog.LevelDebug},
+	{service.ErrPassWord, model.ErrPassWord, 401, slog.LevelInfo},
+	{auth.ErrUserDisable, model.ErrUserDisable, 401, slog.LevelDebug},
+	{service.ErrNotAdmin, model.ErrNotAdmin, 401, slog.LevelDebug},
+	{auth.ErrTokenInvalid, model.ErrAuth, 401, slog.LevelDebug},
+	{email.ErrTokenInvalid, model.ErrAuth, 401, slog.LevelDebug},
+	{email.ErrSendLimit, model.ErrEmailSend, 403, slog.LevelDebug},
+}
+
 func (h *HandleError) Service(ctx context.Context, w http.ResponseWriter, err error) {
-	if errors.Is(err, service.ErrExistUser) {
-		h.Error(ctx, w, err.Error(), model.ErrExistUser, 400, slog.LevelDebug)
-		return
-	}
-	if errors.Is(err, service.ErrExitsName) {
-		h.Error(ctx, w, err.Error(), model.ErrExitsName, 400, slog.LevelDebug)
-		return
-	}
-	if errors.Is(err, service.ErrRegLimit) {
-		h.Error(ctx, w, err.Error(), model.ErrRegLimit, 400, slog.LevelDebug)
-		return
-	}
-	if errors.Is(err, captcha.ErrCaptcha) {
-		h.Error(ctx, w, err.Error(), model.ErrCaptcha, 400, slog.LevelDebug)
-		return
-	}
-	if errors.Is(err, service.ErrPassWord) {
-		h.Error(ctx, w, err.Error(), model.ErrPassWord, 401, slog.LevelDebug)
-		return
-	}
-	if errors.Is(err, auth.ErrUserDisable) {
-		h.Error(ctx, w, err.Error(), model.ErrUserDisable, 401, slog.LevelDebug)
-		return
-	}
-	if errors.Is(err, service.ErrNotAdmin) {
-		h.Error(ctx, w, err.Error(), model.ErrNotAdmin, 401, slog.LevelDebug)
-		return
-	}
-	if errors.Is(err, auth.ErrTokenInvalid) {
-		h.Error(ctx, w, err.Error(), model.ErrAuth, 401, slog.LevelDebug)
-		return
+	for _, errorHandler := range errorHandlers {
+		if errors.Is(err, errorHandler.ErrorType) {
+			h.Error(ctx, w, err.Error(), errorHandler.ModelError, errorHandler.StatusCode, errorHandler.LogLevel)
+			return
+		}
 	}
 
 	h.Error(ctx, w, err.Error(), model.ErrService, 500, slog.LevelWarn)

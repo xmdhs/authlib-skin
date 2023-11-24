@@ -19,13 +19,13 @@ import (
 type UserHandel struct {
 	handleError    *handelerror.HandleError
 	validate       *validator.Validate
-	userService    *service.UserSerice
+	userService    *service.UserService
 	logger         *slog.Logger
 	textureService *service.TextureService
 }
 
 func NewUserHandel(handleError *handelerror.HandleError, validate *validator.Validate,
-	userService *service.UserSerice, logger *slog.Logger, textureService *service.TextureService) *UserHandel {
+	userService *service.UserService, logger *slog.Logger, textureService *service.TextureService) *UserHandel {
 	return &UserHandel{
 		handleError:    handleError,
 		validate:       validate,
@@ -203,6 +203,31 @@ func (h *UserHandel) PutTexture() http.HandlerFunc {
 		}
 
 		err = h.textureService.PutTexture(ctx, t, skin, models, textureType)
+		if err != nil {
+			h.handleError.Service(ctx, w, err)
+			return
+		}
+		encodeJson(w, model.API[any]{
+			Code: 0,
+		})
+	}
+}
+
+func (h *UserHandel) SendRegEmail() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		c, err := utils.DeCodeBody[model.SendRegEmail](r.Body, h.validate)
+		if err != nil {
+			h.handleError.Error(ctx, w, err.Error(), model.ErrInput, 400, slog.LevelDebug)
+			return
+		}
+		ip, err := utils.GetIP(r)
+		if err != nil {
+			h.handleError.Error(ctx, w, err.Error(), model.ErrInput, 400, slog.LevelDebug)
+			return
+		}
+
+		err = h.userService.SendRegEmail(ctx, c.Email, c.CaptchaToken, r.Host, ip)
 		if err != nil {
 			h.handleError.Service(ctx, w, err)
 			return

@@ -17,10 +17,11 @@ import (
 	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/service/auth"
 	"github.com/xmdhs/authlib-skin/service/captcha"
+	"github.com/xmdhs/authlib-skin/service/email"
 )
 
 var (
-	userSerice  *UserSerice
+	userSerice  *UserService
 	adminSerice *AdminService
 )
 
@@ -42,8 +43,9 @@ func initSerice(ctx context.Context) func() {
 	cache := cache.NewFastCache(100000)
 	config := config.Default()
 	authService := auth.NewAuthService(c, cache, &rsa4.PublicKey, rsa4)
+	email := lo.Must(email.NewEmail(rsa4, config, cache))
 
-	userSerice = NewUserSerice(config, c, captcha.NewCaptchaService(config, &http.Client{}), authService, cache)
+	userSerice = NewUserSerice(config, c, captcha.NewCaptchaService(config, &http.Client{}), authService, cache, email)
 	adminSerice = NewAdminService(authService, c, config, cache)
 
 	return func() {
@@ -66,7 +68,7 @@ func TestUserSerice_Reg(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		w       *UserSerice
+		w       *UserService
 		args    args
 		wantErr bool
 	}{

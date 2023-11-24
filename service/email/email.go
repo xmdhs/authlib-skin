@@ -26,14 +26,14 @@ type EmailConfig struct {
 	Pass string
 }
 
-type Email struct {
+type EmailService struct {
 	emailConfig []EmailConfig
 	pri         *rsa.PrivateKey
 	config      config.Config
 	cache       cache.Cache
 }
 
-func NewEmail(pri *rsa.PrivateKey, c config.Config, cache cache.Cache) (*Email, error) {
+func NewEmail(pri *rsa.PrivateKey, c config.Config, cache cache.Cache) (*EmailService, error) {
 	ec := lo.Map[config.SmtpUser, EmailConfig](c.Email.Smtp, func(item config.SmtpUser, index int) EmailConfig {
 		return EmailConfig{
 			Host: item.Host,
@@ -44,7 +44,7 @@ func NewEmail(pri *rsa.PrivateKey, c config.Config, cache cache.Cache) (*Email, 
 		}
 	})
 
-	return &Email{
+	return &EmailService{
 		emailConfig: ec,
 		pri:         pri,
 		config:      c,
@@ -52,12 +52,12 @@ func NewEmail(pri *rsa.PrivateKey, c config.Config, cache cache.Cache) (*Email, 
 	}, nil
 }
 
-func (e Email) getRandEmailUser() EmailConfig {
+func (e EmailService) getRandEmailUser() EmailConfig {
 	i := rand.Intn(len(e.emailConfig))
 	return e.emailConfig[i]
 }
 
-func (e Email) SendEmail(ctx context.Context, to string, subject, body string) error {
+func (e EmailService) SendEmail(ctx context.Context, to string, subject, body string) error {
 	u := e.getRandEmailUser()
 	m := mail.NewMsg()
 
@@ -92,7 +92,7 @@ func (e Email) SendEmail(ctx context.Context, to string, subject, body string) e
 
 var emailTemplate = lo.Must(template.New("email").Parse(`<p>{{ .msg }}</p><a href="{{.url}}">{{ .url }}</a>`))
 
-func (e Email) SendVerifyUrl(ctx context.Context, email string, interval int, host string) error {
+func (e EmailService) SendVerifyUrl(ctx context.Context, email string, interval int, host string) error {
 	sendKey := []byte("SendEmail" + email)
 	sendB, err := e.cache.Get(sendKey)
 	if err != nil {
@@ -143,12 +143,11 @@ func (e Email) SendVerifyUrl(ctx context.Context, email string, interval int, ho
 }
 
 var (
-	ErrCodeNotValid = errors.New("验证码无效")
 	ErrSendLimit    = errors.New("邮件发送限制")
 	ErrTokenInvalid = errors.New("token 无效")
 )
 
-func (e Email) VerifyJwt(email, jwtStr string) error {
+func (e EmailService) VerifyJwt(email, jwtStr string) error {
 	token, err := jwt.ParseWithClaims(jwtStr, &jwt.RegisteredClaims{}, func(t *jwt.Token) (interface{}, error) {
 		return e.pri.PublicKey, nil
 	})

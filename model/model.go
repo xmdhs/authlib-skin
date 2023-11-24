@@ -18,6 +18,7 @@ type UserReg struct {
 	Password     string `validate:"required,min=6,max=50"`
 	Name         string `validate:"required,min=3,max=16"`
 	CaptchaToken string
+	EmailJwt     string
 }
 
 type TokenClaims struct {
@@ -83,4 +84,9 @@ type LoginRep struct {
 	Token string `json:"token"`
 	Name  string `json:"name"`
 	UUID  string `json:"uuid"`
+}
+
+type SendRegEmail struct {
+	Email        string `json:"email"`
+	CaptchaToken string `json:"captchaToken"`
 }
