@@ -9,7 +9,7 @@ import (
 	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
 	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/model/yggdrasil"
-	sutils "github.com/xmdhs/authlib-skin/service/utils"
+	"github.com/xmdhs/authlib-skin/service/auth"
 )
 
 type sessionWithIP struct {
@@ -19,7 +19,7 @@ type sessionWithIP struct {
 
 func (y *Yggdrasil) SessionJoin(ctx context.Context, s yggdrasil.Session, t *model.TokenClaims, ip string) error {
 	if s.SelectedProfile != t.Subject {
-		return fmt.Errorf("SessionJoin: %w", sutils.ErrTokenInvalid)
+		return fmt.Errorf("SessionJoin: %w", auth.ErrTokenInvalid)
 	}
 	err := cache.CacheHelp[sessionWithIP]{Cache: y.cache}.Put([]byte("session"+s.ServerID), sessionWithIP{
 		User: *t,

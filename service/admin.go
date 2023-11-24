@@ -13,6 +13,7 @@ import (
 	"github.com/xmdhs/authlib-skin/db/ent/usertoken"
 	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/model/yggdrasil"
+	"github.com/xmdhs/authlib-skin/service/auth"
 	utilsService "github.com/xmdhs/authlib-skin/service/utils"
 	"github.com/xmdhs/authlib-skin/utils"
 )
@@ -20,7 +21,7 @@ import (
 var ErrNotAdmin = errors.New("无权限")
 
 func (w *WebService) Auth(ctx context.Context, token string) (*model.TokenClaims, error) {
-	t, err := utilsService.Auth(ctx, yggdrasil.ValidateToken{AccessToken: token}, w.client, w.cache, &w.prikey.PublicKey, false)
+	t, err := w.authService.Auth(ctx, yggdrasil.ValidateToken{AccessToken: token}, false)
 	if err != nil {
 		return nil, fmt.Errorf("WebService.Auth: %w", err)
 	}
@@ -32,7 +33,7 @@ func (w *WebService) IsAdmin(ctx context.Context, t *model.TokenClaims) error {
 	if err != nil {
 		return fmt.Errorf("IsAdmin: %w", err)
 	}
-	if !utilsService.IsAdmin(u.State) {
+	if !auth.IsAdmin(u.State) {
 		return fmt.Errorf("IsAdmin: %w", ErrNotAdmin)
 	}
 	return nil
@@ -62,12 +63,12 @@ func (w *WebService) ListUser(ctx context.Context, page int, email, name string)
 			UserInfo: model.UserInfo{
 				UID:     v.ID,
 				UUID:    v.Edges.Profile.UUID,
-				IsAdmin: utilsService.IsAdmin(v.State),
+				IsAdmin: auth.IsAdmin(v.State),
 			},
 			Email:     v.Email,
 			RegIp:     v.RegIP,
 			Name:      v.Edges.Profile.Name,
-			IsDisable: utilsService.IsDisable(v.State),
+			IsDisable: auth.IsDisable(v.State),
 		})
 	}
 
@@ -131,13 +132,13 @@ func (w *WebService) EditUser(ctx context.Context, u model.EditUser, uid int) er
 
 		state := aUser.State
 		if u.IsAdmin != nil {
-			state = utilsService.SetAdmin(state, *u.IsAdmin)
+			state = auth.SetAdmin(state, *u.IsAdmin)
 		}
 		if u.IsDisable != nil {
 			if *u.IsDisable {
 				changePasswd = true
 			}
-			state = utilsService.SetDisable(state, *u.IsDisable)
+			state = auth.SetDisable(state, *u.IsDisable)
 		}
 		if state != aUser.State {
 			upUser = upUser.SetState(state)

@@ -15,6 +15,7 @@ import (
 	"github.com/xmdhs/authlib-skin/db/ent"
 	"github.com/xmdhs/authlib-skin/db/ent/migrate"
 	"github.com/xmdhs/authlib-skin/model"
+	"github.com/xmdhs/authlib-skin/service/auth"
 )
 
 var webService *WebService
@@ -34,7 +35,8 @@ func initWebService(ctx context.Context) func() {
 	c := lo.Must(ent.Open("mysql", "root:root@tcp(127.0.0.1)/test"))
 	lo.Must0(c.Schema.Create(context.Background(), migrate.WithForeignKeys(false), migrate.WithDropIndex(true), migrate.WithDropColumn(true)))
 	rsa4 := lo.Must(rsa.GenerateKey(rand.Reader, 4096))
-	webService = NewWebService(config.Default(), c, &http.Client{}, cache.NewFastCache(100000), rsa4)
+	cache := cache.NewFastCache(100000)
+	webService = NewWebService(config.Default(), c, &http.Client{}, cache, rsa4, auth.NewAuthService(c, cache, &rsa4.PublicKey, rsa4))
 
 	return func() {
 		c.User.Delete().Exec(ctx)

@@ -17,19 +17,19 @@ import (
 	"github.com/xmdhs/authlib-skin/db/ent"
 	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/model/yggdrasil"
-	sutils "github.com/xmdhs/authlib-skin/service/utils"
+	"github.com/xmdhs/authlib-skin/service/auth"
 )
 
 type Yggdrasil struct {
-	client *ent.Client
-	cache  cache.Cache
-	config config.Config
-	prikey *rsa.PrivateKey
-
-	pubStr func() string
+	client      *ent.Client
+	cache       cache.Cache
+	config      config.Config
+	prikey      *rsa.PrivateKey
+	authService *auth.AuthService
+	pubStr      func() string
 }
 
-func NewYggdrasil(client *ent.Client, cache cache.Cache, c config.Config, prikey *rsa.PrivateKey) *Yggdrasil {
+func NewYggdrasil(client *ent.Client, cache cache.Cache, c config.Config, prikey *rsa.PrivateKey, authService *auth.AuthService) *Yggdrasil {
 	return &Yggdrasil{
 		client: client,
 		cache:  cache,
@@ -39,6 +39,7 @@ func NewYggdrasil(client *ent.Client, cache cache.Cache, c config.Config, prikey
 			derBytes := lo.Must(x509.MarshalPKIXPublicKey(&prikey.PublicKey))
 			return base64.StdEncoding.EncodeToString(derBytes)
 		}),
+		authService: authService,
 	}
 }
 
@@ -77,11 +78,11 @@ func putUint(n uint64, c cache.Cache, key []byte, d time.Duration) error {
 }
 
 func newJwtToken(jwtKey *rsa.PrivateKey, tokenID, clientToken, UUID string, userID int) (string, error) {
-	return sutils.NewJwtToken(jwtKey, tokenID, clientToken, UUID, userID)
+	return auth.NewJwtToken(jwtKey, tokenID, clientToken, UUID, userID)
 }
 
 func (y *Yggdrasil) Auth(ctx context.Context, t yggdrasil.ValidateToken) (*model.TokenClaims, error) {
-	u, err := sutils.Auth(ctx, t, y.client, y.cache, &y.prikey.PublicKey, true)
+	u, err := y.authService.Auth(ctx, t, true)
 	if err != nil {
 		return nil, fmt.Errorf("ValidateToken: %w", err)
 	}

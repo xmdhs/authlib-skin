@@ -15,7 +15,7 @@ import (
 	"github.com/samber/lo"
 	"github.com/xmdhs/authlib-skin/config"
 	"github.com/xmdhs/authlib-skin/model/yggdrasil"
-	utilsS "github.com/xmdhs/authlib-skin/service/utils"
+	"github.com/xmdhs/authlib-skin/service/auth"
 	yggdrasilS "github.com/xmdhs/authlib-skin/service/yggdrasil"
 	"github.com/xmdhs/authlib-skin/utils"
 )
@@ -111,7 +111,7 @@ func (y *Yggdrasil) Auth(handle http.Handler) http.Handler {
 
 		t, err := y.yggdrasilService.Auth(ctx, a)
 		if err != nil {
-			if errors.Is(err, utilsS.ErrTokenInvalid) {
+			if errors.Is(err, auth.ErrTokenInvalid) {
 				y.logger.DebugContext(ctx, err.Error())
 				handleYgError(ctx, w, yggdrasil.Error{ErrorMessage: "Invalid token.", Error: "ForbiddenOperationException"}, 403)
 				return

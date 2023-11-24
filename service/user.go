@@ -13,7 +13,7 @@ import (
 	"github.com/xmdhs/authlib-skin/db/ent/user"
 	"github.com/xmdhs/authlib-skin/db/ent/userprofile"
 	"github.com/xmdhs/authlib-skin/model"
-	utilsService "github.com/xmdhs/authlib-skin/service/utils"
+	"github.com/xmdhs/authlib-skin/service/auth"
 	"github.com/xmdhs/authlib-skin/utils"
 )
 
@@ -86,7 +86,7 @@ func (w *WebService) Reg(ctx context.Context, u model.UserReg, ipPrefix, ip stri
 			return err
 		}
 		if du.ID == 1 {
-			err := tx.User.UpdateOne(du).SetState(utilsService.SetAdmin(0, true)).Exec(ctx)
+			err := tx.User.UpdateOne(du).SetState(auth.SetAdmin(0, true)).Exec(ctx)
 			if err != nil {
 				return err
 			}
@@ -96,7 +96,7 @@ func (w *WebService) Reg(ctx context.Context, u model.UserReg, ipPrefix, ip stri
 	if err != nil {
 		return model.LoginRep{}, fmt.Errorf("Reg: %w", err)
 	}
-	jwt, err := utilsService.CreateToken(ctx, du, w.client, w.cache, w.prikey, "web", userUuid)
+	jwt, err := w.authService.CreateToken(ctx, du, "web", userUuid)
 	if err != nil {
 		return model.LoginRep{}, fmt.Errorf("Login: %w", err)
 	}
@@ -125,7 +125,7 @@ func (w *WebService) Login(ctx context.Context, l model.Login, ip string) (model
 	if err != nil {
 		return model.LoginRep{}, fmt.Errorf("Login: %w", err)
 	}
-	jwt, err := utilsService.CreateToken(ctx, u, w.client, w.cache, w.prikey, "web", u.Edges.Profile.UUID)
+	jwt, err := w.authService.CreateToken(ctx, u, "web", u.Edges.Profile.UUID)
 	if err != nil {
 		return model.LoginRep{}, fmt.Errorf("Login: %w", err)
 	}
@@ -141,7 +141,7 @@ func (w *WebService) Info(ctx context.Context, t *model.TokenClaims) (model.User
 	if err != nil {
 		return model.UserInfo{}, fmt.Errorf("Info: %w", err)
 	}
-	isAdmin := utilsService.IsAdmin(u.State)
+	isAdmin := auth.IsAdmin(u.State)
 	return model.UserInfo{
 		UID:     t.UID,
 		UUID:    t.Subject,

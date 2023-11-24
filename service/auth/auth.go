@@ -1,4 +1,4 @@
-package utils
+package auth
 
 import (
 	"context"
@@ -18,14 +18,35 @@ import (
 	"github.com/xmdhs/authlib-skin/utils"
 )
 
+type AuthService struct {
+	client *ent.Client
+	c      cache.Cache
+	pub    *rsa.PublicKey
+	pri    *rsa.PrivateKey
+}
+
+func NewAuthService(
+	client *ent.Client,
+	c cache.Cache,
+	pub *rsa.PublicKey,
+	pri *rsa.PrivateKey,
+) *AuthService {
+	return &AuthService{
+		client: client,
+		c:      c,
+		pub:    pub,
+		pri:    pri,
+	}
+}
+
 var (
 	ErrTokenInvalid = errors.New("token 无效")
 	ErrUserDisable  = errors.New("用户被禁用")
 )
 
-func Auth(ctx context.Context, t yggdrasil.ValidateToken, client *ent.Client, c cache.Cache, pubkey *rsa.PublicKey, tmpInvalid bool) (*model.TokenClaims, error) {
+func (a *AuthService) Auth(ctx context.Context, t yggdrasil.ValidateToken, tmpInvalid bool) (*model.TokenClaims, error) {
 	token, err := jwt.ParseWithClaims(t.AccessToken, &model.TokenClaims{}, func(t *jwt.Token) (interface{}, error) {
-		return pubkey, nil
+		return a.pub, nil
 	})
 	if err != nil {
 		return nil, fmt.Errorf("Auth: %w", errors.Join(err, ErrTokenInvalid))
@@ -54,7 +75,7 @@ func Auth(ctx context.Context, t yggdrasil.ValidateToken, client *ent.Client, c 
 		}
 	}
 	tokenID, err := func() (uint64, error) {
-		c := cache.CacheHelp[uint64]{Cache: c}
+		c := cache.CacheHelp[uint64]{Cache: a.c}
 		key := []byte("auth" + strconv.Itoa(claims.UID))
 		t, err := c.Get(key)
 		if err != nil {
@@ -63,7 +84,7 @@ func Auth(ctx context.Context, t yggdrasil.ValidateToken, client *ent.Client, c 
 		if t != 0 {
 			return t, nil
 		}
-		ut, err := client.UserToken.Query().Where(usertoken.HasUserWith(user.ID(claims.UID))).First(ctx)
+		ut, err := a.client.UserToken.Query().Where(usertoken.HasUserWith(user.ID(claims.UID))).First(ctx)
 		if err != nil {
 			var ne *ent.NotFoundError
 			if errors.As(err, &ne) {
@@ -82,12 +103,12 @@ func Auth(ctx context.Context, t yggdrasil.ValidateToken, client *ent.Client, c 
 	return claims, nil
 }
 
-func CreateToken(ctx context.Context, u *ent.User, client *ent.Client, cache cache.Cache, jwtKey *rsa.PrivateKey, clientToken string, uuid string) (string, error) {
+func (a *AuthService) CreateToken(ctx context.Context, u *ent.User, clientToken string, uuid string) (string, error) {
 	if IsDisable(u.State) {
 		return "", fmt.Errorf("CreateToken: %w", ErrUserDisable)
 	}
 	var utoken *ent.UserToken
-	err := utils.WithTx(ctx, client, func(tx *ent.Tx) error {
+	err := utils.WithTx(ctx, a.client, func(tx *ent.Tx) error {
 		var err error
 		utoken, err = tx.User.QueryToken(u).ForUpdateA().First(ctx)
 		if err != nil {
@@ -108,55 +129,13 @@ func CreateToken(ctx context.Context, u *ent.User, client *ent.Client, cache cac
 	if err != nil {
 		return "", fmt.Errorf("CreateToken: %w", err)
 	}
-	err = cache.Del([]byte("auth" + strconv.Itoa(u.ID)))
+	err = a.c.Del([]byte("auth" + strconv.Itoa(u.ID)))
 	if err != nil {
 		return "", fmt.Errorf("CreateToken: %w", err)
 	}
-	t, err := NewJwtToken(jwtKey, strconv.FormatUint(utoken.TokenID, 10), clientToken, uuid, u.ID)
+	t, err := NewJwtToken(a.pri, strconv.FormatUint(utoken.TokenID, 10), clientToken, uuid, u.ID)
 	if err != nil {
 		return "", fmt.Errorf("CreateToken: %w", err)
 	}
 	return t, nil
-}
-
-func NewJwtToken(jwtKey *rsa.PrivateKey, tokenID, clientToken, UUID string, userID int) (string, error) {
-	claims := model.TokenClaims{
-		Tid: tokenID,
-		CID: clientToken,
-		UID: userID,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(15 * 24 * time.Hour)),
-			Issuer:    "authlib-skin",
-			Subject:   UUID,
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-		},
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	jwts, err := token.SignedString(jwtKey)
-	if err != nil {
-		return "", fmt.Errorf("newJwtToken: %w", err)
-	}
-	return jwts, nil
-}
-
-func IsAdmin(state int) bool {
-	return state&1 == 1
-}
-
-func IsDisable(state int) bool {
-	return state&2 == 2
-}
-
-func SetAdmin(state int, is bool) int {
-	if is {
-		return state | 1
-	}
-	return state & (state ^ 1)
-}
-
-func SetDisable(state int, is bool) int {
-	if is {
-		return state | 2
-	}
-	return state & (state ^ 2)
 }

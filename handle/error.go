@@ -9,7 +9,7 @@ import (
 
 	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/service"
-	sutils "github.com/xmdhs/authlib-skin/service/utils"
+	"github.com/xmdhs/authlib-skin/service/auth"
 )
 
 func (h *Handel) handleErrorService(ctx context.Context, w http.ResponseWriter, err error) {
@@ -33,7 +33,7 @@ func (h *Handel) handleErrorService(ctx context.Context, w http.ResponseWriter, 
 		h.handleError(ctx, w, err.Error(), model.ErrPassWord, 401, slog.LevelDebug)
 		return
 	}
-	if errors.Is(err, sutils.ErrUserDisable) {
+	if errors.Is(err, auth.ErrUserDisable) {
 		h.handleError(ctx, w, err.Error(), model.ErrUserDisable, 401, slog.LevelDebug)
 		return
 	}
@@ -41,7 +41,7 @@ func (h *Handel) handleErrorService(ctx context.Context, w http.ResponseWriter, 
 		h.handleError(ctx, w, err.Error(), model.ErrNotAdmin, 401, slog.LevelDebug)
 		return
 	}
-	if errors.Is(err, sutils.ErrTokenInvalid) {
+	if errors.Is(err, auth.ErrTokenInvalid) {
 		h.handleError(ctx, w, err.Error(), model.ErrAuth, 401, slog.LevelDebug)
 		return
 	}
