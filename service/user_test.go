@@ -16,6 +16,7 @@ import (
 	"github.com/xmdhs/authlib-skin/db/ent/migrate"
 	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/service/auth"
+	"github.com/xmdhs/authlib-skin/service/captcha"
 )
 
 var webService *WebService
@@ -36,7 +37,7 @@ func initWebService(ctx context.Context) func() {
 	lo.Must0(c.Schema.Create(context.Background(), migrate.WithForeignKeys(false), migrate.WithDropIndex(true), migrate.WithDropColumn(true)))
 	rsa4 := lo.Must(rsa.GenerateKey(rand.Reader, 4096))
 	cache := cache.NewFastCache(100000)
-	webService = NewWebService(config.Default(), c, &http.Client{}, cache, rsa4, auth.NewAuthService(c, cache, &rsa4.PublicKey, rsa4))
+	webService = NewWebService(config.Default(), c, &http.Client{}, cache, rsa4, auth.NewAuthService(c, cache, &rsa4.PublicKey, rsa4), captcha.NewCaptchaService(config.Default(), &http.Client{}))
 
 	return func() {
 		c.User.Delete().Exec(ctx)

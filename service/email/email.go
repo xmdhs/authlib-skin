@@ -33,13 +33,23 @@ type Email struct {
 	cache       cache.Cache
 }
 
-func NewEmail(emailConfig []EmailConfig, pri *rsa.PrivateKey, config config.Config, cache cache.Cache) Email {
-	return Email{
-		emailConfig: emailConfig,
+func NewEmail(pri *rsa.PrivateKey, c config.Config, cache cache.Cache) (*Email, error) {
+	ec := lo.Map[config.SmtpUser, EmailConfig](c.Email.Smtp, func(item config.SmtpUser, index int) EmailConfig {
+		return EmailConfig{
+			Host: item.Host,
+			Port: item.Port,
+			SSL:  item.SSL,
+			Name: item.Name,
+			Pass: item.Pass,
+		}
+	})
+
+	return &Email{
+		emailConfig: ec,
 		pri:         pri,
-		config:      config,
+		config:      c,
 		cache:       cache,
-	}
+	}, nil
 }
 
 func (e Email) getRandEmailUser() EmailConfig {

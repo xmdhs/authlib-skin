@@ -13,6 +13,8 @@ import (
 	yggdrasil2 "github.com/xmdhs/authlib-skin/handle/yggdrasil"
 	"github.com/xmdhs/authlib-skin/server/route"
 	"github.com/xmdhs/authlib-skin/service"
+	"github.com/xmdhs/authlib-skin/service/auth"
+	"github.com/xmdhs/authlib-skin/service/email"
 	"github.com/xmdhs/authlib-skin/service/yggdrasil"
 	"net/http"
 )
@@ -43,8 +45,10 @@ func InitializeRoute(ctx context.Context, c config.Config) (*http.Server, func()
 		cleanup()
 		return nil, nil, err
 	}
-	yggdrasilYggdrasil := yggdrasil.NewYggdrasil(client, cache, c, privateKey)
-	pubRsaKey, err := ProvidePubKey(privateKey)
+	publicKey := ProvidePubKey(privateKey)
+	authService := auth.NewAuthService(client, cache, publicKey, privateKey)
+	yggdrasilYggdrasil := yggdrasil.NewYggdrasil(client, cache, c, privateKey, authService)
+	pubRsaKey, err := ProvidePubKeyStr(privateKey)
 	if err != nil {
 		cleanup2()
 		cleanup()
@@ -52,8 +56,14 @@ func InitializeRoute(ctx context.Context, c config.Config) (*http.Server, func()
 	}
 	yggdrasil3 := yggdrasil2.NewYggdrasil(logger, validate, yggdrasilYggdrasil, c, pubRsaKey)
 	httpClient := ProvideHttpClient()
-	webService := service.NewWebService(c, client, httpClient, cache, privateKey)
-	handel := handle.NewHandel(webService, validate, c, logger)
+	webService := service.NewWebService(c, client, httpClient, cache, privateKey, authService)
+	emailEmail, err := email.NewEmail(privateKey, c, cache)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	handel := handle.NewHandel(webService, validate, c, logger, emailEmail)
 	httpHandler := route.NewRoute(yggdrasil3, handel, c, handler)
 	server, cleanup3 := NewServer(c, httpHandler)
 	return server, func() {

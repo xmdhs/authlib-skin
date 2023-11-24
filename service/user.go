@@ -33,7 +33,7 @@ func (w *WebService) Reg(ctx context.Context, u model.UserReg, ipPrefix, ip stri
 		userUuid = strings.ReplaceAll(uuid.New().String(), "-", "")
 	}
 
-	err := w.verifyCaptcha(ctx, u.CaptchaToken, ip)
+	err := w.captchaService.VerifyCaptcha(ctx, u.CaptchaToken, ip)
 	if err != nil {
 		return model.LoginRep{}, fmt.Errorf("Reg: %w", err)
 	}
@@ -109,7 +109,7 @@ func (w *WebService) Reg(ctx context.Context, u model.UserReg, ipPrefix, ip stri
 }
 
 func (w *WebService) Login(ctx context.Context, l model.Login, ip string) (model.LoginRep, error) {
-	err := w.verifyCaptcha(ctx, l.CaptchaToken, ip)
+	err := w.captchaService.VerifyCaptcha(ctx, l.CaptchaToken, ip)
 	if err != nil {
 		return model.LoginRep{}, fmt.Errorf("Login: %w", err)
 	}

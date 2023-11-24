@@ -95,7 +95,7 @@ func ProvidePriKey(c config.Config) (*rsa.PrivateKey, error) {
 	return a.GetKey(), nil
 }
 
-func ProvidePubKey(pri *rsa.PrivateKey) (yggdrasil.PubRsaKey, error) {
+func ProvidePubKeyStr(pri *rsa.PrivateKey) (yggdrasil.PubRsaKey, error) {
 	s, err := sign.NewAuthlibSignWithKey(pri).GetPKIXPubKeyWithOutRsa()
 	if err != nil {
 		return "", fmt.Errorf("ProvidePubKey: %w", err)
@@ -103,8 +103,12 @@ func ProvidePubKey(pri *rsa.PrivateKey) (yggdrasil.PubRsaKey, error) {
 	return yggdrasil.PubRsaKey(s), nil
 }
 
+func ProvidePubKey(pri *rsa.PrivateKey) *rsa.PublicKey {
+	return &pri.PublicKey
+}
+
 func ProvideHttpClient() *http.Client {
 	return &http.Client{}
 }
 
-var Set = wire.NewSet(ProvideSlog, ProvideDB, ProvideEnt, ProvideValidate, ProvideCache, ProvidePriKey, ProvidePubKey, ProvideHttpClient)
+var Set = wire.NewSet(ProvideSlog, ProvideDB, ProvideEnt, ProvideValidate, ProvideCache, ProvidePriKey, ProvidePubKey, ProvidePubKeyStr, ProvideHttpClient)

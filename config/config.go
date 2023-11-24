@@ -1,20 +1,21 @@
 package config
 
 type Config struct {
-	OfflineUUID    bool    `toml:"offlineUUID" comment:"为 true 则 uuid 生成方式于离线模式相同，若从离线模式切换不会丢失数据。\n已有用户数据的情况下勿更改此项"`
-	Port           string  `toml:"port"`
-	Log            Log     `toml:"log"`
-	Sql            Sql     `toml:"sql"`
-	Debug          bool    `toml:"debug" comment:"输出每条执行的 sql 语句"`
-	Cache          Cache   `toml:"cache"`
-	RaelIP         bool    `toml:"raelIP" comment:"位于反向代理后启用，用于记录真实 ip\n若直接提供服务，请勿打开，否则会被伪造 ip"`
-	MaxIpUser      int     `toml:"maxIpUser" comment:"ip 段最大注册用户，ipv4 为 /24 ipv6 为 /48"`
-	RsaPriKey      string  `toml:"rsaPriKey,multiline" comment:"运行后勿修改，若为集群需设置为一致"`
-	TexturePath    string  `toml:"texturePath" comment:"材质文件保存路径，如果需要对象存储可以把对象储存挂载到本地目录上"`
-	TextureBaseUrl string  `toml:"textureBaseUrl" comment:"材质静态文件提供基础地址\n如果静态文件位于 oss 上，比如 https://s3.amazonaws.com/example/1.png\n则填写 https://s3.amazonaws.com/example \n若通过反向代理提供服务并启用了 https，请在在此处填写带有 https 的基础路径，否则游戏内无法加载皮肤"`
-	WebBaseUrl     string  `toml:"webBaseUrl" comment:"用于在支持的启动器中展示本站的注册地址\n填写类似 https://example.com"`
-	ServerName     string  `toml:"serverName" comment:"皮肤站名字，用于在多个地方展示"`
-	Captcha        Captcha `toml:"captcha"`
+	OfflineUUID    bool        `toml:"offlineUUID" comment:"为 true 则 uuid 生成方式于离线模式相同，若从离线模式切换不会丢失数据。\n已有用户数据的情况下勿更改此项"`
+	Port           string      `toml:"port"`
+	Log            Log         `toml:"log"`
+	Sql            Sql         `toml:"sql"`
+	Debug          bool        `toml:"debug" comment:"输出每条执行的 sql 语句"`
+	Cache          Cache       `toml:"cache"`
+	RaelIP         bool        `toml:"raelIP" comment:"位于反向代理后启用，用于记录真实 ip\n若直接提供服务，请勿打开，否则会被伪造 ip"`
+	MaxIpUser      int         `toml:"maxIpUser" comment:"ip 段最大注册用户，ipv4 为 /24 ipv6 为 /48"`
+	RsaPriKey      string      `toml:"rsaPriKey,multiline" comment:"运行后勿修改，若为集群需设置为一致"`
+	TexturePath    string      `toml:"texturePath" comment:"材质文件保存路径，如果需要对象存储可以把对象储存挂载到本地目录上"`
+	TextureBaseUrl string      `toml:"textureBaseUrl" comment:"材质静态文件提供基础地址\n如果静态文件位于 oss 上，比如 https://s3.amazonaws.com/example/1.png\n则填写 https://s3.amazonaws.com/example \n若通过反向代理提供服务并启用了 https，请在在此处填写带有 https 的基础路径，否则游戏内无法加载皮肤"`
+	WebBaseUrl     string      `toml:"webBaseUrl" comment:"用于在支持的启动器中展示本站的注册地址\n填写类似 https://example.com"`
+	ServerName     string      `toml:"serverName" comment:"皮肤站名字，用于在多个地方展示"`
+	Captcha        Captcha     `toml:"captcha"`
+	Email          EmailConfig `toml:"email"`
 }
 
 type Log struct {
@@ -38,6 +39,19 @@ type Captcha struct {
 	Type    string `toml:"type" comment:"验证码类型，目前只支持 cloudflare turnstile，若需要填写 turnstile"`
 	SiteKey string `toml:"siteKey"`
 	Secret  string `toml:"secret"`
+}
+
+type EmailConfig struct {
+	Enable bool       `toml:"enable" comment:"注册验证邮件，且允许使用邮箱找回账号"`
+	Smtp   []SmtpUser `toml:"smtp"`
+}
+
+type SmtpUser struct {
+	Host string `toml:"host"`
+	Port int    `toml:"port"`
+	SSL  bool   `toml:"SSL"`
+	Name string `toml:"name"`
+	Pass string `toml:"password"`
 }
 
 func Default() Config {

@@ -10,6 +10,7 @@ import (
 	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/service"
 	"github.com/xmdhs/authlib-skin/service/auth"
+	"github.com/xmdhs/authlib-skin/service/captcha"
 )
 
 func (h *Handel) handleErrorService(ctx context.Context, w http.ResponseWriter, err error) {
@@ -25,7 +26,7 @@ func (h *Handel) handleErrorService(ctx context.Context, w http.ResponseWriter, 
 		h.handleError(ctx, w, err.Error(), model.ErrRegLimit, 400, slog.LevelDebug)
 		return
 	}
-	if errors.Is(err, service.ErrCaptcha) {
+	if errors.Is(err, captcha.ErrCaptcha) {
 		h.handleError(ctx, w, err.Error(), model.ErrCaptcha, 400, slog.LevelDebug)
 		return
 	}
