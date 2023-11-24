@@ -42,6 +42,7 @@ var errorHandlers = []errorHandler{
 	{auth.ErrTokenInvalid, model.ErrAuth, 401, slog.LevelDebug},
 	{email.ErrTokenInvalid, model.ErrAuth, 401, slog.LevelDebug},
 	{email.ErrSendLimit, model.ErrEmailSend, 403, slog.LevelDebug},
+	{service.ErrUsername, model.ErrPassWord, 401, slog.LevelInfo},
 }
 
 func (h *HandleError) Service(ctx context.Context, w http.ResponseWriter, err error) {

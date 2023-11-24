@@ -89,6 +89,12 @@ type LoginRep struct {
 }
 
 type SendRegEmail struct {
-	Email        string `json:"email"`
+	Email        string `json:"email" validate:"required,email"`
 	CaptchaToken string `json:"captchaToken"`
+}
+
+type ForgotPassword struct {
+	Email    string `json:"email" validate:"required,email"`
+	EmailJwt string `json:"emailJwt" validate:"required"`
+	PassWord string `json:"passWord" validate:"required"`
 }

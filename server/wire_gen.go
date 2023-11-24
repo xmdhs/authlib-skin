@@ -71,7 +71,7 @@ func InitializeRoute(ctx context.Context, c config.Config) (*http.Server, func()
 	}
 	userService := service.NewUserSerice(c, client, captchaService, authService, cache, emailService)
 	textureService := service.NewTextureService(client, c, cache)
-	userHandel := handle.NewUserHandel(handleError, validate, userService, logger, textureService)
+	userHandel := handle.NewUserHandel(handleError, validate, userService, logger, textureService, c)
 	adminService := service.NewAdminService(authService, client, c, cache)
 	adminHandel := handle.NewAdminHandel(handleError, adminService, validate)
 	httpHandler := route.NewRoute(yggdrasil3, handel, c, handler, userHandel, adminHandel)

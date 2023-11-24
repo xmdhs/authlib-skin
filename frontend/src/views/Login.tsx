@@ -13,7 +13,7 @@ import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import { useSetAtom } from 'jotai';
 import { token, user } from '@/store/store'
-import { login } from '@/apis/apis'
+import { getConfig, login } from '@/apis/apis'
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import Loading from '@/components/Loading'
 import CheckInput, { refType } from '@/components/CheckInput'
@@ -21,6 +21,7 @@ import useTitle from '@/hooks/useTitle';
 import CaptchaWidget from '@/components/CaptchaWidget';
 import type { refType as CaptchaWidgetRef } from '@/components/CaptchaWidget'
 import { ApiErr } from '@/apis/error';
+import { useRequest } from 'ahooks';
 
 
 
@@ -34,6 +35,16 @@ export default function SignIn() {
     useTitle("登录")
     const captchaRef = React.useRef<CaptchaWidgetRef>(null)
     const [captchaToken, setCaptchaToken] = useState("");
+
+    const server = useRequest(getConfig, {
+        cacheKey: "/api/v1/config",
+        staleTime: 60000,
+        onError: e => {
+            console.warn(e)
+            setErr(String(e))
+        }
+    })
+
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -66,7 +77,7 @@ export default function SignIn() {
                     switch (v.code) {
                         case 10:
                             setErr("验证码错误")
-                            return    
+                            return
                         case 6:
                             setErr("密码或用户名错误")
                             return
@@ -137,9 +148,9 @@ export default function SignIn() {
                     </Button>
                     <Grid container>
                         <Grid item xs>
-                            {/* <Link href="#" variant="body2">
+                            {server.data?.NeedEmail && <Link component={RouterLink} to="/forgot_email" variant="body2">
                                 忘记密码？
-                            </Link> */}
+                            </Link>}
                         </Grid>
                         <Grid item>
                             <Link component={RouterLink} to="/register" variant="body2">

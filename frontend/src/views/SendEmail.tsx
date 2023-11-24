@@ -12,7 +12,7 @@ import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import { useRequest, useTitle } from 'ahooks';
-import { getConfig, sendRegEmail } from '@/apis/apis';
+import { getConfig } from '@/apis/apis';
 import { useEffect, useRef, useState } from 'react';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
@@ -26,14 +26,14 @@ import { useNavigate } from "react-router-dom";
 import { ApiErr } from '@/apis/error';
 import Loading from '@/components/Loading';
 
-export default function SignUpEmail() {
+export default function SendEmail({ title, anyEmail = false, sendService }: { title: string, anyEmail?: boolean, sendService: (email: string, captchaToken: string) => Promise<unknown> }) {
     const [err, setErr] = useState("");
     const [domain, setDomain] = useState("");
     const [email, setEmail] = useState("")
     const captchaRef = useRef<CaptchaWidgetRef>(null)
     const [captchaToken, setCaptchaToken] = useState("");
     const [open, setOpen] = useState(false);
-    useTitle("注册")
+    useTitle(title)
     const navigate = useNavigate();
     const [helperText, setHelperText] = useState("")
     const [loading, setLoading] = useState(false);
@@ -73,7 +73,7 @@ export default function SignUpEmail() {
             return email
         })()
 
-        if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(sendEmail)){
+        if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(sendEmail)) {
             setHelperText("邮箱格式错误")
             return
         }
@@ -82,7 +82,7 @@ export default function SignUpEmail() {
             return
         }
         setLoading(true)
-        sendRegEmail(sendEmail, captchaToken).then(() => setOpen(true)).catch(e => {
+        sendService(sendEmail, captchaToken).then(() => setOpen(true)).catch(e => {
             captchaRef.current?.reload()
             console.warn(e)
             if (e instanceof ApiErr) {
@@ -120,7 +120,7 @@ export default function SignUpEmail() {
                     <LockOutlinedIcon />
                 </Avatar>
                 <Typography component="h1" variant="h5">
-                    输入邮箱
+                    {title}
                 </Typography>
                 <Box component="form" noValidate onSubmit={onSubmit} sx={{ mt: 3 }}>
                     <Grid container spacing={2}>
@@ -135,7 +135,7 @@ export default function SignUpEmail() {
                                 onChange={emailonChange}
                             />
                             {
-                                server.data?.AllowDomain.length != 0 &&
+                                server.data?.AllowDomain.length != 0 && !anyEmail &&
                                 <FormControl>
                                     <InputLabel>域名</InputLabel>
                                     <Select label="域名" value={domain} onChange={v => setDomain(v.target.value)}>
@@ -164,7 +164,7 @@ export default function SignUpEmail() {
             <Dialog open={open}>
                 <DialogTitle>邮件已发送</DialogTitle>
                 <DialogContent>
-                    <Typography>请到收件箱（或垃圾箱）点击验证链接以继续完成注册。</Typography>
+                    <Typography>请到收件箱（或垃圾箱）点击验证链接以继续。</Typography>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleClose}>返回首页</Button>

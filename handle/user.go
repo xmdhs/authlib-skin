@@ -2,6 +2,7 @@ package handle
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"image/png"
 	"io"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
+	"github.com/xmdhs/authlib-skin/config"
 	"github.com/xmdhs/authlib-skin/handle/handelerror"
 	"github.com/xmdhs/authlib-skin/model"
 	"github.com/xmdhs/authlib-skin/service"
@@ -22,16 +24,18 @@ type UserHandel struct {
 	userService    *service.UserService
 	logger         *slog.Logger
 	textureService *service.TextureService
+	config         config.Config
 }
 
 func NewUserHandel(handleError *handelerror.HandleError, validate *validator.Validate,
-	userService *service.UserService, logger *slog.Logger, textureService *service.TextureService) *UserHandel {
+	userService *service.UserService, logger *slog.Logger, textureService *service.TextureService, config config.Config) *UserHandel {
 	return &UserHandel{
 		handleError:    handleError,
 		validate:       validate,
 		userService:    userService,
 		logger:         logger,
 		textureService: textureService,
+		config:         config,
 	}
 }
 
@@ -120,7 +124,7 @@ func (h *UserHandel) ChangePasswd() http.HandlerFunc {
 			h.handleError.Error(ctx, w, err.Error(), model.ErrInput, 400, slog.LevelDebug)
 			return
 		}
-		err = h.userService.ChangePasswd(ctx, c, t)
+		err = h.userService.ChangePasswd(ctx, c, t.UID, true)
 		if err != nil {
 			h.handleError.Service(ctx, w, err)
 			return
@@ -213,21 +217,77 @@ func (h *UserHandel) PutTexture() http.HandlerFunc {
 	}
 }
 
+func (h *UserHandel) NeedEnableEmail(handle http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		if !h.config.Email.Enable {
+			h.handleError.Error(ctx, w, "未开启邮件功能", model.ErrUnknown, 403, slog.LevelInfo)
+		}
+		handle.ServeHTTP(w, r)
+	})
+}
+
 func (h *UserHandel) SendRegEmail() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		c, err := utils.DeCodeBody[model.SendRegEmail](r.Body, h.validate)
-		if err != nil {
-			h.handleError.Error(ctx, w, err.Error(), model.ErrInput, 400, slog.LevelDebug)
-			return
-		}
-		ip, err := utils.GetIP(r)
-		if err != nil {
-			h.handleError.Error(ctx, w, err.Error(), model.ErrInput, 400, slog.LevelDebug)
+		c, ip, shouldReturn := h.sendMailParameter(ctx, r, w)
+		if shouldReturn {
 			return
 		}
 
-		err = h.userService.SendRegEmail(ctx, c.Email, c.CaptchaToken, r.Host, ip)
+		err := h.userService.SendRegEmail(ctx, c.Email, c.CaptchaToken, r.Host, ip)
+		if err != nil {
+			h.handleError.Service(ctx, w, err)
+			return
+		}
+		encodeJson(w, model.API[any]{
+			Code: 0,
+		})
+	}
+}
+
+func (h *UserHandel) SendForgotEmail() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		c, ip, shouldReturn := h.sendMailParameter(ctx, r, w)
+		if shouldReturn {
+			return
+		}
+
+		err := h.userService.SendChangePasswordEmail(ctx, c.Email, c.CaptchaToken, r.Host, ip)
+		if err != nil {
+			h.handleError.Service(ctx, w, err)
+			return
+		}
+		encodeJson(w, model.API[any]{
+			Code: 0,
+		})
+	}
+}
+
+func (h *UserHandel) sendMailParameter(ctx context.Context, r *http.Request, w http.ResponseWriter) (model.SendRegEmail, string, bool) {
+	c, err := utils.DeCodeBody[model.SendRegEmail](r.Body, h.validate)
+	if err != nil {
+		h.handleError.Error(ctx, w, err.Error(), model.ErrInput, 400, slog.LevelDebug)
+		return model.SendRegEmail{}, "", true
+	}
+	ip, err := utils.GetIP(r)
+	if err != nil {
+		h.handleError.Error(ctx, w, err.Error(), model.ErrInput, 400, slog.LevelDebug)
+		return model.SendRegEmail{}, "", true
+	}
+	return c, ip, false
+}
+
+func (h *UserHandel) ForgotPassword() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		c, err := utils.DeCodeBody[model.ForgotPassword](r.Body, h.validate)
+		if err != nil {
+			h.handleError.Error(ctx, w, err.Error(), model.ErrInput, 400, slog.LevelDebug)
+			return
+		}
+		err = h.userService.ForgotPassword(ctx, c.Email, c.PassWord, c.EmailJwt)
 		if err != nil {
 			h.handleError.Service(ctx, w, err)
 			return

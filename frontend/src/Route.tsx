@@ -9,7 +9,9 @@ import Layout from '@/views/Layout'
 import UserAdmin from "@/views/admin/UserAdmin";
 import NeedLogin from "@/components/NeedLogin";
 import Index from "@/views/Index";
-import SignUpEmail from "@/views/SignUpEmail";
+import SendEmail from "@/views/SendEmail";
+import { sendForgotEmail, sendRegEmail } from "@/apis/apis";
+import Forgot from "@/views/Forgot";
 
 const router = createBrowserRouter([
     { path: "*", Component: Root },
@@ -24,7 +26,9 @@ function Root() {
                     <Route path="/*" element={<p>404</p>} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
-                    <Route path="/register_email" element={<SignUpEmail />} />
+                    <Route path="/register_email" element={<SendEmail title="注册" sendService={sendRegEmail} />} />
+                    <Route path="/forgot_email" element={<SendEmail title="找回密码" anyEmail sendService={sendForgotEmail} />} />
+                    <Route path="/forgot" element={<Forgot />} />
 
                     <Route element={<NeedLogin><Outlet /></NeedLogin>}>
                         <Route path="/profile" element={<Profile />} />

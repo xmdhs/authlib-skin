@@ -27,6 +27,7 @@ var (
 	ErrRegLimit   = errors.New("超过注册 ip 限制")
 	ErrPassWord   = errors.New("错误的密码或用户名")
 	ErrChangeName = errors.New("离线模式 uuid 不允许修改用户名")
+	ErrUsername   = errors.New("邮箱不存在")
 )
 
 type UserService struct {
@@ -181,14 +182,16 @@ func (w *UserService) Info(ctx context.Context, t *model.TokenClaims) (model.Use
 	}, nil
 }
 
-func (w *UserService) ChangePasswd(ctx context.Context, p model.ChangePasswd, t *model.TokenClaims) error {
-	u, err := w.client.User.Query().Where(user.IDEQ(t.UID)).WithToken().First(ctx)
+func (w *UserService) ChangePasswd(ctx context.Context, p model.ChangePasswd, uid int, validOldPass bool) error {
+	u, err := w.client.User.Query().Where(user.IDEQ(uid)).WithToken().First(ctx)
 	if err != nil {
 		return fmt.Errorf("ChangePasswd: %w", err)
 	}
-	err = validatePass(ctx, u, p.Old)
-	if err != nil {
-		return fmt.Errorf("ChangePasswd: %w", err)
+	if validOldPass {
+		err := validatePass(ctx, u, p.Old)
+		if err != nil {
+			return fmt.Errorf("ChangePasswd: %w", err)
+		}
 	}
 	pass, salt := utils.Argon2ID(p.New)
 	if u.Edges.Token != nil {
@@ -197,7 +200,7 @@ func (w *UserService) ChangePasswd(ctx context.Context, p model.ChangePasswd, t 
 			return fmt.Errorf("ChangePasswd: %w", err)
 		}
 	}
-	err = w.cache.Del([]byte("auth" + strconv.Itoa(t.UID)))
+	err = w.cache.Del([]byte("auth" + strconv.Itoa(uid)))
 	if err != nil {
 		return fmt.Errorf("ChangePasswd: %w", err)
 	}
@@ -256,9 +259,45 @@ func (w *UserService) SendRegEmail(ctx context.Context, email, CaptchaToken, hos
 		return fmt.Errorf("SendRegEmail: %w", err)
 	}
 
-	err = w.emailService.SendVerifyUrl(ctx, email, 60, host)
+	err = w.emailService.SendVerifyUrl(ctx, email, 60, host, "验证你的邮箱以完成注册", "点击下方链接完成注册，1 天内有效", "/register")
 	if err != nil {
 		return fmt.Errorf("SendRegEmail: %w", err)
+	}
+	return nil
+}
+
+func (w *UserService) SendChangePasswordEmail(ctx context.Context, email, CaptchaToken, host, ip string) error {
+	err := w.captchaService.VerifyCaptcha(ctx, CaptchaToken, ip)
+	if err != nil {
+		return fmt.Errorf("SendChangePasswordEmail: %w", err)
+	}
+	c, err := w.client.User.Query().Where(user.Email(email)).Count(ctx)
+	if err != nil {
+		return fmt.Errorf("SendChangePasswordEmail: %w", err)
+	}
+	if c == 0 {
+		return fmt.Errorf("SendChangePasswordEmail: %w", ErrUsername)
+	}
+	err = w.emailService.SendVerifyUrl(ctx, email, 60, host, "找回密码邮箱验证", "点击下方链接更改你的密码，1 天内有效", "/forgot")
+	if err != nil {
+		return fmt.Errorf("SendChangePasswordEmail: %w", err)
+	}
+	return nil
+}
+
+func (w *UserService) ForgotPassword(ctx context.Context, email, passWord, emailJwt string) error {
+	err := w.emailService.VerifyJwt(email, emailJwt)
+	if err != nil {
+		return fmt.Errorf("ForgotPassword: %w", err)
+	}
+	u, err := w.client.User.Query().Where(user.Email(email)).First(ctx)
+	if err != nil {
+		return fmt.Errorf("ForgotPassword: %w", err)
+	}
+
+	err = w.ChangePasswd(ctx, model.ChangePasswd{New: passWord}, u.ID, false)
+	if err != nil {
+		return fmt.Errorf("ForgotPassword: %w", err)
 	}
 	return nil
 }

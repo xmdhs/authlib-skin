@@ -130,3 +130,27 @@ export async function sendRegEmail(email: string, captchaToken: string) {
     })
     return await apiGet<unknown>(r)
 }
+
+export async function sendForgotEmail(email: string, captchaToken: string) {
+    const r = await fetch(root() + "/api/v1/user/forgot_email", {
+        method: "POST",
+        body: JSON.stringify({
+            "email": email,
+            "captchaToken": captchaToken
+        })
+    })
+    return await apiGet<unknown>(r)
+}
+
+
+export async function forgotPassWord(email: string, emailJwt: string, password: string) {
+    const r = await fetch(root() + "/api/v1/user/forgot", {
+        method: "POST",
+        body: JSON.stringify({
+            "email": email,
+            "emailJwt": emailJwt,
+            "passWord": password,
+        })
+    })
+    return await apiGet<unknown>(r)
+}

@@ -99,7 +99,7 @@ func (e EmailService) SendEmail(ctx context.Context, to string, subject, body st
 
 var emailTemplate = lo.Must(template.New("email").Parse(`<p>{{ .msg }}</p><a href="{{.url}}">{{ .url }}</a>`))
 
-func (e EmailService) SendVerifyUrl(ctx context.Context, email string, interval int, host string) error {
+func (e EmailService) SendVerifyUrl(ctx context.Context, email string, interval int, host string, subject, msg, path string) error {
 	sendKey := []byte("SendEmail" + email)
 	sendB, err := e.cache.Get(sendKey)
 	if err != nil {
@@ -125,7 +125,7 @@ func (e EmailService) SendVerifyUrl(ctx context.Context, email string, interval 
 	u := url.URL{
 		Host:   host,
 		Scheme: "http",
-		Path:   "/register",
+		Path:   path,
 	}
 	u.RawQuery = q.Encode()
 
@@ -140,7 +140,7 @@ func (e EmailService) SendVerifyUrl(ctx context.Context, email string, interval 
 
 	body := bytes.NewBuffer(nil)
 	err = emailTemplate.Execute(body, map[string]any{
-		"msg": "点击下方链接验证你的邮箱，1 天内有效",
+		"msg": msg,
 		"url": u.String(),
 	})
 	if err != nil {
@@ -167,18 +167,21 @@ func (e EmailService) VerifyJwt(email, jwtStr string) error {
 		return fmt.Errorf("VerifyJwt: %w", err)
 	}
 	sub, _ := token.Claims.GetSubject()
-	if !token.Valid || sub != email {
+	iss, _ := token.Claims.GetIssuer()
+	if !token.Valid || sub != email || iss != issuer {
 		return fmt.Errorf("VerifyJwt: %w", ErrTokenInvalid)
 	}
 	return nil
 }
+
+const issuer = "authlib-skin email verification"
 
 func newJwtToken(jwtKey *rsa.PrivateKey, email string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.RegisteredClaims{
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * 24 * time.Hour)),
 		IssuedAt:  jwt.NewNumericDate(time.Now()),
 		Subject:   email,
-		Issuer:    "authlib-skin email verification",
+		Issuer:    issuer,
 	})
 	jwts, err := token.SignedString(jwtKey)
 	if err != nil {
