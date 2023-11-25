@@ -168,7 +168,7 @@ func (e EmailService) VerifyJwt(email, jwtStr, path string) error {
 	}
 	sub, _ := token.Claims.GetSubject()
 	iss, _ := token.Claims.GetIssuer()
-	if !token.Valid || sub != email || iss+path != issuer {
+	if !token.Valid || sub != email || issuer+path != iss {
 		return fmt.Errorf("VerifyJwt: %w", ErrTokenInvalid)
 	}
 	return nil
