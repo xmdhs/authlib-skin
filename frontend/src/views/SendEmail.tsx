@@ -67,7 +67,7 @@ export default function SendEmail({ title, anyEmail = false, sendService }: { ti
             setHelperText("邮箱不得为空")
         }
         const sendEmail = (() => {
-            if (domain != "") {
+            if (!anyEmail && domain != "") {
                 return `${email}@${domain}`
             }
             return email
