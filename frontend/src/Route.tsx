@@ -27,7 +27,7 @@ function Root() {
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
                     <Route path="/register_email" element={<SendEmail title="注册" sendService={sendRegEmail} />} />
-                    <Route path="/forgot_email" element={<SendEmail title="找回密码" anyEmail sendService={sendForgotEmail} />} />
+                    <Route path="/forgot_email" element={<SendEmail title="重设密码" anyEmail sendService={sendForgotEmail} />} />
                     <Route path="/forgot" element={<Forgot />} />
 
                     <Route element={<NeedLogin><Outlet /></NeedLogin>}>

@@ -60,7 +60,7 @@ func (w *UserService) Reg(ctx context.Context, u model.UserReg, ipPrefix, ip str
 	}
 
 	if w.config.Email.Enable {
-		err := w.emailService.VerifyJwt(u.Email, u.EmailJwt)
+		err := w.emailService.VerifyJwt(u.Email, u.EmailJwt, "/register")
 		if err != nil {
 			return model.LoginRep{}, fmt.Errorf("Reg: %w", err)
 		}
@@ -263,7 +263,7 @@ func (w *UserService) SendChangePasswordEmail(ctx context.Context, email, Captch
 	if c == 0 {
 		return fmt.Errorf("SendChangePasswordEmail: %w", ErrUsername)
 	}
-	err = w.emailService.SendVerifyUrl(ctx, email, 60, host, "找回密码邮箱验证", "点击下方链接更改你的密码，1 天内有效", "/forgot")
+	err = w.emailService.SendVerifyUrl(ctx, email, 60, host, "重设密码", "点击下方链接更改你的密码，1 天内有效", "/forgot")
 	if err != nil {
 		return fmt.Errorf("SendChangePasswordEmail: %w", err)
 	}
@@ -271,7 +271,7 @@ func (w *UserService) SendChangePasswordEmail(ctx context.Context, email, Captch
 }
 
 func (w *UserService) ForgotPassword(ctx context.Context, email, passWord, emailJwt string) error {
-	err := w.emailService.VerifyJwt(email, emailJwt)
+	err := w.emailService.VerifyJwt(email, emailJwt, "/forgot")
 	if err != nil {
 		return fmt.Errorf("ForgotPassword: %w", err)
 	}

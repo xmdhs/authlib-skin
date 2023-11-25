@@ -113,7 +113,7 @@ func (e EmailService) SendVerifyUrl(ctx context.Context, email string, interval 
 		return fmt.Errorf("SendVerifyUrl: %w", err)
 	}
 
-	code, err := newJwtToken(e.pri, email)
+	code, err := newJwtToken(e.pri, email, issuer+path)
 	if err != nil {
 		return fmt.Errorf("SendVerifyUrl: %w", err)
 	}
@@ -159,7 +159,7 @@ var (
 	ErrTokenInvalid = errors.New("token 无效")
 )
 
-func (e EmailService) VerifyJwt(email, jwtStr string) error {
+func (e EmailService) VerifyJwt(email, jwtStr, path string) error {
 	token, err := jwt.ParseWithClaims(jwtStr, &jwt.RegisteredClaims{}, func(t *jwt.Token) (interface{}, error) {
 		return &e.pri.PublicKey, nil
 	})
@@ -168,20 +168,20 @@ func (e EmailService) VerifyJwt(email, jwtStr string) error {
 	}
 	sub, _ := token.Claims.GetSubject()
 	iss, _ := token.Claims.GetIssuer()
-	if !token.Valid || sub != email || iss != issuer {
+	if !token.Valid || sub != email || iss+path != issuer {
 		return fmt.Errorf("VerifyJwt: %w", ErrTokenInvalid)
 	}
 	return nil
 }
 
-const issuer = "authlib-skin email verification"
+const issuer = "email"
 
-func newJwtToken(jwtKey *rsa.PrivateKey, email string) (string, error) {
+func newJwtToken(jwtKey *rsa.PrivateKey, email, iss string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.RegisteredClaims{
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * 24 * time.Hour)),
 		IssuedAt:  jwt.NewNumericDate(time.Now()),
 		Subject:   email,
-		Issuer:    issuer,
+		Issuer:    iss,
 	})
 	jwts, err := token.SignedString(jwtKey)
 	if err != nil {

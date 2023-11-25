@@ -18,7 +18,7 @@ import { useNavigate } from 'react-router-dom';
 
 export default function Forgot() {
     const [err, setErr] = useState("")
-    useTitle("找回密码")
+    useTitle("重设密码")
     const [passerr, setPasserr] = useState("")
     const [pass, setPass] = useState({
         pass1: "",
