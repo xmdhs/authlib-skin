@@ -46,24 +46,25 @@ export default function SignUp() {
         setDisableEmail(true)
     }, [u.searchParams])
 
-    useRequest(getConfig, {
+    const server = useRequest(getConfig, {
         cacheKey: "/api/v1/config",
         staleTime: 60000,
         onError: e => {
             console.warn(e)
             setRegErr(String(e))
-        },
-        onSuccess: v => {
-            if (!v.NeedEmail) return
-
-            const code = u.searchParams.get("code")
-            if (!code || code == "") {
-                navigate("/register_email")
-                return
-            }
-            setCode(code)
         }
     })
+
+    React.useEffect(() => {
+        if (!server.data || !server.data.NeedEmail) return
+
+        const code = u.searchParams.get("code")
+        if (!code || code == "") {
+            navigate("/register_email")
+            return
+        }
+        setCode(code)
+    }, [server.data, u.searchParams, navigate])
 
 
 
