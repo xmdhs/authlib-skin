@@ -147,7 +147,7 @@ func (e EmailService) SendVerifyUrl(ctx context.Context, email string, interval 
 		return fmt.Errorf("SendVerifyUrl: %w", err)
 	}
 
-	err = e.SendEmail(ctx, email, "验证你的邮箱", body.String())
+	err = e.SendEmail(ctx, email, subject, body.String())
 	if err != nil {
 		return fmt.Errorf("SendVerifyUrl: %w", err)
 	}
