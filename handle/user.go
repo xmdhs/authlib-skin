@@ -3,11 +3,15 @@ package handle
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"image/png"
 	"io"
 	"log/slog"
 	"net/http"
+	"regexp"
+	"strings"
+	"sync"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
@@ -25,10 +29,16 @@ type UserHandel struct {
 	logger         *slog.Logger
 	textureService *service.TextureService
 	config         config.Config
+
+	emailReg func() (*regexp.Regexp, error)
 }
 
 func NewUserHandel(handleError *handelerror.HandleError, validate *validator.Validate,
 	userService *service.UserService, logger *slog.Logger, textureService *service.TextureService, config config.Config) *UserHandel {
+	emailReg := sync.OnceValues[*regexp.Regexp, error](func() (*regexp.Regexp, error) {
+		return regexp.Compile(config.Email.EmailReg)
+	})
+
 	return &UserHandel{
 		handleError:    handleError,
 		validate:       validate,
@@ -36,6 +46,8 @@ func NewUserHandel(handleError *handelerror.HandleError, validate *validator.Val
 		logger:         logger,
 		textureService: textureService,
 		config:         config,
+
+		emailReg: emailReg,
 	}
 }
 
@@ -227,12 +239,39 @@ func (h *UserHandel) NeedEnableEmail(handle http.Handler) http.Handler {
 	})
 }
 
+var ErrNotAllowDomain = errors.New("不在允许域名列表内")
+
 func (h *UserHandel) SendRegEmail() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		c, ip, shouldReturn := h.sendMailParameter(ctx, r, w)
 		if shouldReturn {
 			return
+		}
+
+		if len(h.config.Email.AllowDomain) != 0 {
+			allow := false
+			for _, v := range h.config.Email.AllowDomain {
+				if strings.HasSuffix(c.Email, v) {
+					allow = true
+					break
+				}
+			}
+			if !allow {
+				h.handleError.Error(ctx, w, "不在允许邮箱域名内", model.ErrInput, 400, slog.LevelDebug)
+				return
+			}
+		}
+		if h.config.Email.EmailReg != "" {
+			r, err := h.emailReg()
+			if err != nil {
+				h.handleError.Error(ctx, w, "正则错误", model.ErrUnknown, 500, slog.LevelError)
+				return
+			}
+			if !r.MatchString(c.Email) {
+				h.handleError.Error(ctx, w, "邮箱不符合正则要求", model.ErrInput, 400, slog.LevelDebug)
+				return
+			}
 		}
 
 		err := h.userService.SendRegEmail(ctx, c.Email, c.CaptchaToken, r.Host, ip)

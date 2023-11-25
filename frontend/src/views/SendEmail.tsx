@@ -77,6 +77,11 @@ export default function SendEmail({ title, anyEmail = false, sendService }: { ti
             setHelperText("邮箱格式错误")
             return
         }
+        if (!anyEmail && server.data?.EmailReg && server.data?.EmailReg != ""
+            && !new RegExp(server.data?.EmailReg).test(sendEmail)) {
+            setHelperText(server.data?.EmailRegMsg ?? "邮箱不满足正则要求")
+            return
+        }
 
         if (server.data?.captcha.type != "" && captchaToken == "") {
             return

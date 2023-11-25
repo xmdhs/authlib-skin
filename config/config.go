@@ -45,12 +45,14 @@ type EmailConfig struct {
 	Enable      bool       `toml:"enable" comment:"注册验证邮件，且允许使用邮箱找回账号"`
 	Smtp        []SmtpUser `toml:"smtp"`
 	AllowDomain []string   `toml:"allow_domain" comment:"允许用于注册的邮箱域名，留空则允许全部"`
+	EmailReg    string     `toml:"email_reg" comment:"邮箱正则，留空则不处理，如 ^[0-9]+@qq.com$|^[^+\\.A-Z]+@gmail.com$"`
+	EmailRegMsg string     `toml:"email_reg_msg" comment:"不满足要求时的提示信息"`
 }
 
 type SmtpUser struct {
 	Host string `toml:"host"`
 	Port int    `toml:"port"`
-	SSL  bool   `toml:"SSL"`
+	SSL  bool   `toml:"SSL" comment:"启用 ssl"`
 	Name string `toml:"name"`
 	Pass string `toml:"password"`
 }
@@ -82,5 +84,9 @@ func Default() Config {
 		WebBaseUrl:     "",
 		ServerName:     "没有设置名字",
 		Captcha:        Captcha{},
+		Email: EmailConfig{
+			Smtp:        []SmtpUser{},
+			AllowDomain: []string{},
+		},
 	}
 }

@@ -42,6 +42,8 @@ export interface ApiConfig {
     serverName: string
     NeedEmail: boolean
     AllowDomain: string[]
+    EmailReg: string
+    EmailRegMsg: string
 }
 
 export interface UserInfo {

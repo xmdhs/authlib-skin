@@ -238,22 +238,7 @@ func (w *UserService) ChangeName(ctx context.Context, newName string, t *model.T
 	return nil
 }
 
-var ErrNotAllowDomain = errors.New("不在允许域名列表内")
-
 func (w *UserService) SendRegEmail(ctx context.Context, email, CaptchaToken, host, ip string) error {
-	if len(w.config.Email.AllowDomain) != 0 {
-		allow := false
-		for _, v := range w.config.Email.AllowDomain {
-			if strings.HasSuffix(email, v) {
-				allow = true
-				break
-			}
-		}
-		if !allow {
-			return fmt.Errorf("SendRegEmail: %w", ErrNotAllowDomain)
-		}
-	}
-
 	err := w.captchaService.VerifyCaptcha(ctx, CaptchaToken, ip)
 	if err != nil {
 		return fmt.Errorf("SendRegEmail: %w", err)

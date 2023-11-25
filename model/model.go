@@ -65,6 +65,8 @@ type Config struct {
 	ServerName      string `json:"serverName"`
 	NeedEmail       bool
 	AllowDomain     []string
+	EmailReg        string
+	EmailRegMsg     string
 }
 
 type EditUser struct {
