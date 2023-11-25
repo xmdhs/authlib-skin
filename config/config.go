@@ -85,7 +85,15 @@ func Default() Config {
 		ServerName:     "没有设置名字",
 		Captcha:        Captcha{},
 		Email: EmailConfig{
-			Smtp:        []SmtpUser{},
+			Smtp: []SmtpUser{
+				{
+					Host: "",
+					Port: 0,
+					SSL:  false,
+					Name: "",
+					Pass: "",
+				},
+			},
 			AllowDomain: []string{},
 		},
 	}
