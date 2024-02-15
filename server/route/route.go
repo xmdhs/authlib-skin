@@ -63,6 +63,7 @@ func newYggdrasil(handelY *yggdrasil.Yggdrasil) http.Handler {
 
 	r.Get("/sessionserver/session/minecraft/profile/{uuid}", handelY.GetProfile())
 	r.Post("/api/profiles/minecraft", handelY.BatchProfile())
+	r.Post("/minecraftservices/minecraft/profile/lookup/bulk/byname", handelY.BatchProfile()) // 23w42a
 
 	r.Get("/sessionserver/session/minecraft/hasJoined", handelY.HasJoined())
 
